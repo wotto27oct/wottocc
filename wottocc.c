@@ -234,9 +234,12 @@ void runtest() {
 	for (int i = 0; i < 100; i++){
 		Token tmp;
 		tmp.ty = 2*i;
-		vec_push(vec2, (void *)&tmp);
+		Token *d = malloc(sizeof(Token));
+		*d = tmp;
+		vec_push(vec2, (void *)d);
 	}
 	printf("%d\n", ((Token *)(vec2->data[23]))->ty);
+	printf("%d\n", ((Token *)(vec2->data[35]))->ty);
 
 	printf("OK\n");
 }

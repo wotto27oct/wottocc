@@ -28,6 +28,12 @@ typedef struct Node {
 	int val;			// use if ty==ND_NUM
 } Node;
 
+typedef struct {
+	void **data;	// the data
+	int capacity;	// buffer (the capacity of the length)
+	int len;		// the length of the vector
+} Vector;
+
 // preserve tokenized token string at this array
 // assume that the number of token string is less than 100.
 Token tokens[100];
@@ -44,6 +50,10 @@ Node *term();
 void tokenize(char*);
 void gen(Node*);
 //void error(char*);
+Vector *new_vector();
+void vec_push(Vector *vec, void *elem);
+void expect(int, int, int);
+void runtest();
 
 // create new Node
 Node *new_node(int ty, Node *lhs, Node *rhs) {
@@ -184,10 +194,53 @@ void gen(Node *node) {
 	exit(1);
 }*/
 
+Vector *new_vector() {
+	Vector *vec = malloc(sizeof(Vector));
+	vec->data = malloc(sizeof(void *) * 16);
+	vec->capacity = 16;
+	vec->len = 0;
+	return vec;
+}
+
+void vec_push(Vector *vec, void *elem) {
+	if (vec->capacity == vec->len) {
+		vec->capacity *= 2;
+		vec->data = realloc(vec->data, sizeof(void *) * vec->capacity);
+	}
+	vec->data[vec->len++] = elem;
+}
+
+void expect(int line, int expected, int actual) {
+	if (expected == actual)
+		return;
+	fprintf(stderr, "%d: %d expected, but got %d\n", line, expected, actual);
+	exit(1);
+}
+
+void runtest() {
+	Vector *vec = new_vector();
+	expect(__LINE__, 0, vec->len);
+
+	for (int i = 0; i < 100; i++)
+		vec_push(vec, (void *)i);
+
+	expect(__LINE__, 100, vec->len);
+	expect(__LINE__, 0, (int)vec->data[0]);
+	expect(__LINE__, 50, (int)vec->data[50]);
+	expect(__LINE__, 99, (int)vec->data[99]);
+
+	printf("OK\n");
+}
+
 int main(int argc, char **argv) {
 	if (argc != 2) {
 		fprintf(stderr, "引数の個数が正しくありません\n");
 		return 1;
+	}
+
+	if (strcmp(argv[1], "-test") == 0){
+		runtest();
+		return 0;
 	}
 
 	// tokenize and parse

@@ -15,7 +15,7 @@ enum {
 };
 
 // トークンの型
-typedef struct {
+typedef struct Token {
 	int ty;		// トークンの型
 	int val;	// tyがTK_NUMの場合，その数値
 	char *input; // トークン文字列（error massage)
@@ -228,6 +228,15 @@ void runtest() {
 	expect(__LINE__, 0, (int)vec->data[0]);
 	expect(__LINE__, 50, (int)vec->data[50]);
 	expect(__LINE__, 99, (int)vec->data[99]);
+
+	Vector *vec2 = new_vector();
+	
+	for (int i = 0; i < 100; i++){
+		Token tmp;
+		tmp.ty = 2*i;
+		vec_push(vec2, (void *)&tmp);
+	}
+	printf("%d\n", ((Token *)(vec2->data[23]))->ty);
 
 	printf("OK\n");
 }

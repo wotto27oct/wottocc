@@ -36,7 +36,9 @@ typedef struct {
 
 // preserve tokenized token string at this array
 // assume that the number of token string is less than 100.
-Token tokens[100];
+//Token tokens[100];
+
+Vector *tokens;
 
 // position of tokens
 int pos = 0;
@@ -73,7 +75,7 @@ Node *new_node_num(int val) {
 
 // consume tokens if the next token is as expected.
 int consume(int ty) {
-	if (tokens[pos].ty != ty)
+	if (((Token *)vec_get(tokens, pos))->ty != ty)
 		return 0;
 	pos++;
 	return 1;
@@ -110,17 +112,19 @@ Node *term() {
 		Node *node = add();
 		if (!consume(')')) {
 			//error("there isn't right-parenthesis: %s", tokens[pos].input);
-			fprintf(stderr, "there isn't right-parenthesis: %s", tokens[pos].input);
+			fprintf(stderr, "there isn't right-parenthesis: %s\n", 
+					((Token *)vec_get(tokens, pos))->input);
 			exit(1);
 		}
 		return node;
 	}
 	
-	if (tokens[pos].ty == TK_NUM)
-		return new_node_num(tokens[pos++].val);
+	if (((Token *)vec_get(tokens, pos))->ty == TK_NUM)
+		return new_node_num(((Token *)vec_get(tokens, pos++))->val);
 	
 	//error("the token is neither number nor left-parenthesis: %s", tokens[pos].input);
-	fprintf(stderr, "the token is neither number nor left-parenthesis: %s", tokens[pos].input);
+	fprintf(stderr, "the token is neither number nor left-parenthesis: %s", 
+			((Token *)vec_get(tokens, pos))->input);
 	exit(1);
 }
 
@@ -135,18 +139,24 @@ void tokenize(char *p) {
 		}
 
 		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
-			tokens[i].ty = *p;
-			tokens[i].input = p;
-			i++;
+			Token tmp;
+			tmp.ty = *p;
+			tmp.input = p;
+			Token *d = malloc(sizeof(Token));
+			*d = tmp;
+			vec_push(tokens, (void *)d);
 			p++;
 			continue;
 		}
 
 		if (isdigit(*p)) {
-			tokens[i].ty = TK_NUM;
-			tokens[i].input = p;
-			tokens[i].val = strtol(p, &p, 10);
-			i++;
+			Token tmp;
+			tmp.ty = TK_NUM;
+			tmp.input = p;
+			tmp.val = strtol(p, &p, 10);
+			Token *d = malloc(sizeof(Token));
+			*d = tmp;
+			vec_push(tokens, (void *)d);
 			continue;
 		}
 
@@ -154,8 +164,12 @@ void tokenize(char *p) {
 		exit(1);
 	}
 
-	tokens[i].ty = TK_EOF;
-	tokens[i].input = p;
+	Token tmp;
+	tmp.ty = TK_EOF;
+	tmp.input = p;
+	Token *d = malloc(sizeof(Token));
+	*d = tmp;
+	vec_push(tokens, (void *)d);
 }
 
 // emurate stack machine
@@ -251,6 +265,7 @@ void runtest() {
 }
 
 int main(int argc, char **argv) {
+
 	if (argc != 2) {
 		fprintf(stderr, "引数の個数が正しくありません\n");
 		return 1;
@@ -261,6 +276,7 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
+	tokens = new_vector();
 	// tokenize and parse
 	tokenize(argv[1]);
 	Node *node = add();

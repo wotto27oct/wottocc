@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// preserve tokenized token string at this array
-// assume that the number of token string is less than 100.
-Token tokens[100];
 
 // トークンの型を表す値
 enum {
@@ -15,7 +12,7 @@ enum {
 
 enum {
 	ND_NUM = 256,	// node type of number
-}
+};
 
 // トークンの型
 typedef struct {
@@ -30,6 +27,23 @@ typedef struct Node {
 	struct Node *rhs;	// RHS
 	int val;			// use if ty==ND_NUM
 } Node;
+
+// preserve tokenized token string at this array
+// assume that the number of token string is less than 100.
+Token tokens[100];
+
+// position of tokens
+int pos = 0;
+
+Node *new_node(int, Node*, Node*);
+Node *new_node_num(int);
+int consume(int);
+Node *add();
+Node *mul();
+Node *term();
+void tokenize(char*);
+void gen(Node*);
+//void error(char*);
 
 // create new Node
 Node *new_node(int ty, Node *lhs, Node *rhs) {
@@ -83,15 +97,20 @@ Node *mul() {
 Node *term() {
 	if (consume('(')) {
 		Node *node = add();
-		if (!consume(')'))
-			error("there isn't right-parenthesis: %s", token[pos].input);
+		if (!consume(')')) {
+			//error("there isn't right-parenthesis: %s", tokens[pos].input);
+			fprintf(stderr, "there isn't right-parenthesis: %s", tokens[pos].input);
+			exit(1);
+		}
 		return node;
 	}
 	
 	if (tokens[pos].ty == TK_NUM)
-		return new_node_num(tokes[pos++].val);
+		return new_node_num(tokens[pos++].val);
 	
-	error("the token is neither number nor left-parenthesis: %s", tokens[pos].input);
+	//error("the token is neither number nor left-parenthesis: %s", tokens[pos].input);
+	fprintf(stderr, "the token is neither number nor left-parenthesis: %s", tokens[pos].input);
+	exit(1);
 }
 
 // divide strings which p points into token and preserve at tokens.
@@ -104,7 +123,7 @@ void tokenize(char *p) {
 			continue;
 		}
 
-		if (*p == '+' || *p == '-') {
+		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
 			tokens[i].ty = *p;
 			tokens[i].input = p;
 			i++;
@@ -141,7 +160,7 @@ void gen(Node *node) {
 	printf("  pop rdi\n");
 	printf("  pop rax\n");
 
-	switch (node->ty)
+	switch (node->ty) {
 	case '+':
 		printf("  add rax, rdi\n");
 		break;
@@ -154,15 +173,16 @@ void gen(Node *node) {
 	case '/':
 		printf("  mov rdx, 0\n");
 		printf("  div rdi\n");
+	}
 	
 	printf("  push rax\n");
 }
 
 // report errors
-void error(int i) {
-	fprintf(stderr, "unexpected token: %s\n", tokens[i].input);
+/*void error(char *str) {
+	printf("%s", str);
 	exit(1);
-}
+}*/
 
 int main(int argc, char **argv) {
 	if (argc != 2) {
@@ -170,47 +190,21 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	// tokenize
+	// tokenize and parse
 	tokenize(argv[1]);
+	Node *node = add();
 	
-	// output the first half part of assembli
+	// output the first half part of assembly
 	printf(".intel_syntax noprefix\n");
 	printf(".global main\n");
 	printf("main:\n");
 
-	// output first mov command
-	// the first token of the formula must be TK_NUM.
-	if (tokens[0].ty != TK_NUM)
-		error(0);
-	printf("  mov rax, %d\n", tokens[0].val);
+	// generate assembly analyzing Abstract Syntax Tree
+	gen(node);
 
-	// output assembli
-	// processing tokens of '+ <NUM>' or '- <NUM>'
-	int i = 1;
-
-	while (tokens[i].ty != TK_EOF) {
-		if (tokens[i].ty == '+') {
-			i++;
-			if (tokens[i].ty != TK_NUM)
-				error(i);
-			printf("  add rax, %d\n", tokens[i].val);
-			i++;
-			continue;
-		}
-
-		if (tokens[i].ty == '-') {
-			i++;
-			if (tokens[i].ty != TK_NUM)
-				error(i);
-			printf("  sub rax, %d\n", tokens[i].val);
-			i++;
-			continue;
-		}
-
-		error(i);
-		return 1;
-	}
-
+	// the whole value of formula should be at the top of stack
+	// pop it into RAX.
+	printf("  pop rax\n");
 	printf("  ret\n");
 	return 0;
 }

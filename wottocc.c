@@ -3,11 +3,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+// preserve tokenized token string at this array
+// assume that the number of token string is less than 100.
+Token tokens[100];
+
 // トークンの型を表す値
 enum {
-	TK_NUM = 256,	// 整数トークン
-	TK_EOF,			// 入力の終わりを表すトークン
+	TK_NUM = 256,	// token type of integer
+	TK_EOF,			// token type of EOF
 };
+
+enum {
+	ND_NUM = 256,	// node type of number
+}
 
 // トークンの型
 typedef struct {
@@ -16,9 +24,75 @@ typedef struct {
 	char *input; // トークン文字列（error massage)
 } Token;
 
-// preserve tokenized token string at this array
-// assume that the number of token string is less than 100.
-Token tokens[100];
+typedef struct Node {
+	int ty;				// is operator or ND_NUM
+	struct Node *lhs;	// LHS
+	struct Node *rhs;	// RHS
+	int val;			// use if ty==ND_NUM
+} Node;
+
+// create new Node
+Node *new_node(int ty, Node *lhs, Node *rhs) {
+	Node *node = malloc(sizeof(Node));
+	node->ty = ty;
+	node->lhs = lhs;
+	node->rhs = rhs;
+	return node;
+}
+Node *new_node_num(int val) {
+	Node *node = malloc(sizeof(Node));
+	node->ty = ND_NUM;
+	node->val = val;
+	return node;
+}
+
+// consume tokens if the next token is as expected.
+int consume(int ty) {
+	if (tokens[pos].ty != ty)
+		return 0;
+	pos++;
+	return 1;
+}
+
+Node *add() {
+	Node *node = mul();
+
+	for (;;) {
+		if (consume('+'))
+			node = new_node('+', node, mul());
+		else if (consume('-'))
+			node = new_node('-', node, mul());
+		else
+			return node;
+	}
+}
+
+Node *mul() {
+	Node *node = term();
+
+	for (;;) {
+		if (consume('*'))
+			node = new_node('*', node, term());
+		else if (consume('/'))
+			node = new_node('/', node, term());
+		else
+			return node;
+	}
+}
+
+Node *term() {
+	if (consume('(')) {
+		Node *node = add();
+		if (!consume(')'))
+			error("there isn't right-parenthesis: %s", token[pos].input);
+		return node;
+	}
+	
+	if (tokens[pos].ty == TK_NUM)
+		return new_node_num(tokes[pos++].val);
+	
+	error("the token is neither number nor left-parenthesis: %s", tokens[pos].input);
+}
 
 // divide strings which p points into token and preserve at tokens.
 void tokenize(char *p) {
@@ -52,6 +126,36 @@ void tokenize(char *p) {
 
 	tokens[i].ty = TK_EOF;
 	tokens[i].input = p;
+}
+
+// emurate stack machine
+void gen(Node *node) {
+	if (node->ty == ND_NUM) {
+		printf("  push %d\n", node->val);
+		return;
+	}
+
+	gen(node->lhs);
+	gen(node->rhs);
+
+	printf("  pop rdi\n");
+	printf("  pop rax\n");
+
+	switch (node->ty)
+	case '+':
+		printf("  add rax, rdi\n");
+		break;
+	case '-':
+		printf("  sub rax, rdi\n");
+		break;
+	case '*':
+		printf("  mul rdi\n");
+		break;
+	case '/':
+		printf("  mov rdx, 0\n");
+		printf("  div rdi\n");
+	
+	printf("  push rax\n");
 }
 
 // report errors

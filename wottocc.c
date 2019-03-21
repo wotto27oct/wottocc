@@ -52,6 +52,7 @@ void gen(Node*);
 //void error(char*);
 Vector *new_vector();
 void vec_push(Vector *vec, void *elem);
+void *vec_get(Vector *vec, int num);
 void expect(int, int, int);
 void runtest();
 
@@ -210,6 +211,10 @@ void vec_push(Vector *vec, void *elem) {
 	vec->data[vec->len++] = elem;
 }
 
+void *vec_get(Vector *vec, int num) {
+	return vec->data[num];
+}
+
 void expect(int line, int expected, int actual) {
 	if (expected == actual)
 		return;
@@ -240,6 +245,7 @@ void runtest() {
 	}
 	printf("%d\n", ((Token *)(vec2->data[23]))->ty);
 	printf("%d\n", ((Token *)(vec2->data[35]))->ty);
+	printf("%d\n", ((Token *)vec_get(vec2, 23))->ty);
 
 	printf("OK\n");
 }

@@ -27,7 +27,7 @@ void expect(int line, int expected, int actual) {
 	exit(1);
 }
 
-void runtest() {
+void test_vector() {
 	Vector *vec = new_vector();
 	expect(__LINE__, 0, vec->len);
 
@@ -52,5 +52,6 @@ void runtest() {
 	printf("%d\n", ((Token *)(vec2->data[35]))->ty);
 	printf("%d\n", ((Token *)vec_get(vec2, 23))->ty);
 
-	printf("OK\n");
+	printf("vector OK\n");
 }
+

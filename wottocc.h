@@ -40,9 +40,18 @@ typedef struct {
 	int len;		// the length of the vector
 } Vector;
 
+typedef struct {
+	Vector *keys;
+	Vector *vals;
+} Map;
+
 Node *new_node(int, Node*, Node*);
 Node *new_node_num(int);
 Node *new_node_ident(char);
+Map *new_map();
+void map_put(Map*, char*, void*);
+void *map_get(Map*, char*);
+void test_map();
 int consume(int);
 void *program();
 Node *stmt();
@@ -59,5 +68,6 @@ void vec_push(Vector *vec, void *elem);
 void *vec_get(Vector *vec, int num);
 void expect(int, int, int);
 void runtest();
+void test_vector();
 
 #endif

@@ -185,24 +185,20 @@ void tokenize(char *p) {
 
 		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' 
 			|| *p == ';' || *p == '=') {
-			Token tmp;
-			tmp.ty = *p;
-			tmp.input = p;
-			Token *d = malloc(sizeof(Token));
-			*d = tmp;
-			vec_push(tokens, (void *)d);
+			Token *tmp = malloc(sizeof(Token));
+			tmp->ty = *p;
+			tmp->input = p;
+			vec_push(tokens, (void *)tmp);
 			p++;
 			continue;
 		}
 
 		if (isdigit(*p)) {
-			Token tmp;
-			tmp.ty = TK_NUM;
-			tmp.input = p;
-			tmp.val = strtol(p, &p, 10);
-			Token *d = malloc(sizeof(Token));
-			*d = tmp;
-			vec_push(tokens, (void *)d);
+			Token *tmp = malloc(sizeof(Token));
+			tmp->ty = TK_NUM;
+			tmp->input = p;
+			tmp->val = strtol(p, &p, 10);
+			vec_push(tokens, (void *)tmp);
 			continue;
 		}
 
@@ -220,13 +216,12 @@ void tokenize(char *p) {
 				}
 			}
 			buf[bufind++] = '\0';
-			Token tmp;
-			tmp.ty = TK_IDENT;
-			tmp.input = new_str(buf);
-			Token *d = malloc(sizeof(Token));
-			*d = tmp;
-			vec_push(tokens, (void *)d);
-			map_put(variables, new_str(buf), 0);
+			char *buf_str = new_str(buf);
+			Token *tmp = malloc(sizeof(Token));
+			tmp->ty = TK_IDENT;
+			tmp->input = buf_str;
+			vec_push(tokens, (void *)tmp);
+			map_put(variables, buf_str, 0);
 			continue;
 		}
 
@@ -234,12 +229,10 @@ void tokenize(char *p) {
 		exit(1);
 	}
 
-	Token tmp;
-	tmp.ty = TK_EOF;
-	tmp.input = p;
-	Token *d = malloc(sizeof(Token));
-	*d = tmp;
-	vec_push(tokens, (void *)d);
+	Token *tmp = malloc(sizeof(Token));
+	tmp->ty = TK_EOF;
+	tmp->input = p;
+	vec_push(tokens, (void *)tmp);
 }
 
 void gen_lval(Node *node) {

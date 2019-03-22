@@ -5,6 +5,7 @@
 //Token tokens[100];
 
 Vector *tokens;
+Map *variables;
 
 // position of tokens
 int pos = 0;
@@ -27,7 +28,7 @@ Node *new_node_num(int val) {
 	return node;
 }
 
-Node *new_node_ident(char name) {
+Node *new_node_ident(char *name) {
 	Node *node = malloc(sizeof(Node));
 	node->ty = ND_IDENT;
 	node->name = name;
@@ -52,6 +53,14 @@ void *map_get(Map *map, char *key) {
 			return map->vals->data[i];
 	return NULL;
 }
+
+int map_get_ind(Map *map, char *key) {
+	for (int i = map->keys->len - 1; i >= 0; i--)
+		if (strcmp(map->keys->data[i], key) == 0)
+			return i;
+	return NULL;
+}
+
 
 void test_map() {
 	Map *map = new_map();
@@ -149,12 +158,19 @@ Node *term() {
 		return new_node_num(((Token *)vec_get(tokens, pos++))->val);
 		break;
 	case TK_IDENT:
-		return new_node_ident(((Token *)vec_get(tokens, pos++))->input[0]);
+		return new_node_ident(((Token *)vec_get(tokens, pos++))->input);
 		break;
 	}
 	
 	error("the token is neither number nor left-parenthesis: %s\n", 
 			((Token *)vec_get(tokens, pos))->input);
+}
+
+char *new_str(const char *src){
+	// aqcc
+	char *ret = malloc(strlen(src) + 1);
+	strcpy(ret, src);
+	return ret;
 }
 
 // divide strings which p points into token and preserve at tokens.
@@ -190,14 +206,27 @@ void tokenize(char *p) {
 			continue;
 		}
 
-		if ('a' <= *p && *p <= 'z') {
+		if (isalpha(*p) || *p == '_') {
+			char buf[256];		// enough length?
+			int bufind = 0;
+			buf[bufind++] = *p;
+			p++;
+			while (1) {
+				if(isalpha(*p) || *p == '_'){
+					buf[bufind++] = *p;
+					p++;
+				} else {
+					break;
+				}
+			}
+			buf[bufind++] = '\0';
 			Token tmp;
 			tmp.ty = TK_IDENT;
-			tmp.input = p;
+			tmp.input = new_str(buf);
 			Token *d = malloc(sizeof(Token));
 			*d = tmp;
 			vec_push(tokens, (void *)d);
-			p++;
+			map_put(variables, new_str(buf), 0);
 			continue;
 		}
 
@@ -217,9 +246,9 @@ void gen_lval(Node *node) {
 	if (node->ty != ND_IDENT)
 		error("lvalue of the substitution is not variable.");
 	
-	int offset = ('z' - node->name + 1) * 8;
+	int offset = (variables->keys->len - map_get_ind(variables, node->name) + 1) * 8;
 	printf("  mov rax, rbp\n");
-	printf("  sub rax, %d\n", offset);
+	printf("  sub rax, %d\n", offset);	
 	printf("  push rax\n");
 }
 
@@ -297,8 +326,12 @@ int main(int argc, char **argv) {
 	}
 
 	tokens = new_vector();
+	variables = new_map();
+
 	// tokenize and parse
 	tokenize(argv[1]);
+
+	printf("#tokenized\n");
 	program();
 	
 	// output the first half part of assembly
@@ -309,7 +342,7 @@ int main(int argc, char **argv) {
 	// secure the range of variable 'a'~'z'
 	printf("  push rbp\n");
 	printf("  mov rbp, rsp\n");
-	printf("  sub rsp, 208\n");
+	printf("  sub rsp, %d\n", (variables->keys->len) * 8);
 
 	// generate assembly in order
 	for (int i = 0; code[i]; i++) {

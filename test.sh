@@ -32,4 +32,7 @@ try 2 "(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
 try 2 "a=2;"
 try 5 "a=5; b=a; b;"
 try 3 "a=b=3; a;"
+
+try 4 "abc = 4;"
+try 45 "Abakan = 3; Minako = Abakan * 5; Million_t = Abakan * Minako;"
 echo OK

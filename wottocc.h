@@ -46,29 +46,50 @@ typedef struct {
 	int len;		// the length of the map
 } Map;
 
+// util.c
+void runtest();
+
+// parse.c 
 Node *new_node(int, Node*, Node*);
 Node *new_node_num(int);
 Node *new_node_ident(char*);
-Map *new_map();
-void map_put(Map*, char*, void*);
-void *map_get(Map*, char*);
-void test_map();
 int consume(int);
-void *program();
+void program();
 Node *stmt();
 Node *assign();
 Node *add();
 Node *mul();
 Node *term();
+
+// tokenize.c
 void tokenize(char*);
+
+// codegen.c
 void gen_lval(Node*);
 void gen(Node*);
-void error(const char*, ...);
+
+// vector.c
 Vector *new_vector();
 void vec_push(Vector *vec, void *elem);
 void *vec_get(Vector *vec, int num);
 void expect(int, int, int);
 void runtest();
 void test_vector();
+
+// map.c
+Map *new_map();
+void map_put(Map*, char*, void*);
+void *map_get(Map*, char*);
+int map_get_ind(Map*, char*);
+void test_map();
+
+// util.c
+char *new_str(const char*);
+void error(const char*, ...);
+
+extern Vector *tokens;
+extern Map *variables;
+extern int pos;
+extern Node *code[100];
 
 #endif

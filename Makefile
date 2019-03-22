@@ -1,5 +1,11 @@
-wottocc: wottocc.c vector.c
-	gcc wottocc.c vector.c -o wottocc
+CFLAGS=-Wall -std=c11
+SRCS=$(wildcard *.c)
+OBJS=$(SRCS:.c=.o)
+
+wottocc: $(OBJS)
+	$(CC) -o wottocc $(OBJS) $(LDFLAGS)
+
+$(OBJS): wottocc.h
 
 test: wottocc
 	./wottocc -test

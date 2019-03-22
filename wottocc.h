@@ -5,15 +5,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 // トークンの型を表す値
 enum {
 	TK_NUM = 256,	// token type of integer
+	TK_IDENT,		// token type of identifier
 	TK_EOF,			// token type of EOF
 };
 
 enum {
 	ND_NUM = 256,	// node type of number
+	ND_IDENT,		// node type of identifier
 };
 
 // トークンの型
@@ -28,6 +31,7 @@ typedef struct Node {
 	struct Node *lhs;	// LHS
 	struct Node *rhs;	// RHS
 	int val;			// use if ty==ND_NUM
+	char name;			// use if ty==ND_IDENT
 } Node;
 
 typedef struct {
@@ -38,13 +42,18 @@ typedef struct {
 
 Node *new_node(int, Node*, Node*);
 Node *new_node_num(int);
+Node *new_node_ident(char);
 int consume(int);
+void *program();
+Node *stmt();
+Node *assign();
 Node *add();
 Node *mul();
 Node *term();
 void tokenize(char*);
+void gen_lval(Node*);
 void gen(Node*);
-//void error(char*);
+void error(const char*, ...);
 Vector *new_vector();
 void vec_push(Vector *vec, void *elem);
 void *vec_get(Vector *vec, int num);

@@ -1,4 +1,5 @@
-wottocc: wottocc.c
+wottocc: wottocc.c vector.c
+	gcc wottocc.c vector.c -o wottocc
 
 test: wottocc
 	./wottocc -test

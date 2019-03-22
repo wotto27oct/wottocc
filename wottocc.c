@@ -9,6 +9,9 @@ Vector *tokens;
 // position of tokens
 int pos = 0;
 
+// nodes
+Node *code[100];
+
 // create new Node
 Node *new_node(int ty, Node *lhs, Node *rhs) {
 	Node *node = malloc(sizeof(Node));
@@ -24,12 +27,45 @@ Node *new_node_num(int val) {
 	return node;
 }
 
+Node *new_node_ident(char name) {
+	Node *node = malloc(sizeof(Node));
+	node->ty = ND_IDENT;
+	node->name = name;
+	return node;
+}
+
+
 // consume tokens if the next token is as expected.
 int consume(int ty) {
 	if (((Token *)vec_get(tokens, pos))->ty != ty)
 		return 0;
 	pos++;
 	return 1;
+}
+
+void *program() {
+	int i = 0;
+	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF)
+		code[i++] = stmt();
+	code[i] = NULL;
+}
+
+Node *stmt() {
+	Node *node = assign();
+	if (!consume(';'))
+		error("It's not the token ';': %s\n", ((Token *)vec_get(tokens, pos++))->input);
+	return node;
+}
+
+Node *assign() {
+	Node *node = add();
+
+	for (;;) {
+		if (consume('='))
+			node = new_node('=', node, assign());
+		else
+			return node;
+	}
 }
 
 Node *add() {
@@ -63,20 +99,23 @@ Node *term() {
 		Node *node = add();
 		if (!consume(')')) {
 			//error("there isn't right-parenthesis: %s", tokens[pos].input);
-			fprintf(stderr, "there isn't right-parenthesis: %s\n", 
+			error("there isn't right-parenthesis: %s\n", 
 					((Token *)vec_get(tokens, pos))->input);
-			exit(1);
 		}
 		return node;
 	}
 	
-	if (((Token *)vec_get(tokens, pos))->ty == TK_NUM)
+	switch (((Token *)vec_get(tokens, pos))->ty){
+	case TK_NUM:
 		return new_node_num(((Token *)vec_get(tokens, pos++))->val);
+		break;
+	case TK_IDENT:
+		return new_node_ident(((Token *)vec_get(tokens, pos++))->input[0]);
+		break;
+	}
 	
-	//error("the token is neither number nor left-parenthesis: %s", tokens[pos].input);
-	fprintf(stderr, "the token is neither number nor left-parenthesis: %s", 
+	error("the token is neither number nor left-parenthesis: %s\n", 
 			((Token *)vec_get(tokens, pos))->input);
-	exit(1);
 }
 
 // divide strings which p points into token and preserve at tokens.
@@ -89,7 +128,8 @@ void tokenize(char *p) {
 			continue;
 		}
 
-		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
+		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' 
+			|| *p == ';' || *p == '=') {
 			Token tmp;
 			tmp.ty = *p;
 			tmp.input = p;
@@ -111,7 +151,18 @@ void tokenize(char *p) {
 			continue;
 		}
 
-		fprintf(stderr, "cannot tokenize: %s\n", p);
+		if ('a' <= *p && *p <= 'z') {
+			Token tmp;
+			tmp.ty = TK_IDENT;
+			tmp.input = p;
+			Token *d = malloc(sizeof(Token));
+			*d = tmp;
+			vec_push(tokens, (void *)d);
+			p++;
+			continue;
+		}
+
+		error("cannot tokenize: %s\n", p);
 		exit(1);
 	}
 
@@ -123,10 +174,39 @@ void tokenize(char *p) {
 	vec_push(tokens, (void *)d);
 }
 
+void gen_lval(Node *node) {
+	if (node->ty != ND_IDENT)
+		error("lvalue of the substitution is not variable.");
+	
+	int offset = ('z' - node->name + 1) * 8;
+	printf("  mov rax, rbp\n");
+	printf("  sub rax, %d\n", offset);
+	printf("  push rax\n");
+}
+
 // emurate stack machine
 void gen(Node *node) {
 	if (node->ty == ND_NUM) {
 		printf("  push %d\n", node->val);
+		return;
+	}
+
+	if (node->ty == ND_IDENT) {
+		gen_lval(node);
+		printf("  pop rax\n");
+		printf("  mov rax, [rax]\n");
+		printf("  push rax\n");
+		return;
+	}
+
+	if (node->ty == '=') {
+		gen_lval(node->lhs);
+		gen(node->rhs);
+
+		printf("  pop rdi\n");
+		printf("  pop rax\n");
+		printf("  mov [rax], rdi\n");
+		printf("  push rdi\n");
 		return;
 	}
 
@@ -154,66 +234,16 @@ void gen(Node *node) {
 	printf("  push rax\n");
 }
 
+
 // report errors
-/*void error(char *str) {
-	printf("%s", str);
-	exit(1);
-}*/
-
-Vector *new_vector() {
-	Vector *vec = malloc(sizeof(Vector));
-	vec->data = malloc(sizeof(void *) * 16);
-	vec->capacity = 16;
-	vec->len = 0;
-	return vec;
-}
-
-void vec_push(Vector *vec, void *elem) {
-	if (vec->capacity == vec->len) {
-		vec->capacity *= 2;
-		vec->data = realloc(vec->data, sizeof(void *) * vec->capacity);
-	}
-	vec->data[vec->len++] = elem;
-}
-
-void *vec_get(Vector *vec, int num) {
-	return vec->data[num];
-}
-
-void expect(int line, int expected, int actual) {
-	if (expected == actual)
-		return;
-	fprintf(stderr, "%d: %d expected, but got %d\n", line, expected, actual);
+void error(const char *str, ...) {
+	va_list ap;
+	va_start(ap, str);
+	vprintf(str, ap);
+	va_end(ap);
 	exit(1);
 }
 
-void runtest() {
-	Vector *vec = new_vector();
-	expect(__LINE__, 0, vec->len);
-
-	for (int i = 0; i < 100; i++)
-		vec_push(vec, (void *)i);
-
-	expect(__LINE__, 100, vec->len);
-	expect(__LINE__, 0, (int)vec->data[0]);
-	expect(__LINE__, 50, (int)vec->data[50]);
-	expect(__LINE__, 99, (int)vec->data[99]);
-
-	Vector *vec2 = new_vector();
-	
-	for (int i = 0; i < 100; i++){
-		Token tmp;
-		tmp.ty = 2*i;
-		Token *d = malloc(sizeof(Token));
-		*d = tmp;
-		vec_push(vec2, (void *)d);
-	}
-	printf("%d\n", ((Token *)(vec2->data[23]))->ty);
-	printf("%d\n", ((Token *)(vec2->data[35]))->ty);
-	printf("%d\n", ((Token *)vec_get(vec2, 23))->ty);
-
-	printf("OK\n");
-}
 
 int main(int argc, char **argv) {
 
@@ -230,19 +260,30 @@ int main(int argc, char **argv) {
 	tokens = new_vector();
 	// tokenize and parse
 	tokenize(argv[1]);
-	Node *node = add();
+	program();
 	
 	// output the first half part of assembly
 	printf(".intel_syntax noprefix\n");
 	printf(".global main\n");
 	printf("main:\n");
 
-	// generate assembly analyzing Abstract Syntax Tree
-	gen(node);
+	// secure the range of variable 'a'~'z'
+	printf("  push rbp\n");
+	printf("  mov rbp, rsp\n");
+	printf("  sub rsp, 208\n");
+
+	// generate assembly in order
+	for (int i = 0; code[i]; i++) {
+		gen(code[i]);
+
+		// as a result of formula, there must be one value at stack register
+		printf("  pop rax\n");
+	}
 
 	// the whole value of formula should be at the top of stack
 	// pop it into RAX.
-	printf("  pop rax\n");
+	printf("  mov rsp, rbp\n");
+	printf("  pop rbp\n");
 	printf("  ret\n");
 	return 0;
 }

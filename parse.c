@@ -22,10 +22,11 @@ Node *new_node_ident(char *name) {
 	return node;
 }
 
-Node *new_node_func(char *name) {
+Node *new_node_func(char *name, Node *lhs) {
 	Node *node = malloc(sizeof(Node));
 	node->ty = ND_FUNC;
 	node->name = name;
+	node->lhs = lhs;
 	return node;
 }
 
@@ -132,11 +133,16 @@ Node *term() {
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
 		if (consume('(')) {
+			if (consume(')')){
+				// 0-args
+				return new_node_func(t_name, NULL);
+			}
+			Node *node = add();
 			if (!consume(')')) {
 				error("there isn't right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
 				exit(1);
 			}
-			return new_node_func(t_name);
+			return new_node_func(t_name, node);
 		} else {
 			return new_node_ident(t_name);
 		}

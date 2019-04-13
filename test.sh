@@ -61,5 +61,7 @@ try 1 "3+4 != 5+6;"
 try 0 "a = 4; a + 2 != 6;"
 
 tryfunc "foo!" "foo();"
+tryfunc "2" "footwo(2);"
+tryfunc "11" "a = 3; b = 2; c = 4; footwo(a+b*c);"
 
 echo OK

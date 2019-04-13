@@ -2,7 +2,6 @@
 
 Vector *tokens;
 Map *variables;
-Map *functions;
 
 // position of tokens
 int pos = 0;

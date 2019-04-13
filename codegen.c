@@ -35,6 +35,10 @@ void gen(Node *node) {
 	}
 
 	if (node->ty == ND_FUNC) {
+		if (node->lhs != NULL) {
+			gen(node->lhs);
+			printf("pop rdi\n");
+		}
 		printf("  call %s\n", node->name);
 		return;
 	}

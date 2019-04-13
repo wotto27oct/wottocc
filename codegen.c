@@ -35,10 +35,17 @@ void gen(Node *node) {
 	}
 
 	if (node->ty == ND_FUNC) {
-		if (node->lhs != NULL) {
+		char registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+		int i = 0;
+		Node *tmp;
+		tmp = node->lhs;
+		while (tmp != NULL) {
 			gen(node->lhs);
-			printf("pop rdi\n");
+			printf("pop %s\n", registers[i]);
+			i++;
+			tmp = tmp->lhs;
 		}
+			
 		printf("  call %s\n", node->name);
 		return;
 	}

@@ -134,13 +134,22 @@ Node *term() {
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
 		if (consume('(')) {
 			if (consume(')')){
-				// 0-args
+				// 0-arg
 				return new_node_func(t_name, NULL);
 			}
 			Node *node = add();
-			if (!consume(')')) {
-				error("there isn't right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
-				exit(1);
+			Node *tmpnode = node;
+			while (1) {
+				if (consume(')')) {
+					tmpnode->lhs = NULL;
+					break;
+				} else if (consume(',')){
+					tmpnode->lhs = add();
+					tmpnode = tmpnode->lhs;
+				} else {
+					error("function args is wrong: %s\n", ((Token *)vec_get(tokens, pos))->input);
+					exit(1);
+				}
 			}
 			return new_node_func(t_name, node);
 		} else {

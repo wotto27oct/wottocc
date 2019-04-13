@@ -7,12 +7,10 @@ Vector *code;
 // position of tokens
 int pos = 0;
 
-
 void runtest() {
 	test_vector();
 	test_map();
 }
-
 
 int main(int argc, char **argv) {
 

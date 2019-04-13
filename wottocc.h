@@ -34,15 +34,6 @@ typedef struct Token {
 	char *input; // トークン文字列（error massage)
 } Token;
 
-typedef struct Node {
-	int ty;				// is operator or ND_NUM
-	struct Node *lhs;	// LHS
-	struct Node *rhs;	// RHS
-	int val;			// use if ty==ND_NUM
-	char *name;			// use if ty==ND_IDENT
-	struct Node *args;	// use if ty==ND_FUNC
-} Node;
-
 typedef struct {
 	void **data;	// the data
 	int capacity;	// buffer (the capacity of the length)
@@ -54,6 +45,15 @@ typedef struct {
 	Vector *vals;	// varialle values
 	int len;		// the length of the map
 } Map;
+
+typedef struct Node {
+	int ty;				// is operator or ND_NUM
+	struct Node *lhs;	// LHS
+	struct Node *rhs;	// RHS
+	int val;			// use if ty==ND_NUM
+	char *name;			// use if ty==ND_IDENT
+	Vector *args;	// use if ty==ND_FUNC
+} Node;
 
 // util.c
 void runtest();

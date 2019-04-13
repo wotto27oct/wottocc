@@ -8,6 +8,7 @@ Node *new_node(int ty, Node *lhs, Node *rhs) {
 	node->rhs = rhs;
 	return node;
 }
+
 Node *new_node_num(int val) {
 	Node *node = malloc(sizeof(Node));
 	node->ty = ND_NUM;
@@ -22,14 +23,13 @@ Node *new_node_ident(char *name) {
 	return node;
 }
 
-Node *new_node_func(char *name, Node *args) {
+Node *new_node_func(char *name, Vector *args) {
 	Node *node = malloc(sizeof(Node));
 	node->ty = ND_FUNC;
 	node->name = name;
 	node->args = args;
 	return node;
 }
-
 
 // consume tokens if the next token is as expected.
 int consume(int ty) {
@@ -40,7 +40,6 @@ int consume(int ty) {
 }
 
 void program() {
-	int i = 0;
 	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF)
 		vec_push(code, stmt());
 	return;
@@ -132,25 +131,22 @@ Node *term() {
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
 		if (consume('(')) {
-			if (consume(')')){
-				// 0-arg
-				return new_node_func(t_name, NULL);
-			}
-			Node *node = add();
-			Node *tmpnode = node;
+			Vector *args = new_vector();
 			while (1) {
 				if (consume(')')) {
-					tmpnode->args = NULL;
 					break;
-				} else if (consume(',')){
-					tmpnode->args = add();
-					tmpnode = tmpnode->args;
-				} else {
-					error("function args is wrong: %s\n", ((Token *)vec_get(tokens, pos))->input);
-					exit(1);
+				}
+				vec_push(args, assign());
+				if (!consume(',')) {
+					if (!consume(')')) {
+						error("there's no right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
+						exit(1);
+					} else {
+						break;
+					}
 				}
 			}
-			return new_node_func(t_name, node);
+			return new_node_func(t_name, args);
 		} else {
 			return new_node_ident(t_name);
 		}

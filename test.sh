@@ -68,5 +68,8 @@ tryfunc "9" "main(){b=2;foothree(1,b+b);}"
 
 try 1 "main(){1;} foo(){2;}"
 try 2 "main(){foo();} foo(){return 2;}"
+try 3 "foo(){return 3;} footwo(){return 4;} main(){foo();}"
+
+try 0 "foo(){x=3;} main(){x=0;foo();x;}"
 
 echo OK

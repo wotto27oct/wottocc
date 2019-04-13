@@ -3,7 +3,8 @@
 void gen_lval(Node *node) {
 	if (node->ty != ND_IDENT)
 		error("lvalue of the substitution is not variable.");
-	
+
+	Map *variables = vec_get(env, envnum);	
 	int offset = (variables->keys->len - map_get_ind(variables, node->name) + 1) * 8;
 	printf("  mov rax, rbp\n");
 	printf("  sub rax, %d\n", offset);	

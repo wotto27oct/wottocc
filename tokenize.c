@@ -81,7 +81,7 @@ void tokenize(char *p) {
 			tmp->ty = TK_IDENT;
 			tmp->input = buf_str;
 			vec_push(tokens, (void *)tmp);
-			map_put(variables, buf_str, 0);
+			//map_put(variables, buf_str, 0);
 			continue;
 		}
 

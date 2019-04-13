@@ -17,6 +17,8 @@ Node *new_node_num(int val) {
 }
 
 Node *new_node_ident(char *name) {
+	Map *variables = vec_get(env, envnum);
+	map_put(variables, name, 0);	
 	Node *node = malloc(sizeof(Node));
 	node->ty = ND_IDENT;
 	node->name = name;
@@ -40,8 +42,12 @@ int consume(int ty) {
 }
 
 void program() {
-	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF)
+	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF) {
+		Map *variables = new_map();
+		vec_push(env, variables);
 		vec_push(functions, function());
+		envnum++;
+	}
 	return;
 }
 

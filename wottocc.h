@@ -102,8 +102,9 @@ char *new_str(const char*);
 void error(const char*, ...);
 
 extern Vector *tokens;
-extern Map *variables;
+extern Vector *env;
 extern int pos;
 extern Vector *functions;
+extern int envnum;
 
 #endif

@@ -1,7 +1,8 @@
 #include "wottocc.h"
 
 Vector *tokens;
-Map *variables;
+Vector *env;
+int envnum;
 Vector *functions;
 
 // position of tokens
@@ -25,7 +26,8 @@ int main(int argc, char **argv) {
 	}
 
 	tokens = new_vector();
-	variables = new_map();
+	env = new_vector();
+	envnum = 0;
 	functions = new_vector();
 
 	// tokenize and parse
@@ -34,6 +36,8 @@ int main(int argc, char **argv) {
 	printf("#tokenized\n");
 	program();
 	
+	envnum = 0;
+
 	printf(".intel_syntax noprefix\n");
 
 	for (int i = 0; i < functions->len; i++) {
@@ -44,6 +48,7 @@ int main(int argc, char **argv) {
 	// generate assembly in order
 	for (int i = 0; i < functions->len; i++) {
 		Node *tmp = vec_get(functions, i);
+		Map *variables = vec_get(env, i);
 		// output the first half part of assembly
 		//printf(".global %s\n", tmp->fname);
 		printf("%s:\n", tmp->fname);

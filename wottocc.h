@@ -13,6 +13,7 @@ enum {
 	TK_IDENT,		// token type of identifier
 	TK_RETURN,		// token type of return
 	TK_EQUAL,		// token type of ==
+	TK_NEQUAL,		// token type of !=
 	TK_EOF,			// token type of EOF
 };
 
@@ -20,7 +21,8 @@ enum {
 	ND_NUM = 256,	// node type of number
 	ND_IDENT,		// node type of identifier
 	ND_RETURN,		// node type of return
-	ND_EQUAL		// node type of ==
+	ND_EQUAL,		// node type of ==
+	ND_NEQUAL		// node type of !=
 };
 
 // トークンの型

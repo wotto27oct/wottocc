@@ -70,6 +70,11 @@ void gen(Node *node) {
 		printf("  sete al\n");
 		printf("  movzb rax, al\n");
 		break;
+	case ND_NEQUAL:
+		printf("  cmp rax, rdi\n");
+		printf("  setne al\n");
+		printf("  movzb rax, al\n");
+		break;
 	}
 	
 	printf("  push rax\n");

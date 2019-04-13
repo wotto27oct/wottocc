@@ -71,6 +71,8 @@ Node *equal() {
 	for (;;) {
 		if (consume(TK_EQUAL))
 			node = new_node(ND_EQUAL, node, equal());
+		else if (consume(TK_NEQUAL))
+			node = new_node(ND_NEQUAL, node, equal());
 		else
 			return node;
 	}

@@ -40,4 +40,7 @@ try 1 "return 1;"
 
 try 1 "a = 4; a == 4;"
 try 0 "a = 3; b = 4; a == b;"
+
+try 1 "3+4 != 5+6;"
+try 0 "a = 4; a + 2 != 6;"
 echo OK

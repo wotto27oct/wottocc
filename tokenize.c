@@ -40,10 +40,18 @@ void tokenize(char *p) {
 				tmp->ty = TK_EQUAL;
 				tmp->input = "==";
 				vec_push(tokens, (void *)tmp);
-				p+=2;
+				p += 2;
 				continue;
 			}
 		}	
+		if (*p == '!' && *(p+1) == '=') {
+			Token *tmp = malloc(sizeof(Token));
+			tmp->ty = TK_NEQUAL;
+			tmp->input = "!=";
+			vec_push(tokens, (void *)tmp);
+			p += 2;
+			continue;
+		}
 
 		if (isdigit(*p)) {
 			Token *tmp = malloc(sizeof(Token));

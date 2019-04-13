@@ -40,6 +40,7 @@ typedef struct Node {
 	struct Node *rhs;	// RHS
 	int val;			// use if ty==ND_NUM
 	char *name;			// use if ty==ND_IDENT
+	struct Node *args;	// use if ty==ND_FUNC
 } Node;
 
 typedef struct {

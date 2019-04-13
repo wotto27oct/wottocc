@@ -22,11 +22,11 @@ Node *new_node_ident(char *name) {
 	return node;
 }
 
-Node *new_node_func(char *name, Node *lhs) {
+Node *new_node_func(char *name, Node *args) {
 	Node *node = malloc(sizeof(Node));
 	node->ty = ND_FUNC;
 	node->name = name;
-	node->lhs = lhs;
+	node->args = args;
 	return node;
 }
 
@@ -141,11 +141,11 @@ Node *term() {
 			Node *tmpnode = node;
 			while (1) {
 				if (consume(')')) {
-					tmpnode->lhs = NULL;
+					tmpnode->args = NULL;
 					break;
 				} else if (consume(',')){
-					tmpnode->lhs = add();
-					tmpnode = tmpnode->lhs;
+					tmpnode->args = add();
+					tmpnode = tmpnode->args;
 				} else {
 					error("function args is wrong: %s\n", ((Token *)vec_get(tokens, pos))->input);
 					exit(1);

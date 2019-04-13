@@ -62,8 +62,10 @@ try 0 "a = 4; a + 2 != 6;"
 
 tryfunc "foo!" "foo();"
 tryfunc "2" "footwo(2);"
-tryfunc "3" "foothree(1,1);"
 tryfunc "11" "a = 3; b = 2; c = 4; footwo(a+b*c);"
+tryfunc "9" "foothree(1,4);"
+tryfunc "9" "b=2;foothree(1,b+b);"
+
 
 
 echo OK

@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	printf(".global main\n");
 	printf("main:\n");
 
-	// secure the range of variable 'a'~'z'
+	// secure the range of variable
 	printf("  push rbp\n");
 	printf("  mov rbp, rsp\n");
 	printf("  sub rsp, %d\n", (variables->keys->len) * 8);

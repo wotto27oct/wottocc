@@ -101,6 +101,6 @@ extern Vector *tokens;
 extern Map *variables;
 extern Map *functions;
 extern int pos;
-extern Node *code[100];
+extern Vector *code;
 
 #endif

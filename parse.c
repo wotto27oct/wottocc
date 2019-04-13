@@ -42,8 +42,7 @@ int consume(int ty) {
 void program() {
 	int i = 0;
 	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF)
-		code[i++] = stmt();
-	code[i] = NULL;
+		vec_push(code, stmt());
 	return;
 }
 

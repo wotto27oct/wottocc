@@ -2,12 +2,10 @@
 
 Vector *tokens;
 Map *variables;
+Vector *code;
 
 // position of tokens
 int pos = 0;
-
-// nodes
-Node *code[100];
 
 
 void runtest() {
@@ -30,6 +28,7 @@ int main(int argc, char **argv) {
 
 	tokens = new_vector();
 	variables = new_map();
+	code = new_vector();
 
 	// tokenize and parse
 	tokenize(argv[1]);
@@ -48,8 +47,8 @@ int main(int argc, char **argv) {
 	printf("  sub rsp, %d\n", (variables->keys->len) * 8);
 
 	// generate assembly in order
-	for (int i = 0; code[i]; i++) {
-		gen(code[i]);
+	for (int i = 0; i < code->len; i++) {
+		gen(vec_get(code, i));
 
 		// as a result of formula, there must be one value at stack register
 		printf("  pop rax\n");

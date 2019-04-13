@@ -55,11 +55,22 @@ Node *stmt() {
 }
 
 Node *assign() {
-	Node *node = add();
+	Node *node = equal();
 
 	for (;;) {
 		if (consume('='))
 			node = new_node('=', node, assign());
+		else
+			return node;
+	}
+}
+
+Node *equal() {
+	Node *node = add();
+
+	for (;;) {
+		if (consume(TK_EQUAL))
+			node = new_node(ND_EQUAL, node, equal());
 		else
 			return node;
 	}

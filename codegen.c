@@ -64,6 +64,12 @@ void gen(Node *node) {
 	case '/':
 		printf("  mov rdx, 0\n");
 		printf("  div rdi\n");
+		break;
+	case ND_EQUAL:
+		printf("  cmp rax, rdi\n");
+		printf("  sete al\n");
+		printf("  movzb rax, al\n");
+		break;
 	}
 	
 	printf("  push rax\n");

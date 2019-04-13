@@ -37,4 +37,7 @@ try 4 "abc = 4;"
 try 45 "Abakan = 3; Minako = Abakan * 5; Million_t = Abakan * Minako;"
 
 try 1 "return 1;"
+
+try 1 "a = 4; a == 4;"
+try 0 "a = 3; b = 4; a == b;"
 echo OK

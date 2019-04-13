@@ -4,7 +4,7 @@ try() {
 	input="$2"
 
 	./wottocc "$input" > tmp.s
-	gcc -o tmp tmp.s foo.o
+	gcc -o tmp tmp.s
 	./tmp
 	actual="$?"
 
@@ -66,6 +66,7 @@ tryfunc "11" "main(){a = 3; b = 2; c = 4; footwo(a+b*c);}"
 tryfunc "9" "main(){foothree(1,4);}"
 tryfunc "9" "main(){b=2;foothree(1,b+b);}"
 
-
+try 1 "main(){1;} foo(){2;}"
+try 2 "main(){foo();} foo(){return 2;}"
 
 echo OK

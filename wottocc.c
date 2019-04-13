@@ -34,13 +34,18 @@ int main(int argc, char **argv) {
 	printf("#tokenized\n");
 	program();
 	
+	printf(".intel_syntax noprefix\n");
+
+	for (int i = 0; i < functions->len; i++) {
+		Node *tmp = vec_get(functions, i);
+		printf(".global %s\n", tmp->fname);
+	}
 
 	// generate assembly in order
 	for (int i = 0; i < functions->len; i++) {
 		Node *tmp = vec_get(functions, i);
 		// output the first half part of assembly
-		printf(".intel_syntax noprefix\n");
-		printf(".global %s\n", tmp->fname);
+		//printf(".global %s\n", tmp->fname);
 		printf("%s:\n", tmp->fname);
 
 		// secure the range of variable
@@ -51,12 +56,13 @@ int main(int argc, char **argv) {
 
 		// as a result of formula, there must be one value at stack register
 		//printf("  pop rax\n");
+		
+		// the whole value of formula should be at the top of stack
+		// pop it into RAX.
+		printf("  mov rsp, rbp\n");
+		printf("  pop rbp\n");
+		printf("  ret\n");
 	}
 
-	// the whole value of formula should be at the top of stack
-	// pop it into RAX.
-	printf("  mov rsp, rbp\n");
-	printf("  pop rbp\n");
-	printf("  ret\n");
 	return 0;
 }

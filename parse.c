@@ -58,11 +58,23 @@ Node *function() {
 		node = malloc(sizeof(Node));
 		node->ty = ND_FUNCDEF;
 		node->fname = ((Token *)vec_get(tokens, pos-2))->input;
-		// now 0-arg
-		if (!consume(')')){
-			error("There's no right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
-			exit(1);
+		Vector *args = new_vector();
+		while (1) {
+			if (consume(')')) {
+				break;
+			}
+			vec_push(args, assign());
+			if (!consume(',')) {
+				if (!consume(')')) {
+					error("there's no right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
+					exit(1);
+				} else {
+					break;
+				}
+			}
+
 		}
+		node->args = args;
 		consume('{');
 		node->stmts = new_vector();
 		while (!consume('}')) {

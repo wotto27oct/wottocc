@@ -72,4 +72,6 @@ try 3 "foo(){return 3;} footwo(){return 4;} main(){foo();}"
 
 try 0 "foo(){x=3;} main(){x=0;foo();x;}"
 
+try 3 "foo(x){x=3;return x;} main(){foo(2);}"
+
 echo OK

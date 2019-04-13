@@ -14,6 +14,7 @@ enum {
 	TK_RETURN,		// token type of return
 	TK_EQUAL,		// token type of ==
 	TK_NEQUAL,		// token type of !=
+	TK_FUNC,
 	TK_EOF,			// token type of EOF
 };
 
@@ -22,7 +23,8 @@ enum {
 	ND_IDENT,		// node type of identifier
 	ND_RETURN,		// node type of return
 	ND_EQUAL,		// node type of ==
-	ND_NEQUAL		// node type of !=
+	ND_NEQUAL,		// node type of !=
+	ND_FUNC
 };
 
 // トークンの型
@@ -96,6 +98,7 @@ void error(const char*, ...);
 
 extern Vector *tokens;
 extern Map *variables;
+extern Map *functions;
 extern int pos;
 extern Node *code[100];
 

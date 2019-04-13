@@ -67,10 +67,15 @@ void tokenize(char *p) {
 			int bufind = 0;
 			buf[bufind++] = *p;
 			p++;
+			int isfunc = 0;
 			while (1) {
 				if(isalpha(*p) || *p == '_'){
 					buf[bufind++] = *p;
 					p++;
+				} else if (*p == '(' && *(p+1) == ')'){
+					isfunc = 1;
+					p += 2;
+					break;
 				} else {
 					break;
 				}
@@ -78,10 +83,11 @@ void tokenize(char *p) {
 			buf[bufind++] = '\0';
 			char *buf_str = new_str(buf);
 			Token *tmp = malloc(sizeof(Token));
-			tmp->ty = TK_IDENT;
+			if (isfunc == 0) tmp->ty = TK_IDENT;
+			else tmp->ty = TK_FUNC;
 			tmp->input = buf_str;
 			vec_push(tokens, (void *)tmp);
-			map_put(variables, buf_str, 0);
+			if (isfunc == 0) map_put(variables, buf_str, 0);
 			continue;
 		}
 

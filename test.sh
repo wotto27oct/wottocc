@@ -4,9 +4,25 @@ try() {
 	input="$2"
 
 	./wottocc "$input" > tmp.s
-	gcc -o tmp tmp.s
+	gcc -o tmp tmp.s foo.o
 	./tmp
 	actual="$?"
+
+	if [ "$actual" = "$expected" ]; then
+		echo "$input => $actual"
+	else
+		echo "$expected expected, but got $actual"
+		exit 1
+	fi
+}
+
+tryfunc() {
+	expected="$1"
+	input="$2"
+
+	./wottocc "$input" > tmp.s
+	gcc -o tmp tmp.s foo.o
+	actual=$(./tmp)
 
 	if [ "$actual" = "$expected" ]; then
 		echo "$input => $actual"
@@ -43,4 +59,7 @@ try 0 "a = 3; b = 4; a == b;"
 
 try 1 "3+4 != 5+6;"
 try 0 "a = 4; a + 2 != 6;"
+
+tryfunc "foo!" "foo();"
+
 echo OK

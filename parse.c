@@ -22,6 +22,13 @@ Node *new_node_ident(char *name) {
 	return node;
 }
 
+Node *new_node_func(char *name) {
+	Node *node = malloc(sizeof(Node));
+	node->ty = ND_FUNC;
+	node->name = name;
+	return node;
+}
+
 
 // consume tokens if the next token is as expected.
 int consume(int ty) {
@@ -121,6 +128,9 @@ Node *term() {
 		break;
 	case TK_IDENT:
 		return new_node_ident(((Token *)vec_get(tokens, pos++))->input);
+		break;
+	case TK_FUNC:
+		return new_node_func(((Token *)vec_get(tokens, pos++))->input);
 		break;
 	}
 	

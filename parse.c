@@ -41,7 +41,7 @@ int consume(int ty) {
 
 void program() {
 	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF)
-		vec_push(code, function());
+		vec_push(functions, function());
 	return;
 }
 
@@ -51,6 +51,7 @@ Node *function() {
 	if (consume(TK_IDENT) && consume('(') ){
 		node = malloc(sizeof(Node));
 		node->ty = ND_FUNCDEF;
+		node->fname = ((Token *)vec_get(tokens, pos-2))->input;
 		// now 0-arg
 		if (!consume(')')){
 			error("There's no right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);

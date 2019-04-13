@@ -55,6 +55,7 @@ typedef struct Node {
 	char *name;			// use if ty==ND_IDENT
 	Vector *args;		// use if ty==ND_FUNC
 	Vector *stmts;		// use if ty==ND_FUNCDEF
+	char *fname;		// use if ty==ND_FUNCDEF
 } Node;
 
 // util.c
@@ -102,8 +103,7 @@ void error(const char*, ...);
 
 extern Vector *tokens;
 extern Map *variables;
-extern Map *functions;
 extern int pos;
-extern Vector *code;
+extern Vector *functions;
 
 #endif

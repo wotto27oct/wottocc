@@ -16,6 +16,8 @@ void gen(Node *node) {
 		int i = 0;
 		for (; i < node->stmts->len; i++) {
 			gen(vec_get(node->stmts, i));
+			// as a result of statement, there must be one value at stack register
+			printf("  pop rax\n");
 		}
 		return;
 	}

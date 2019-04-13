@@ -65,6 +65,7 @@ tryfunc "2" "footwo(2);"
 tryfunc "11" "a = 3; b = 2; c = 4; footwo(a+b*c);"
 tryfunc "9" "foothree(1,4);"
 tryfunc "9" "b=2;foothree(1,b+b);"
+tryfunc "21" "a=1;b=2;c=3;d=4;e=5;f=6;foosix(a,b,c,d,e,f);"
 
 
 

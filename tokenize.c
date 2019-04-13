@@ -19,7 +19,7 @@ void tokenize(char *p) {
 		}
 
 		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' 
-			|| *p == ';' || *p == ',') {
+			|| *p == ';' || *p == ',' || *p == '{' || *p == '}') {
 			Token *tmp = malloc(sizeof(Token));
 			tmp->ty = *p;
 			tmp->input = p;

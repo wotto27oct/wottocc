@@ -24,7 +24,8 @@ enum {
 	ND_RETURN,		// node type of return
 	ND_EQUAL,		// node type of ==
 	ND_NEQUAL,		// node type of !=
-	ND_FUNC
+	ND_FUNC,
+	ND_FUNCDEF
 };
 
 // トークンの型
@@ -52,7 +53,8 @@ typedef struct Node {
 	struct Node *rhs;	// RHS
 	int val;			// use if ty==ND_NUM
 	char *name;			// use if ty==ND_IDENT
-	Vector *args;	// use if ty==ND_FUNC
+	Vector *args;		// use if ty==ND_FUNC
+	Vector *stmts;		// use if ty==ND_FUNCDEF
 } Node;
 
 // util.c
@@ -64,6 +66,7 @@ Node *new_node_num(int);
 Node *new_node_ident(char*);
 int consume(int);
 void program();
+Node *function();
 Node *stmt();
 Node *assign();
 Node *equal();

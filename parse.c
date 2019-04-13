@@ -41,8 +41,31 @@ int consume(int ty) {
 
 void program() {
 	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF)
-		vec_push(code, stmt());
+		vec_push(code, function());
 	return;
+}
+
+Node *function() {
+	Node *node;
+
+	if (consume(TK_IDENT) && consume('(') ){
+		node = malloc(sizeof(Node));
+		node->ty = ND_FUNCDEF;
+		// now 0-arg
+		if (!consume(')')){
+			error("There's no right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
+			exit(1);
+		}
+		consume('{');
+		node->stmts = new_vector();
+		while (!consume('}')) {
+			vec_push(node->stmts, stmt());
+		}
+		return node;
+	} else {
+		error("It's not function: %s\n", ((Token *)vec_get(tokens, pos))->input);
+		exit(1);
+	}
 }
 
 Node *stmt() {

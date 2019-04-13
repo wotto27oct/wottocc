@@ -12,6 +12,14 @@ void gen_lval(Node *node) {
 
 // emurate stack machine
 void gen(Node *node) {
+	if (node->ty == ND_FUNCDEF) {
+		int i = 0;
+		for (; i < node->stmts->len; i++) {
+			gen(vec_get(node->stmts, i));
+		}
+		return;
+	}
+
 	if (node->ty == ND_RETURN) {
 		gen(node->lhs);
 		printf("  pop rax\n");

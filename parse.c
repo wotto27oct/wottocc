@@ -118,19 +118,28 @@ Node *term() {
 			//error("there isn't right-parenthesis: %s", tokens[pos].input);
 			error("there isn't right-parenthesis: %s\n", 
 					((Token *)vec_get(tokens, pos))->input);
+			exit(1);
 		}
 		return node;
 	}
-	
+
+	char *t_name;
+
 	switch (((Token *)vec_get(tokens, pos))->ty){
 	case TK_NUM:
 		return new_node_num(((Token *)vec_get(tokens, pos++))->val);
 		break;
 	case TK_IDENT:
-		return new_node_ident(((Token *)vec_get(tokens, pos++))->input);
-		break;
-	case TK_FUNC:
-		return new_node_func(((Token *)vec_get(tokens, pos++))->input);
+		t_name = ((Token *)vec_get(tokens, pos++))->input;
+		if (consume('(')) {
+			if (!consume(')')) {
+				error("there isn't right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
+				exit(1);
+			}
+			return new_node_func(t_name);
+		} else {
+			return new_node_ident(t_name);
+		}
 		break;
 	}
 	

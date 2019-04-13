@@ -11,12 +11,14 @@
 enum {
 	TK_NUM = 256,	// token type of integer
 	TK_IDENT,		// token type of identifier
+	TK_RETURN,		// token type of return
 	TK_EOF,			// token type of EOF
 };
 
 enum {
 	ND_NUM = 256,	// node type of number
 	ND_IDENT,		// node type of identifier
+	ND_RETURN
 };
 
 // トークンの型

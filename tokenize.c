@@ -9,6 +9,15 @@ void tokenize(char *p) {
 			continue;
 		}
 
+		if (strncmp(p, "return", 6) == 0) {
+			Token *tmp = malloc(sizeof(Token));
+			tmp->ty = TK_RETURN;
+			tmp->input = p;
+			vec_push(tokens, (void *)tmp);
+			p += 6;
+			continue;
+		}
+
 		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' 
 			|| *p == ';' || *p == '=') {
 			Token *tmp = malloc(sizeof(Token));

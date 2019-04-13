@@ -40,7 +40,15 @@ void program() {
 }
 
 Node *stmt() {
-	Node *node = assign();
+	Node *node;
+
+	if (consume(TK_RETURN)) {
+		node = malloc(sizeof(Node));
+		node->ty = ND_RETURN;
+		node->lhs = assign();
+	} else {
+		node = assign();
+	}
 	if (!consume(';'))
 		error("It's not the token ';': %s\n", ((Token *)vec_get(tokens, pos++))->input);
 	return node;

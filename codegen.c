@@ -32,6 +32,18 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->ty == ND_IF) {
+		gen(node->lhs);
+		// result must be on top of the stack
+		printf("  pop rax\n");
+		printf("  cmp rax, 0\n");
+		printf("  je .Lend%d\n", if_cnt);
+		gen(node->rhs);
+		printf(".Lend%d:\n", if_cnt);
+		if_cnt++;
+		return;
+	}
+
 	if (node->ty == ND_NUM) {
 		printf("  push %d\n", node->val);
 		return;

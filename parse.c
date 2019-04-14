@@ -59,6 +59,7 @@ Node *function() {
 		node->ty = ND_FUNCDEF;
 		node->fname = ((Token *)vec_get(tokens, pos-2))->input;
 		Vector *args = new_vector();
+		// foo(x, y){ ... }
 		while (1) {
 			if (consume(')')) {
 				break;
@@ -94,11 +95,25 @@ Node *stmt() {
 		node = malloc(sizeof(Node));
 		node->ty = ND_RETURN;
 		node->lhs = assign();
+		if (!consume(';'))
+			error("It's not the token ';': %s\n", ((Token *)vec_get(tokens, pos++))->input);
+	} else if (consume(TK_IF)) {
+		node = malloc(sizeof(Node));
+		node->ty = ND_IF;
+		if (!consume('(')) {
+			error("no left-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		node->lhs = assign();
+		if (!consume(')')) {
+			error("no right-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		node->rhs = stmt();
+		
 	} else {
 		node = assign();
+		if (!consume(';'))
+			error("It's not the token ';': %s\n", ((Token *)vec_get(tokens, pos++))->input);
 	}
-	if (!consume(';'))
-		error("It's not the token ';': %s\n", ((Token *)vec_get(tokens, pos++))->input);
 	return node;
 }
 

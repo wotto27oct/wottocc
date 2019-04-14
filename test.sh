@@ -76,4 +76,7 @@ try 1 "foo(x){0;} main(){foo(3);1;}"
 try 3 "foo(x){x=x+1;return x;} main(){foo(2);}"
 try 5 "foo(x,y){return x + 2 * y;} main(){x=2; foo(1,2);}"
 
+try 2 "main(){a=3;if(1)a=2;a;}"
+try 3 "main(){a=2;if(3)a=3;a;}"
+
 echo OK

@@ -15,6 +15,7 @@ enum {
 	TK_EQUAL,		// token type of ==
 	TK_NEQUAL,		// token type of !=
 	TK_FUNC,
+	TK_IF,			// token type of if
 	TK_EOF,			// token type of EOF
 };
 
@@ -25,7 +26,8 @@ enum {
 	ND_EQUAL,		// node type of ==
 	ND_NEQUAL,		// node type of !=
 	ND_FUNC,
-	ND_FUNCDEF
+	ND_FUNCDEF,
+	ND_IF
 };
 
 // トークンの型
@@ -104,6 +106,7 @@ void error(const char*, ...);
 extern Vector *tokens;
 extern Vector *env;
 extern int pos;
+extern int if_cnt;
 extern Vector *functions;
 extern int envnum;
 

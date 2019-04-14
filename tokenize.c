@@ -9,14 +9,6 @@ void tokenize(char *p) {
 			continue;
 		}
 
-		if (strncmp(p, "return", 6) == 0) {
-			Token *tmp = malloc(sizeof(Token));
-			tmp->ty = TK_RETURN;
-			tmp->input = p;
-			vec_push(tokens, (void *)tmp);
-			p += 6;
-			continue;
-		}
 
 		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' 
 			|| *p == ';' || *p == ',' || *p == '{' || *p == '}') {
@@ -77,11 +69,17 @@ void tokenize(char *p) {
 			}
 			buf[bufind++] = '\0';
 			char *buf_str = new_str(buf);
+			
 			Token *tmp = malloc(sizeof(Token));
-			tmp->ty = TK_IDENT;
 			tmp->input = buf_str;
+			if (strcmp(buf_str, "return") == 0) {
+				tmp->ty = TK_RETURN;
+			} else if (strcmp(buf_str, "if") == 0) {
+				tmp->ty = TK_IF;
+			} else {
+				tmp->ty = TK_IDENT;
+			}
 			vec_push(tokens, (void *)tmp);
-			//map_put(variables, buf_str, 0);
 			continue;
 		}
 

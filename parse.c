@@ -178,7 +178,7 @@ Node *stmt() {
 	} else if (consume(TK_INT)) {
 		node = malloc(sizeof(Node));
 		node->ty = ND_INT;
-		// int *x;
+		// int x[10];
 		Type *type = malloc(sizeof(Type)); 
 		type->ty = TY_INT;
 		type->ptrof = NULL;
@@ -194,10 +194,25 @@ Node *stmt() {
 			error("it's not identifier: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
 		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
+		node->name = vname;
+
+		if (consume('[')) {
+			if (!consume(TK_NUM)) {
+				error("array_initializer must be number: %s\n", ((Token *)vec_get(tokens,pos))->input);
+			}
+			Type *newtype = malloc(sizeof(Type));
+			newtype->ty = TY_ARRAY;
+			newtype->ptrof = type;
+			newtype->array_size = ((Token *)vec_get(tokens,pos-1))->val;
+			type = newtype;
+			if (!consume(']')){
+				error("no ']' at array-def: %s\n", ((Token *)vec_get(tokens,pos))->input);
+			}
+		}
+		
 		Map *variables = vec_get(env, envnum);
 		map_put(variables, vname, 0, type);
-		node->name = vname;
-		
+
 		if (!consume(';')) {
 			error("no ';' at variable-def: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}

@@ -47,4 +47,6 @@ try 3 "int main(){int x; x=3; int *y; y=&x; return *y;}"
 try 0 "int main(){int *p; int *q; q = p + 2; return 0;}"
 try 0 "int main(){int **p; int **q; q = p - 4; return 0;}"
 
+try 0 "int main(){int a[10]; return 0;}"
+
 echo OK

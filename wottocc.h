@@ -50,7 +50,8 @@ enum {
 
 enum {
 	TY_INT = 512,
-	TY_PTR
+	TY_PTR,
+	TY_ARRAY
 };
 
 // トークンの型
@@ -63,6 +64,7 @@ typedef struct Token {
 typedef struct Type{
 	int ty;
 	struct Type *ptrof;
+	size_t array_size;
 } Type;
 
 typedef struct {

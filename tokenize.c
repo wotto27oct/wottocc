@@ -145,6 +145,8 @@ void tokenize(char *p) {
 				tmp->ty = TK_WHILE;
 			} else if (strcmp(buf_str, "for") == 0) {
 				tmp->ty = TK_FOR;
+			} else if (strcmp(buf_str, "int") == 0) {
+				tmp->ty = TK_INT;
 			} else {
 				tmp->ty = TK_IDENT;
 			}

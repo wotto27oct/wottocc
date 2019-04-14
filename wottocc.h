@@ -23,6 +23,7 @@ enum {
 	TK_ELSE,
 	TK_WHILE,
 	TK_FOR,
+	TK_INT,			// token type of int
 	TK_EOF,			// token type of EOF
 };
 
@@ -41,7 +42,8 @@ enum {
 	ND_IF,
 	ND_ELSE,
 	ND_WHILE,
-	ND_FOR
+	ND_FOR,
+	ND_INT
 };
 
 // トークンの型

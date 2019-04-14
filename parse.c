@@ -17,8 +17,8 @@ Node *new_node_num(int val) {
 }
 
 Node *new_node_ident(char *name) {
-	Map *variables = vec_get(env, envnum);
-	map_put(variables, name, 0);	
+	/*Map *variables = vec_get(env, envnum);
+	map_put(variables, name, 0);*/	
 	Node *node = malloc(sizeof(Node));
 	node->ty = ND_IDENT;
 	node->name = name;
@@ -130,7 +130,7 @@ Node *stmt() {
 		}
 		node->lhs = stmt();
 
-	} else if (consume(TK_FOR)){
+	} else if (consume(TK_FOR)) {
 		node = malloc(sizeof(Node));
 		node->ty = ND_FOR;
 		if (!consume('(')) {
@@ -151,6 +151,21 @@ Node *stmt() {
 			error("no right-parenthesis at for: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
 		node->lhs = stmt();
+
+	} else if (consume(TK_INT)) {
+		node = malloc(sizeof(Node));
+		node->ty = ND_INT;
+		// int x;
+		if(!consume(TK_IDENT)) {
+			error("it's not identifier: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
+		Map *variables = vec_get(env, envnum);
+		map_put(variables, vname, 0);
+		
+		if (!consume(';')) {
+			error("no ';' at variable-def: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
 
 	} else {
 		node = assign();

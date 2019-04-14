@@ -78,6 +78,8 @@ void tokenize(char *p) {
 				tmp->ty = TK_IF;
 			} else if (strcmp(buf_str, "else") == 0) {
 				tmp->ty = TK_ELSE;
+			} else if (strcmp(buf_str, "while") == 0) {
+				tmp->ty = TK_WHILE;
 			} else {
 				tmp->ty = TK_IDENT;
 			}

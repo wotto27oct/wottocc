@@ -116,6 +116,20 @@ Node *stmt() {
 			node->rhs = NULL;
 		}
 		
+	} else if (consume(TK_WHILE)) {
+		node = malloc(sizeof(Node));
+		node->ty = ND_WHILE;
+		if (!consume('(')) {
+			error("no left-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		Vector *arg = new_vector();
+		vec_push(arg, assign());
+		node->args = arg;
+		if (!consume(')')) {
+			error("no right-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		node->lhs = stmt();
+
 	} else {
 		node = assign();
 		if (!consume(';'))

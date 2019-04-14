@@ -17,6 +17,7 @@ enum {
 	TK_FUNC,
 	TK_IF,			// token type of if
 	TK_ELSE,
+	TK_WHILE,
 	TK_EOF,			// token type of EOF
 };
 
@@ -29,7 +30,8 @@ enum {
 	ND_FUNC,
 	ND_FUNCDEF,
 	ND_IF,
-	ND_ELSE
+	ND_ELSE,
+	ND_WHILE
 };
 
 // トークンの型
@@ -108,7 +110,7 @@ void error(const char*, ...);
 extern Vector *tokens;
 extern Vector *env;
 extern int pos;
-extern int if_cnt;
+extern int loop_cnt;
 extern Vector *functions;
 extern int envnum;
 

@@ -8,8 +8,8 @@ Vector *functions;
 // position of tokens
 int pos = 0;
 
-// number of if_label
-int if_cnt = 0;
+// number of loop_label
+int loop_cnt = 0;
 
 void runtest() {
 	test_vector();

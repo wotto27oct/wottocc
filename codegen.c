@@ -33,26 +33,42 @@ void gen(Node *node) {
 	}
 
 	if (node->ty == ND_IF) {
-		int now_if_cnt = if_cnt;
-		if_cnt++;
+		int now_loop_cnt = loop_cnt;
+		loop_cnt++;
 		Node *arg = vec_get(node->args, 0);
 		gen(arg);
 		// result must be on top of the stack
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .Lend%d\n", now_if_cnt);
+		printf("  je .Lend%d\n", now_loop_cnt);
 		gen(node->lhs);
 		if (node->rhs != NULL) {
-			printf("  jmp .ELend%d\n", now_if_cnt);
+			printf("  jmp .ELend%d\n", now_loop_cnt);
 		}
-		printf(".Lend%d:\n", now_if_cnt);
+		printf(".Lend%d:\n", now_loop_cnt);
 		if (node->rhs != NULL) {
 			// else
 			gen(node->rhs);
-			printf(".ELend%d:\n", now_if_cnt);
+			printf(".ELend%d:\n", now_loop_cnt);
 		}
 		return;
 	}
+
+	if (node->ty == ND_WHILE) {
+		int now_loop_cnt = loop_cnt;
+		loop_cnt++;
+		printf(".Lbegin%d:\n", now_loop_cnt);
+		Node *arg = vec_get(node->args, 0);
+		gen(arg);
+		// result must be on top of the stack
+		printf("  pop rax\n");
+		printf("  cmp rax, 0\n");
+		printf("  je .Lend%d\n", now_loop_cnt);
+		gen(node->lhs);
+		printf("  jmp .Lbegin%d\n", now_loop_cnt);
+		printf(".Lend%d:\n", now_loop_cnt);
+		return;
+	}	
 
 	if (node->ty == ND_NUM) {
 		printf("  push %d\n", node->val);

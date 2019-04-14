@@ -93,4 +93,8 @@ try 0 "main(){a=10;while(a>=1)a=a-1;return a;}"
 try 1 "main(){1<2<=1;}"
 
 try 10 "main(){b=0;for(i=0;i<10;i=i+1) b=b+1; return b;}"
+
+try 1 "main(){a=0;++a;}"
+try 10 "main(){b=0;for(i=0;i<10;++i) ++b; return b;}"
+try 0 "main(){b=10;for(i=10;i>0;--i) --b; return b;}"
 echo OK

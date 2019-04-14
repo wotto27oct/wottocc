@@ -215,7 +215,7 @@ Node *add() {
 }
 
 Node *mul() {
-	Node *node = term();
+	Node *node = monomial();
 
 	for (;;) {
 		if (consume('*'))
@@ -225,6 +225,16 @@ Node *mul() {
 		else
 			return node;
 	}
+}
+
+Node *monomial() {
+	Node *node;
+	if (consume(TK_PREINC))
+		node = new_node(ND_PREINC, term(), NULL);
+	else if (consume(TK_PREDEC))
+		node = new_node(ND_PREDEC, term(), NULL);
+	else node = term();
+	return node;
 }
 
 Node *term() {

@@ -16,6 +16,8 @@ enum {
 	TK_NEQUAL,		// token type of !=
 	TK_LEQ,			// token type of <=
 	TK_GEQ,			// token type of >=
+	TK_PREINC,		// token type of ++ (pre)
+	TK_PREDEC,		// token type of -- (pre)
 	TK_FUNC,
 	TK_IF,			// token type of if
 	TK_ELSE,
@@ -32,6 +34,8 @@ enum {
 	ND_NEQUAL,		// node type of !=
 	ND_LEQ,			// node type of <=
 	ND_GEQ,			// node type of >=
+	ND_PREINC,		// node type of ++ (pre)
+	ND_PREDEC,		// node type of -- (pre)
 	ND_FUNC,
 	ND_FUNCDEF,
 	ND_IF,
@@ -86,6 +90,7 @@ Node *equal();
 Node *compare();
 Node *add();
 Node *mul();
+Node *monomial();
 Node *term();
 
 // tokenize.c

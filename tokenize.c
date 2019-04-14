@@ -9,8 +9,7 @@ void tokenize(char *p) {
 			continue;
 		}
 
-
-		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' 
+		if (*p == '*' || *p == '/' || *p == '(' || *p == ')' 
 			|| *p == ';' || *p == ',' || *p == '{' || *p == '}') {
 			Token *tmp = malloc(sizeof(Token));
 			tmp->ty = *p;
@@ -19,6 +18,37 @@ void tokenize(char *p) {
 			p++;
 			continue;
 		}
+
+		if (*p == '+') {
+			Token *tmp = malloc(sizeof(Token));
+			if (*(p+1) != '+') {
+				tmp->ty = '+';
+				tmp->input = p;
+				p++;
+			} else {
+				tmp->ty = TK_PREINC;
+				tmp->input = "++";
+				p+=2;
+			}
+			vec_push(tokens, (void *)tmp);
+			continue;
+		}
+		
+		if (*p == '-') {
+			Token *tmp = malloc(sizeof(Token));
+			if (*(p+1) != '-') {
+				tmp->ty = '-';
+				tmp->input = p;
+				p++;
+			} else {
+				tmp->ty = TK_PREDEC;
+				tmp->input = "--";
+				p+=2;
+			}
+			vec_push(tokens, (void *)tmp);
+			continue;
+		}
+
 		if (*p == '=') {
 			if (*(p+1) != '=') {
 				Token *tmp = malloc(sizeof(Token));

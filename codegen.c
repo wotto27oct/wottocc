@@ -129,6 +129,24 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->ty == ND_PREINC) {
+		gen_lval(node->lhs);
+		printf("  pop rax\n");
+		printf("  mov rdi, 1\n");
+		printf("  add [rax], rdi\n");
+		printf("  push [rax]\n");
+		return;
+	}
+
+	if (node->ty == ND_PREDEC) {
+		gen_lval(node->lhs);
+		printf("  pop rax\n");
+		printf("  mov rdi, 1\n");
+		printf("  sub [rax], rdi\n");
+		printf("  push [rax]\n");
+		return;
+	}
+
 	gen(node->lhs);
 	gen(node->rhs);
 

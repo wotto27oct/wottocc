@@ -120,13 +120,35 @@ Node *stmt() {
 		node = malloc(sizeof(Node));
 		node->ty = ND_WHILE;
 		if (!consume('(')) {
-			error("no left-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
+			error("no left-parenthesis at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
 		Vector *arg = new_vector();
 		vec_push(arg, assign());
 		node->args = arg;
 		if (!consume(')')) {
-			error("no right-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
+			error("no right-parenthesis at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		node->lhs = stmt();
+
+	} else if (consume(TK_FOR)){
+		node = malloc(sizeof(Node));
+		node->ty = ND_FOR;
+		if (!consume('(')) {
+			error("no left-parenthesis at for: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		Vector *arg = new_vector();
+		vec_push(arg, assign());
+		if (!consume(';')) {
+			error("no ';' at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		vec_push(arg, equal());
+		if (!consume(';')) {
+			error("no ';' at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
+		}
+		vec_push(arg, assign());
+		node->args = arg;
+		if (!consume(')')) {
+			error("no right-parenthesis at for: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
 		node->lhs = stmt();
 

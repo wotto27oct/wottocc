@@ -70,6 +70,25 @@ void gen(Node *node) {
 		return;
 	}	
 
+	if (node->ty == ND_FOR) {
+		int now_loop_cnt = loop_cnt;
+		loop_cnt++;
+		Node *arg = vec_get(node->args, 0);
+		gen(arg);
+		printf(".Lbegin%d:\n", now_loop_cnt);
+		arg = vec_get(node->args, 1);
+		gen(arg);
+		printf("  pop rax\n");
+		printf("  cmp rax, 0\n");
+		printf("  je .Lend%d\n", now_loop_cnt);
+		gen(node->lhs);
+		arg = vec_get(node->args, 2);
+		gen(arg);
+		printf("  jmp .Lbegin%d\n", now_loop_cnt);
+		printf(".Lend%d:\n", now_loop_cnt);
+		return;
+	}
+
 	if (node->ty == ND_NUM) {
 		printf("  push %d\n", node->val);
 		return;

@@ -33,14 +33,24 @@ void gen(Node *node) {
 	}
 
 	if (node->ty == ND_IF) {
-		gen(node->lhs);
+		int now_if_cnt = if_cnt;
+		if_cnt++;
+		Node *arg = vec_get(node->args, 0);
+		gen(arg);
 		// result must be on top of the stack
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .Lend%d\n", if_cnt);
-		gen(node->rhs);
-		printf(".Lend%d:\n", if_cnt);
-		if_cnt++;
+		printf("  je .Lend%d\n", now_if_cnt);
+		gen(node->lhs);
+		if (node->rhs != NULL) {
+			printf("  jmp .ELend%d\n", now_if_cnt);
+		}
+		printf(".Lend%d:\n", now_if_cnt);
+		if (node->rhs != NULL) {
+			// else
+			gen(node->rhs);
+			printf(".ELend%d:\n", now_if_cnt);
+		}
 		return;
 	}
 

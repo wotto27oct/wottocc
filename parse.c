@@ -103,11 +103,18 @@ Node *stmt() {
 		if (!consume('(')) {
 			error("no left-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
-		node->lhs = assign();
+		Vector *arg = new_vector();
+		vec_push(arg, assign());
+		node->args = arg;
 		if (!consume(')')) {
 			error("no right-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
-		node->rhs = stmt();
+		node->lhs = stmt();
+		if (consume(TK_ELSE)) {
+			node->rhs = stmt();
+		} else {
+			node->rhs = NULL;
+		}
 		
 	} else {
 		node = assign();

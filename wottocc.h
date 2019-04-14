@@ -16,6 +16,7 @@ enum {
 	TK_NEQUAL,		// token type of !=
 	TK_FUNC,
 	TK_IF,			// token type of if
+	TK_ELSE,
 	TK_EOF,			// token type of EOF
 };
 
@@ -27,7 +28,8 @@ enum {
 	ND_NEQUAL,		// node type of !=
 	ND_FUNC,
 	ND_FUNCDEF,
-	ND_IF
+	ND_IF,
+	ND_ELSE
 };
 
 // トークンの型

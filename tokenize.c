@@ -76,6 +76,8 @@ void tokenize(char *p) {
 				tmp->ty = TK_RETURN;
 			} else if (strcmp(buf_str, "if") == 0) {
 				tmp->ty = TK_IF;
+			} else if (strcmp(buf_str, "else") == 0) {
+				tmp->ty = TK_ELSE;
 			} else {
 				tmp->ty = TK_IDENT;
 			}

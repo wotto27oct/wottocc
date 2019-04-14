@@ -79,4 +79,7 @@ try 5 "foo(x,y){return x + 2 * y;} main(){x=2; foo(1,2);}"
 try 2 "main(){a=3;if(1)a=2;a;}"
 try 3 "main(){a=2;if(3)a=3;a;}"
 
+try 1 "main(){a=0;if(a==1)a=2;else a=1; return a;}"
+try 5 "main(){a=0;if(a==1) if(a==2) a=3; else a=4; else a=5; return a;}"
+try 11 "main(){a=3; b=2; if(a==3) if(b==1) a=10; else a=11; else a=12; return a;}"
 echo OK

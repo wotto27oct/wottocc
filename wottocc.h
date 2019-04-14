@@ -43,7 +43,14 @@ enum {
 	ND_ELSE,
 	ND_WHILE,
 	ND_FOR,
-	ND_INT
+	ND_INT,
+	ND_DEREF,
+	ND_ADDRESS
+};
+
+enum {
+	TY_INT = 512,
+	TY_PTR
 };
 
 // トークンの型
@@ -52,6 +59,11 @@ typedef struct Token {
 	int val;	// tyがTK_NUMの場合，その数値
 	char *input; // トークン文字列（error massage)
 } Token;
+
+typedef struct Type{
+	int ty;
+	struct Type *ptrof;
+} Type;
 
 typedef struct {
 	void **data;	// the data
@@ -62,6 +74,7 @@ typedef struct {
 typedef struct {
 	Vector *keys;	// variable names
 	Vector *vals;	// varialle values
+	Vector *types;  // variable types
 	int len;		// the length of the map
 } Map;
 
@@ -112,9 +125,10 @@ void test_vector();
 
 // map.c
 Map *new_map();
-void map_put(Map*, char*, void*);
+void map_put(Map*, char*, void*, Type*);
 void *map_get(Map*, char*);
 int map_get_ind(Map*, char*);
+void *map_get_type(Map*, char*);
 void test_map();
 
 // util.c

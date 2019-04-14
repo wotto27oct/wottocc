@@ -152,6 +152,20 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->ty == ND_DEREF) {
+		gen(node->lhs);
+		// address must be on the stack
+		printf("  pop rax\n");
+		printf("  mov rax, [rax]\n");
+		printf("  push rax\n");
+		return;
+	}
+
+	if (node->ty == '&') {
+		gen_lval(node->lhs);
+		return;
+	}
+
 	gen(node->lhs);
 	gen(node->rhs);
 

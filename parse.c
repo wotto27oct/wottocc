@@ -59,7 +59,7 @@ Node *function() {
 		node->ty = ND_FUNCDEF;
 		node->fname = ((Token *)vec_get(tokens, pos-2))->input;
 		Vector *args = new_vector();
-		// int foo(int x, int y){ ... }
+		// int foo(int *x, int y){ ... }
 		while (1) {
 			if (consume(')')) {
 				break;
@@ -67,12 +67,22 @@ Node *function() {
 			if (!consume(TK_INT)) {
 				error("no type at args: %s\n", ((Token *)vec_get(tokens, pos))->input);
 			}
+			Type *type = malloc(sizeof(Type)); 
+			type->ty = TY_INT;
+			type->ptrof = NULL;
+
+			while (consume('*')) {
+				Type *newtype = malloc(sizeof(Type));
+				newtype->ty = TY_PTR;
+				newtype->ptrof = type;
+				type = newtype;
+			}
 			if (!consume(TK_IDENT)){
 				error("args is not variable: %s\n", ((Token *)vec_get(tokens, pos))->input);
 			}
 			char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
 			Map *variables = vec_get(env, envnum);
-			map_put(variables, vname, 0);
+			map_put(variables, vname, 0, type);
 
 			Node *arg = malloc(sizeof(Node));
 		   	arg->ty = ND_INT;
@@ -168,13 +178,24 @@ Node *stmt() {
 	} else if (consume(TK_INT)) {
 		node = malloc(sizeof(Node));
 		node->ty = ND_INT;
-		// int x;
+		// int *x;
+		Type *type = malloc(sizeof(Type)); 
+		type->ty = TY_INT;
+		type->ptrof = NULL;
+
+		while (consume('*')) {
+			Type *newtype = malloc(sizeof(Type));
+			newtype->ty = TY_PTR;
+			newtype->ptrof = type;
+			type = newtype;
+		}
+
 		if(!consume(TK_IDENT)) {
 			error("it's not identifier: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
 		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
 		Map *variables = vec_get(env, envnum);
-		map_put(variables, vname, 0);
+		map_put(variables, vname, 0, type);
 		node->name = vname;
 		
 		if (!consume(';')) {
@@ -257,13 +278,34 @@ Node *mul() {
 }
 
 Node *monomial() {
-	Node *node;
-	if (consume(TK_PREINC))
-		node = new_node(ND_PREINC, term(), NULL);
-	else if (consume(TK_PREDEC))
-		node = new_node(ND_PREDEC, term(), NULL);
-	else node = term();
-	return node;
+	Node *node = NULL;
+
+	// distinct repeatable and unrepeatable
+	for (;;) {
+		if (consume(TK_PREINC)) {
+			node = new_node(ND_PREINC, term(), NULL);
+			return node;
+		} else if (consume(TK_PREDEC)) {
+			node = new_node(ND_PREDEC, term(), NULL);
+			return node;
+		} else if (consume('*')) {
+			Node *lhs = monomial();
+			if (lhs->ty == ND_IDENT){
+				Map *variables = vec_get(env, envnum);
+				Type *type = map_get_type(variables, lhs->name);
+				if (type->ty != TY_PTR) {
+					error("illegal deref: %s\n", ((Token *)vec_get(tokens, pos))->input);
+				}
+			}
+			node = new_node(ND_DEREF, lhs, NULL);
+		} else if (consume('&')) {
+			node = new_node('&', term(), NULL);
+			return node;
+		} else {
+			if (node == NULL) node = term();
+			return node;
+		}
+	}
 }
 
 Node *term() {

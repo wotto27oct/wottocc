@@ -41,4 +41,7 @@ try 20 "int main(){int i; int a; a = 10; for(i = 0; i < 10; ++i) ++a; return a;}
 try 5 "int foo(int x, int y){return x + y * 2;} int main(){foo(1,2);}"
 try 5 "int foo(int x, int y){return x + y * 2;} int main(){int x;int y;x=2;y=1;foo(y,x);}"
 
+try 1 "int main(){int **a; return 1;}"
+try 3 "int main(){int x; x=3; int *y; y=&x; return *y;}"
+
 echo OK

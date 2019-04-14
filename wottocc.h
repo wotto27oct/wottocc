@@ -136,6 +136,7 @@ void test_map();
 // util.c
 char *new_str(const char*);
 void error(const char*, ...);
+int get_stackpos(Map*, int);
 
 extern Vector *tokens;
 extern Vector *env;

@@ -5,7 +5,8 @@ void gen_lval(Node *node) {
 		error("lvalue of the substitution is not variable.");
 
 	Map *variables = vec_get(env, envnum);	
-	int offset = (variables->keys->len - map_get_ind(variables, node->name)) * 8;
+	//int offset = (variables->keys->len - map_get_ind(variables, node->name)) * 8;
+	int offset = get_stackpos(variables, map_get_ind(variables, node->name));
 	printf("  mov rax, rbp\n");
 	printf("  sub rax, %d\n", offset);	
 	printf("  push rax\n");

@@ -43,6 +43,7 @@ try 5 "int foo(int x, int y){return x + y * 2;} int main(){int x;int y;x=2;y=1;f
 
 try 1 "int main(){int **a; return 1;}"
 try 3 "int main(){int x; x=3; int *y; y=&x; return *y;}"
+try 2 "int main(){int x; x=3; int *y; y=&x; *y=2; return x;}"
 
 try 0 "int main(){int *p; int *q; q = p + 2; return 0;}"
 try 0 "int main(){int **p; int **q; q = p - 4; return 0;}"

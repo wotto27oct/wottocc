@@ -54,21 +54,34 @@ void program() {
 Node *function() {
 	Node *node;
 
-	if (consume(TK_IDENT) && consume('(') ){
+	if (consume(TK_INT) && consume(TK_IDENT) && consume('(') ){
 		node = malloc(sizeof(Node));
 		node->ty = ND_FUNCDEF;
 		node->fname = ((Token *)vec_get(tokens, pos-2))->input;
 		Vector *args = new_vector();
-		// foo(x, y){ ... }
+		// int foo(int x, int y){ ... }
 		while (1) {
 			if (consume(')')) {
 				break;
 			}
-			vec_push(args, assign());
+			if (!consume(TK_INT)) {
+				error("no type at args: %s\n", ((Token *)vec_get(tokens, pos))->input);
+			}
+			if (!consume(TK_IDENT)){
+				error("args is not variable: %s\n", ((Token *)vec_get(tokens, pos))->input);
+			}
+			char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
+			Map *variables = vec_get(env, envnum);
+			map_put(variables, vname, 0);
+
+			Node *arg = malloc(sizeof(Node));
+		   	arg->ty = ND_INT;
+			arg->name = vname;
+			vec_push(args, arg);
+
 			if (!consume(',')) {
 				if (!consume(')')) {
 					error("there's no right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
-					exit(1);
 				} else {
 					break;
 				}
@@ -162,6 +175,7 @@ Node *stmt() {
 		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
 		Map *variables = vec_get(env, envnum);
 		map_put(variables, vname, 0);
+		node->name = vname;
 		
 		if (!consume(';')) {
 			error("no ';' at variable-def: %s\n", ((Token *)vec_get(tokens,pos))->input);

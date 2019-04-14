@@ -90,7 +90,7 @@ void gen(Node *node) {
 	}
 
 	if (node->ty == ND_INT) {
-		printf("  push 0\n");
+		printf("  push 1\n"); // must be one value on stack register
 		return;
 	}
 

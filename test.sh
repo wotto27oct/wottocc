@@ -32,10 +32,13 @@ tryfunc() {
 	fi
 }
 
-try 10 "main(){int x; x=10; return x;}"
+try 10 "int main(){int x; x=10; return x;}"
 
-try 4 "main(){int i; int a; a = 10; i = 4;return i;}"
+try 4 "int main(){int i; int a; a = 10; i = 4;return i;}"
 
-try 20 "main(){int i; int a; a = 10; for(i = 0; i < 10; ++i) ++a; return a;}"
+try 20 "int main(){int i; int a; a = 10; for(i = 0; i < 10; ++i) ++a; return a;}"
+
+try 5 "int foo(int x, int y){return x + y * 2;} int main(){foo(1,2);}"
+try 5 "int foo(int x, int y){return x + y * 2;} int main(){int x;int y;x=2;y=1;foo(y,x);}"
 
 echo OK

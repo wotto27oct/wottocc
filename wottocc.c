@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
 		Node *tmp = vec_get(functions, i);
 		Map *variables = vec_get(env, i);
 		// output the first half part of assembly
-		//printf(".global %s\n", tmp->fname);
 		printf("%s:\n", tmp->fname);
 
 		// secure the range of variable
@@ -73,9 +72,6 @@ int main(int argc, char **argv) {
 		}
 		gen(tmp);
 
-		// as a result of formula, there must be one value at stack register
-		//printf("  pop rax\n");
-		
 		// the whole value of formula should be at the top of stack
 		// pop it into RAX.
 		printf("  mov rsp, rbp\n");

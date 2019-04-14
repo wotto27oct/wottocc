@@ -135,6 +135,11 @@ void gen(Node *node) {
 		printf("  setg al\n");
 		printf("  movzb rax, al\n");
 		break;
+	case '>':
+		printf("  cmp rdi, rax\n");
+		printf("  setb al\n");
+		printf("  movzb rax, al\n");
+		break;
 	case ND_EQUAL:
 		printf("  cmp rax, rdi\n");
 		printf("  sete al\n");

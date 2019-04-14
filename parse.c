@@ -168,6 +168,8 @@ Node *compare() {
 	for (;;) {
 		if (consume('<'))
 			node = new_node('<', node, add());
+		else if (consume('>'))
+			node = new_node('>', node, add());
 		else 
 			return node;
 	}

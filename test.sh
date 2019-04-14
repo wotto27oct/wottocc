@@ -87,4 +87,5 @@ try 1 "main(){a=0;while(a==0)a=1;return a;}"
 
 try 1 "main(){1<2;}"
 try 11 "main(){a=0;while(a<11)a=a+1;return a;}"
+try 1 "main(){a=10;while(a>1)a=a-1;return a;}"
 echo OK

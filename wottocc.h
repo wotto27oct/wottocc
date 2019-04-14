@@ -14,6 +14,8 @@ enum {
 	TK_RETURN,		// token type of return
 	TK_EQUAL,		// token type of ==
 	TK_NEQUAL,		// token type of !=
+	TK_LEQ,			// token type of <=
+	TK_GEQ,			// token type of >=
 	TK_FUNC,
 	TK_IF,			// token type of if
 	TK_ELSE,
@@ -27,6 +29,8 @@ enum {
 	ND_RETURN,		// node type of return
 	ND_EQUAL,		// node type of ==
 	ND_NEQUAL,		// node type of !=
+	ND_LEQ,			// node type of <=
+	ND_GEQ,			// node type of >=
 	ND_FUNC,
 	ND_FUNCDEF,
 	ND_IF,

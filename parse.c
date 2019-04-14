@@ -170,6 +170,10 @@ Node *compare() {
 			node = new_node('<', node, add());
 		else if (consume('>'))
 			node = new_node('>', node, add());
+		else if (consume(TK_LEQ))
+			node = new_node(ND_LEQ, node, add());
+		else if (consume(TK_GEQ))
+			node = new_node(ND_GEQ, node, add());
 		else 
 			return node;
 	}

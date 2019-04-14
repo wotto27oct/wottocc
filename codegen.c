@@ -140,6 +140,16 @@ void gen(Node *node) {
 		printf("  setb al\n");
 		printf("  movzb rax, al\n");
 		break;
+	case ND_LEQ:
+		printf("  cmp rdi, rax\n");
+		printf("  setge al\n");
+		printf("  movzb rax, al\n");
+		break;
+	case ND_GEQ:
+		printf("  cmp rdi, rax\n");
+		printf("  setbe al\n");
+		printf("  movzb rax, al\n");
+		break;
 	case ND_EQUAL:
 		printf("  cmp rax, rdi\n");
 		printf("  sete al\n");

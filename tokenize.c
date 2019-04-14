@@ -11,7 +11,7 @@ void tokenize(char *p) {
 
 
 		if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' 
-			|| *p == ';' || *p == ',' || *p == '{' || *p == '}' || *p == '<' || *p == '>') {
+			|| *p == ';' || *p == ',' || *p == '{' || *p == '}') {
 			Token *tmp = malloc(sizeof(Token));
 			tmp->ty = *p;
 			tmp->input = p;
@@ -44,6 +44,39 @@ void tokenize(char *p) {
 			p += 2;
 			continue;
 		}
+
+		// <, <=
+		if (*p == '<') {
+			Token *tmp = malloc(sizeof(Token));
+			if (*(p+1) != '=') {
+				tmp->ty = '<';
+				tmp->input = p;
+				p++;
+			} else {
+				tmp->ty = TK_LEQ;
+				tmp->input = "<=";
+				p+=2;
+			}
+			vec_push(tokens, (void *)tmp);
+			continue;
+		}
+		
+		// >, >=
+		if (*p == '>') {
+			Token *tmp = malloc(sizeof(Token));
+			if (*(p+1) != '=') {
+				tmp->ty = '>';
+				tmp->input = p;
+				p++;
+			} else {
+				tmp->ty = TK_GEQ;
+				tmp->input = ">=";
+				p+=2;
+			}
+			vec_push(tokens, (void *)tmp);
+			continue;
+		}
+
 
 		if (isdigit(*p)) {
 			Token *tmp = malloc(sizeof(Token));

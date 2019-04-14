@@ -84,4 +84,7 @@ try 5 "main(){a=0;if(a==1) if(a==2) a=3; else a=4; else a=5; return a;}"
 try 11 "main(){a=3; b=2; if(a==3) if(b==1) a=10; else a=11; else a=12; return a;}"
 
 try 1 "main(){a=0;while(a==0)a=1;return a;}"
+
+try 1 "main(){1<2;}"
+try 11 "main(){a=0;while(a<11)a=a+1;return a;}"
 echo OK

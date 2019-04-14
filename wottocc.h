@@ -77,6 +77,7 @@ Node *function();
 Node *stmt();
 Node *assign();
 Node *equal();
+Node *compare();
 Node *add();
 Node *mul();
 Node *term();

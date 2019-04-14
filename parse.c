@@ -150,7 +150,7 @@ Node *assign() {
 }
 
 Node *equal() {
-	Node *node = add();
+	Node *node = compare();
 
 	for (;;) {
 		if (consume(TK_EQUAL))
@@ -158,6 +158,17 @@ Node *equal() {
 		else if (consume(TK_NEQUAL))
 			node = new_node(ND_NEQUAL, node, equal());
 		else
+			return node;
+	}
+}
+
+Node *compare() {
+	Node *node = add();
+	
+	for (;;) {
+		if (consume('<'))
+			node = new_node('<', node, add());
+		else 
 			return node;
 	}
 }

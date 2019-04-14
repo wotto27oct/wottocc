@@ -50,4 +50,8 @@ try 0 "int main(){int **p; int **q; q = p - 4; return 0;}"
 
 try 0 "int main(){int a[10]; return 0;}"
 
+try 1 "int main(){int a[2]; *a=1; return *a;}"
+
+try 3 "int main(){int a[2];*a=1;*(a+1)=2; int *p; p = a;return *p + *(p+1);}"
+
 echo OK

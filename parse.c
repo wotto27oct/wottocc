@@ -293,7 +293,7 @@ Node *monomial() {
 			if (lhs->ty == ND_IDENT){
 				Map *variables = vec_get(env, envnum);
 				Type *type = map_get_type(variables, lhs->name);
-				if (type->ty != TY_PTR) {
+				if (type->ty == TY_INT) {
 					error("illegal deref: %s\n", ((Token *)vec_get(tokens, pos))->input);
 				}
 			}

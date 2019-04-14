@@ -166,6 +166,52 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->ty == '+') {
+		gen(node->lhs);
+		gen(node->rhs);
+		Map *variables = vec_get(env, envnum);
+		Type *type = map_get_type(variables, node->lhs->name);
+		if (type->ty == TY_PTR) {
+			printf("  pop rax\n");
+			if (type->ptrof->ty == TY_INT) {
+				printf("  mov rdi, 4\n");
+				printf("  mul rdi\n");
+			} else {
+				printf("  mov rdi, 8\n");
+				printf("  mul rdi\n");
+			}
+			printf("  push rax\n");
+		}
+		printf("  pop rdi\n");
+		printf("  pop rax\n");
+		printf("  add rax, rdi\n");
+		printf("  push rax\n");
+		return;
+	}
+	
+	if (node->ty == '-') {
+		gen(node->lhs);
+		gen(node->rhs);
+		Map *variables = vec_get(env, envnum);
+		Type *type = map_get_type(variables, node->lhs->name);
+		if (type->ty == TY_PTR) {
+			printf("  pop rax\n");
+			if (type->ptrof->ty == TY_INT) {
+				printf("  mov rdi, 4\n");
+				printf("  mul rdi\n");
+			} else {
+				printf("  mov rdi, 8\n");
+				printf("  mul rdi\n");
+			}
+			printf("  push rax\n");
+		}
+		printf("  pop rdi\n");
+		printf("  pop rax\n");
+		printf("  sub rax, rdi\n");
+		printf("  push rax\n");
+		return;
+	}
+
 	gen(node->lhs);
 	gen(node->rhs);
 
@@ -173,9 +219,6 @@ void gen(Node *node) {
 	printf("  pop rax\n");
 
 	switch (node->ty) {
-	case '+':
-		printf("  add rax, rdi\n");
-		break;
 	case '-':
 		printf("  sub rax, rdi\n");
 		break;

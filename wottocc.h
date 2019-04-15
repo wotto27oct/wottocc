@@ -62,7 +62,7 @@ typedef struct Token {
 } Token;
 
 typedef struct Type{
-	int ty;
+	int ty;		// TY_INT or something
 	struct Type *ptrof;
 	size_t array_size;
 } Type;
@@ -82,6 +82,7 @@ typedef struct {
 
 typedef struct Node {
 	int ty;				// is operator or ND_NUM
+	Type *value_ty;		// is int or ptr or something
 	struct Node *lhs;	// LHS
 	struct Node *rhs;	// RHS
 	int val;			// use if ty==ND_NUM
@@ -95,9 +96,11 @@ typedef struct Node {
 void runtest();
 
 // parse.c 
-Node *new_node(int, Node*, Node*);
+Node *new_node(int, Type*, Node*, Node*);
 Node *new_node_num(int);
 Node *new_node_ident(char*);
+Node *new_node_func(char*, Vector*);
+Type *new_vtype(int);
 int consume(int);
 void program();
 Node *function();

@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
 
 	printf("#tokenized\n");
 	program();
+	printf("#parsed\n");
 	
 	envnum = 0;
 

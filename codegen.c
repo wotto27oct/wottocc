@@ -177,23 +177,20 @@ void gen(Node *node) {
 	if (node->ty == '+') {
 		gen(node->lhs);
 		gen(node->rhs);
-		Map *variables = vec_get(env, envnum);
-		Type *type;
-		if (node->lhs->name != NULL)
-			type = map_get_type(variables, node->lhs->name);
-		if (type != NULL) {
-			if (type->ty == TY_PTR || type->ty == TY_ARRAY) {
-				printf("  pop rax\n");
-				if (type->ptrof->ty == TY_INT) {
-					printf("  mov rdi, 8\n");
-					printf("  mul rdi\n");
-				} else {
-					printf("  mov rdi, 8\n");
-					printf("  mul rdi\n");
-				}
-				printf("  push rax\n");
-			}
+		if (node->lhs->value_ty->ty == TY_PTR && node->rhs->value_ty->ty == TY_INT) {
+			printf("  pop rax\n"); // rax = rhs
+			printf("  mov rdi, 8\n");
+			printf("  mul rdi\n");
+			printf("  push rax\n");
+		} else if (node->lhs->value_ty->ty == TY_INT && node->rhs->value_ty->ty == TY_PTR) {
+			printf("  pop rsi\n"); // rsi = rhs
+			printf("  pop rax\n"); // rax = lhs
+			printf("  mov rdi, 8\n");
+			printf("  mul rdi\n");
+			printf("  push rax\n");
+			printf("  push rsi\n");
 		}
+
 		printf("  pop rdi\n");
 		printf("  pop rax\n");
 		printf("  add rax, rdi\n");
@@ -204,19 +201,20 @@ void gen(Node *node) {
 	if (node->ty == '-') {
 		gen(node->lhs);
 		gen(node->rhs);
-		Map *variables = vec_get(env, envnum);
-		Type *type = map_get_type(variables, node->lhs->name);
-		if (type->ty == TY_PTR) {
-			printf("  pop rax\n");
-			if (type->ptrof->ty == TY_INT) {
-				printf("  mov rdi, 4\n");
-				printf("  mul rdi\n");
-			} else {
-				printf("  mov rdi, 8\n");
-				printf("  mul rdi\n");
-			}
+		if (node->lhs->value_ty->ty == TY_PTR && node->rhs->value_ty->ty == TY_INT) {
+			printf("  pop rax\n"); // rax = rhs
+			printf("  mov rdi, 8\n");
+			printf("  mul rdi\n");
 			printf("  push rax\n");
+		} else if (node->lhs->value_ty->ty == TY_INT && node->rhs->value_ty->ty == TY_PTR) {
+			printf("  pop rsi\n"); // rsi = rhs
+			printf("  pop rax\n"); // rax = lhs
+			printf("  mov rdi, 8\n");
+			printf("  mul rdi\n");
+			printf("  push rax\n");
+			printf("  push rsi\n");
 		}
+
 		printf("  pop rdi\n");
 		printf("  pop rax\n");
 		printf("  sub rax, rdi\n");

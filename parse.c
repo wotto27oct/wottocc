@@ -344,6 +344,7 @@ Node *term() {
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
 		if (consume('(')) {
+			// foo(x, y);
 			Vector *args = new_vector();
 			while (1) {
 				if (consume(')')) {
@@ -360,6 +361,14 @@ Node *term() {
 				}
 			}
 			return new_node_func(t_name, args);
+		} else if (consume('[')) {
+			// a[3]; -> *(a + 3);			
+			Node *rhs = add();
+			Node *lhs = new_node_ident(t_name);
+			Node *plus = new_node('+', lhs, rhs);
+			Node *node = new_node(ND_DEREF, plus, NULL);
+			consume(']');
+			return node;
 		} else {
 			return new_node_ident(t_name);
 		}

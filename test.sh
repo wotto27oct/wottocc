@@ -54,4 +54,6 @@ try 1 "int main(){int a[2]; *a=1; return *a;}"
 
 try 3 "int main(){int a[2];*a=1;*(a+1)=2; int *p; p = a;return *p + *(p+1);}"
 
+try 3 "int main(){int a[3]; a[2] = 3; return a[2];}"
+
 echo OK

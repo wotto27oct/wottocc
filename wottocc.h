@@ -98,12 +98,6 @@ typedef struct Node {
 void runtest();
 
 // parse.c 
-Node *new_node(int, Type*, Node*, Node*);
-Node *new_node_num(int);
-Node *new_node_ident(char*);
-Node *new_node_func(char*, Vector*);
-Type *new_type(int);
-int consume(int);
 void program();
 Node *function();
 Node *stmt();
@@ -142,6 +136,13 @@ void test_map();
 char *new_str(const char*);
 void error(const char*, ...);
 int get_stackpos(Map*, int);
+Node *new_node(int, Type*, Node*, Node*);
+Node *new_node_num(int);
+Node *new_node_ident(char*);
+Node *new_node_func(char*, Vector*);
+Type *new_type(int);
+int consume(int);
+int err_consume(int, const char*);
 
 extern Vector *tokens;
 extern Vector *env;

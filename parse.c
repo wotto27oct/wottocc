@@ -1,60 +1,5 @@
 #include "wottocc.h"
 
-// create new Node
-Node *new_node(int node_ty, Type *value_ty, Node *lhs, Node *rhs) {
-	Node *node = malloc(sizeof(Node));
-	node->node_ty = node_ty;
-	node->value_ty = value_ty;
-	node->lhs = lhs;
-	node->rhs = rhs;
-	return node;
-}
-
-Node *new_node_num(int val) {
-	Node *node = new_node(ND_NUM, new_type(TY_INT), NULL, NULL);
-	node->val = val;
-	return node;
-}
-
-Node *new_node_ident(char *name) {
-	
-	// decide value_ty
-	Map *variables = vec_get(env, envnum);
-	Type *value_ty = map_get_type(variables, name);
-	if (value_ty->ty == TY_ARRAY) {
-		// read array a as if pointer a
-		// cf. int a[10]; a[0]=1; *a => 1
-		Type *newtype = new_type(TY_PTR);
-		newtype->ptrof = value_ty->ptrof;
-		value_ty = newtype;
-	}
-
-	Node *node = new_node(ND_IDENT, value_ty, NULL, NULL);
-	node->name = name;
-	return node;
-}
-
-Node *new_node_func(char *name, Vector *args) {
-	Node *node = new_node(ND_FUNC, NULL, NULL, NULL);
-	node->name = name;
-	node->args = args;
-	return node;
-}
-
-Type *new_type(int ty) {
-	Type *type = malloc(sizeof(Type));
-	type->ty = ty;
-	return type;
-}
-
-// consume tokens if the next token is as expected.
-int consume(int ty) {
-	if (((Token *)vec_get(tokens, pos))->ty != ty)
-		return 0;
-	pos++;
-	return 1;
-}
-
 void program() {
 	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF) {
 		Map *variables = new_map();
@@ -68,85 +13,64 @@ void program() {
 Node *function() {
 	Node *node;
 
-	if (consume(TK_INT) && consume(TK_IDENT) && consume('(') ){
-		node = malloc(sizeof(Node));
-		node->node_ty = ND_FUNCDEF;
-		node->fname = ((Token *)vec_get(tokens, pos-2))->input;
-		Vector *args = new_vector();
-		// int foo(int *x, int y){ ... }
-		while (1) {
-			if (consume(')')) {
-				break;
-			}
-			if (!consume(TK_INT)) {
-				error("no type at args: %s\n", ((Token *)vec_get(tokens, pos))->input);
-			}
-			Type *type = malloc(sizeof(Type)); 
-			type->ty = TY_INT;
-			type->ptrof = NULL;
+	err_consume(TK_INT, "It's not suitable format for function");
+	err_consume(TK_IDENT, "It's not suitable format for function");
+	err_consume('(', "It's not suitable format for function");
 
-			while (consume('*')) {
-				Type *newtype = malloc(sizeof(Type));
-				newtype->ty = TY_PTR;
-				newtype->ptrof = type;
-				type = newtype;
-			}
-			if (!consume(TK_IDENT)){
-				error("args is not variable: %s\n", ((Token *)vec_get(tokens, pos))->input);
-			}
-			char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
-			Map *variables = vec_get(env, envnum);
-			map_put(variables, vname, 0, type);
-
-			Node *arg = malloc(sizeof(Node));
-		   	arg->node_ty = ND_INT;
-			arg->name = vname;
-			arg->value_ty = type;
-			vec_push(args, arg);
-
-			if (!consume(',')) {
-				if (!consume(')')) {
-					error("there's no right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
-				} else {
-					break;
-				}
-			}
-
+	node = new_node(ND_FUNCDEF, NULL, NULL, NULL);
+	node->fname = ((Token *)vec_get(tokens, pos-2))->input;
+	Vector *args = new_vector();
+	// int foo(int *x, int y){ ... }
+	Map *variables = vec_get(env, envnum);
+	while (1) {
+		if (consume(')')) {
+			break;
 		}
-		node->args = args;
-		consume('{');
-		node->stmts = new_vector();
-		while (!consume('}')) {
-			vec_push(node->stmts, stmt());
+		err_consume(TK_INT, "no type at args");
+		Type *type = new_type(TY_INT);
+
+		while (consume('*')) {
+			Type *newtype = new_type(TY_PTR);
+			newtype->ptrof = type;
+			type = newtype;
 		}
-		return node;
-	} else {
-		error("It's not function: %s\n", ((Token *)vec_get(tokens, pos))->input);
-		exit(1);
+		err_consume(TK_IDENT, "args is not variable");
+
+		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
+		map_put(variables, vname, 0, type);
+
+		Node *arg = new_node(ND_INT, type, NULL, NULL);
+		arg->name = vname;
+		vec_push(args, arg);
+
+		if (!consume(',')) {
+			err_consume(')', "there's no right-parenthesis at args");
+			break;
+		}
+
 	}
+	node->args = args;
+	consume('{');
+	node->stmts = new_vector();
+	while (!consume('}')) {
+		vec_push(node->stmts, stmt());
+	}
+	return node;
 }
 
 Node *stmt() {
 	Node *node;
 
 	if (consume(TK_RETURN)) {
-		node = malloc(sizeof(Node));
-		node->node_ty = ND_RETURN;
-		node->lhs = assign();
-		if (!consume(';'))
-			error("It's not the token ';': %s\n", ((Token *)vec_get(tokens, pos++))->input);
+		node = new_node(ND_RETURN, NULL, assign(), NULL);
+		err_consume(';', "no ';' at return");
 	} else if (consume(TK_IF)) {
-		node = malloc(sizeof(Node));
-		node->node_ty = ND_IF;
-		if (!consume('(')) {
-			error("no left-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		node = new_node(ND_IF, NULL, NULL, NULL);
+		err_consume('(', "no left-parenthesis at if");
 		Vector *arg = new_vector();
 		vec_push(arg, assign());
 		node->args = arg;
-		if (!consume(')')) {
-			error("no right-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		err_consume(')', "no right-parenthesis at if");
 		node->lhs = stmt();
 		if (consume(TK_ELSE)) {
 			node->rhs = stmt();
@@ -155,87 +79,60 @@ Node *stmt() {
 		}
 		
 	} else if (consume(TK_WHILE)) {
-		node = malloc(sizeof(Node));
-		node->node_ty = ND_WHILE;
-		if (!consume('(')) {
-			error("no left-parenthesis at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		node = new_node(ND_WHILE, NULL, NULL, NULL);
+		err_consume('(', "no left-parenthesis at while");
 		Vector *arg = new_vector();
 		vec_push(arg, assign());
 		node->args = arg;
-		if (!consume(')')) {
-			error("no right-parenthesis at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		err_consume(')', "no right-parenthesis at while");
 		node->lhs = stmt();
 
 	} else if (consume(TK_FOR)) {
-		node = malloc(sizeof(Node));
-		node->node_ty = ND_FOR;
-		if (!consume('(')) {
-			error("no left-parenthesis at for: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		node = new_node(ND_FOR, NULL, NULL, NULL);
+		err_consume('(', "no left-parenthesis at for");
 		Vector *arg = new_vector();
 		vec_push(arg, assign());
-		if (!consume(';')) {
-			error("no ';' at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		err_consume(';', "no ';' at while");
 		vec_push(arg, equal());
-		if (!consume(';')) {
-			error("no ';' at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		err_consume(';', "no ';' at while");
 		vec_push(arg, assign());
 		node->args = arg;
-		if (!consume(')')) {
-			error("no right-parenthesis at for: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		err_consume(')', "no right-parenthesis at for");
 		node->lhs = stmt();
 
 	} else if (consume(TK_INT)) {
-		node = malloc(sizeof(Node));
-		node->node_ty = ND_INT;
 		// int x[10];
-		Type *type = malloc(sizeof(Type)); 
-		type->ty = TY_INT;
-		type->ptrof = NULL;
+		Type *type = new_type(TY_INT); 
 
 		while (consume('*')) {
-			Type *newtype = malloc(sizeof(Type));
-			newtype->ty = TY_PTR;
+			Type *newtype = new_type(TY_PTR);
 			newtype->ptrof = type;
 			type = newtype;
 		}
 
-		if(!consume(TK_IDENT)) {
-			error("it's not identifier: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		err_consume(TK_IDENT, "it's not suitable format for declaration");
 		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
-		node->name = vname;
 
 		if (consume('[')) {
-			if (!consume(TK_NUM)) {
-				error("array_initializer must be number: %s\n", ((Token *)vec_get(tokens,pos))->input);
-			}
-			Type *newtype = malloc(sizeof(Type));
-			newtype->ty = TY_ARRAY;
+			err_consume(TK_NUM, "array initializer must be number");
+			Type *newtype = new_type(TY_ARRAY);
 			newtype->ptrof = type;
 			newtype->array_size = ((Token *)vec_get(tokens,pos-1))->val;
 			type = newtype;
-			if (!consume(']')){
-				error("no ']' at array-def: %s\n", ((Token *)vec_get(tokens,pos))->input);
-			}
+			err_consume(']', "no ']' at array-def");
 		}
 		
 		Map *variables = vec_get(env, envnum);
 		map_put(variables, vname, 0, type);
+		
+		node = new_node(ND_INT, type, NULL, NULL);
+		node->name = vname;
 
-		if (!consume(';')) {
-			error("no ';' at variable-def: %s\n", ((Token *)vec_get(tokens,pos))->input);
-		}
+		err_consume(';', "no ';' at declaration");
 
 	} else {
 		node = assign();
-		if (!consume(';'))
-			error("It's not the token ';': %s\n", ((Token *)vec_get(tokens, pos++))->input);
+		err_consume(';', "no ';' at end of the expression");
 	}
 	return node;
 }
@@ -401,12 +298,8 @@ Node *term() {
 				}
 				vec_push(args, assign());
 				if (!consume(',')) {
-					if (!consume(')')) {
-						error("there's no right-parenthesis: %s\n", ((Token *)vec_get(tokens, pos))->input);
-						exit(1);
-					} else {
-						break;
-					}
+					err_consume(')', "no right-parenthesis at func_call");
+					break;
 				}
 			}
 			return new_node_func(t_name, args);
@@ -416,7 +309,7 @@ Node *term() {
 			Node *lhs = new_node_ident(t_name);
 			Node *plus = new_node('+', new_type(TY_PTR), lhs, rhs);
 			Node *node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), plus, NULL);
-			consume(']');
+			err_consume(']', "no right-bracket at array_suffix");
 			return node;
 		} else {
 			return new_node_ident(t_name);

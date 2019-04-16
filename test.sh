@@ -60,4 +60,8 @@ try 3 "int main(){int a[2];*a=1;*(a+1)=2; int *p; p = a;return *p + *(p+1);}"
 try 3 "int main(){int a[3]; a[2] = 3; return a[2];}"
 try 5 "int main(){int a[3]; *(2+a)=5;return a[2];}"
 
+try 2 "int main(){int a;int b;int c;a=1;b=2;c=0;if(a==1)if(b==1)c=1;else c=2; else c=3; return c;}"
+try 10 "int main(){int i; int b; b=0; for(i=0;i<10;++i) ++b; return b;}"
+try 0 "int main(){int i; i=10; while(i>0) --i; return i;}"
+
 echo OK

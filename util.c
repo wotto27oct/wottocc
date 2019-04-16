@@ -24,7 +24,7 @@ int get_stackpos(Map *variables, int ind) {
 		Type *type = variables->types->data[i];
 		switch(type->ty) {
 		case TY_INT:
-			variable_stack += 8;
+			variable_stack += 4;
 			break;
 		case TY_PTR:
 			variable_stack += 8;

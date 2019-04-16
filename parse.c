@@ -108,6 +108,7 @@ Node *function() {
 			Node *arg = malloc(sizeof(Node));
 		   	arg->ty = ND_INT;
 			arg->name = vname;
+			arg->value_ty = type;
 			vec_push(args, arg);
 
 			if (!consume(',')) {

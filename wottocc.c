@@ -49,7 +49,8 @@ int main(int argc, char **argv) {
 		printf(".global %s\n", tmp->fname);
 	}
 
-	char registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+	char r_registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+	char e_registers[6][4] = {"edi", "esi", "edx", "ecx", "e8", "e9"};
 
 	// generate assembly in order
 	for (int i = 0; i < functions->len; i++) {
@@ -71,7 +72,10 @@ int main(int argc, char **argv) {
 			int offset = get_stackpos(variables, map_get_ind(variables, arg->name));
 			printf("  mov rax, rbp\n");
 			printf("  sub rax, %d\n", offset);
-			printf("  mov [rax], %s\n", registers[j]);	
+			if (arg->value_ty->ty == TY_INT)
+				printf("  mov [rax], %s\n", e_registers[j]);	
+			else 
+				printf("  mov [rax], %s\n", r_registers[j]);	
 		}
 		gen(tmp);
 

@@ -1,11 +1,11 @@
 #include "wottocc.h"
 
 void gen_lval(Node *node) {
-	if (node->ty == ND_DEREF) {
+	if (node->node_ty == ND_DEREF) {
 		gen(node->lhs);
 		return;
 	}
-	if (node->ty != ND_IDENT)
+	if (node->node_ty != ND_IDENT)
 		error("lvalue of the substitution is not variable.\n");
 
 	Map *variables = vec_get(env, envnum);	
@@ -18,7 +18,7 @@ void gen_lval(Node *node) {
 
 // emurate stack machine
 void gen(Node *node) {
-	if (node->ty == ND_FUNCDEF) {
+	if (node->node_ty == ND_FUNCDEF) {
 		int i = 0;
 		for (; i < node->stmts->len; i++) {
 			gen(vec_get(node->stmts, i));
@@ -28,7 +28,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == ND_RETURN) {
+	if (node->node_ty == ND_RETURN) {
 		gen(node->lhs);
 		printf("  pop rax\n");
 		printf("  mov rsp, rbp\n");
@@ -37,7 +37,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == ND_IF) {
+	if (node->node_ty == ND_IF) {
 		int now_loop_cnt = loop_cnt;
 		loop_cnt++;
 		Node *arg = vec_get(node->args, 0);
@@ -59,7 +59,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == ND_WHILE) {
+	if (node->node_ty == ND_WHILE) {
 		int now_loop_cnt = loop_cnt;
 		loop_cnt++;
 		printf(".Lbegin%d:\n", now_loop_cnt);
@@ -75,7 +75,7 @@ void gen(Node *node) {
 		return;
 	}	
 
-	if (node->ty == ND_FOR) {
+	if (node->node_ty == ND_FOR) {
 		int now_loop_cnt = loop_cnt;
 		loop_cnt++;
 		Node *arg = vec_get(node->args, 0);
@@ -94,17 +94,17 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == ND_INT) {
+	if (node->node_ty == ND_INT) {
 		printf("  push 1\n"); // must be one value on stack register
 		return;
 	}
 
-	if (node->ty == ND_NUM) {
+	if (node->node_ty == ND_NUM) {
 		printf("  push %d\n", node->val);
 		return;
 	}
 
-	if (node->ty == ND_IDENT) {
+	if (node->node_ty == ND_IDENT) {
 		gen_lval(node);
 		Map *variables = vec_get(env, envnum);
 		Type *type = map_get_type(variables, node->name);
@@ -118,7 +118,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == ND_FUNC) {
+	if (node->node_ty == ND_FUNC) {
 		char registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 		int i = 0;
 		for (; i < node->args->len; i++) {
@@ -134,7 +134,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == '=') {
+	if (node->node_ty == '=') {
 		gen_lval(node->lhs);
 		gen(node->rhs);
 
@@ -148,7 +148,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == ND_PREINC) {
+	if (node->node_ty == ND_PREINC) {
 		gen_lval(node->lhs);
 		printf("  pop rax\n");
 		printf("  mov rdi, 1\n");
@@ -157,7 +157,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == ND_PREDEC) {
+	if (node->node_ty == ND_PREDEC) {
 		gen_lval(node->lhs);
 		printf("  pop rax\n");
 		printf("  mov rdi, 1\n");
@@ -166,11 +166,11 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == ND_DEREF) {
+	if (node->node_ty == ND_DEREF) {
 		gen(node->lhs);
 		// address must be on the stack
 		printf("  pop rax\n");
-		if (node->value_ty == TY_INT)
+		if (node->value_ty->ty == TY_INT)
 			printf("  mov eax, [rax]\n");
 		else
 			printf("  mov rax, [rax]\n");
@@ -178,12 +178,12 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->ty == '&') {
+	if (node->node_ty == '&') {
 		gen_lval(node->lhs);
 		return;
 	}
 
-	if (node->ty == '+') {
+	if (node->node_ty == '+') {
 		gen(node->lhs);
 		gen(node->rhs);
 		if (node->lhs->value_ty->ty == TY_PTR && node->rhs->value_ty->ty == TY_INT) {
@@ -211,7 +211,7 @@ void gen(Node *node) {
 		return;
 	}
 	
-	if (node->ty == '-') {
+	if (node->node_ty == '-') {
 		gen(node->lhs);
 		gen(node->rhs);
 		if (node->lhs->value_ty->ty == TY_PTR && node->rhs->value_ty->ty == TY_INT) {
@@ -241,7 +241,7 @@ void gen(Node *node) {
 	printf("  pop rdi\n");
 	printf("  pop rax\n");
 
-	switch (node->ty) {
+	switch (node->node_ty) {
 	case '*':
 		printf("  mul rdi\n");
 		break;

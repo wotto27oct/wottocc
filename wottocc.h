@@ -81,15 +81,17 @@ typedef struct {
 } Map;
 
 typedef struct Node {
-	int ty;				// is operator or ND_NUM
-	Type *value_ty;		// is int or ptr or something
+	int node_ty;		// the type of Node
+	Type *value_ty;		// the type of value of the tree under this Node
 	struct Node *lhs;	// LHS
 	struct Node *rhs;	// RHS
+
 	int val;			// use if ty==ND_NUM
-	char *name;			// use if ty==ND_IDENT
+	char *name;			// use if ty==ND_IDENT or ND_FUNC
+	char *fname;		// use if ty==ND_FUNCDEF
+	
 	Vector *args;		// use if ty==ND_FUNC
 	Vector *stmts;		// use if ty==ND_FUNCDEF
-	char *fname;		// use if ty==ND_FUNCDEF
 } Node;
 
 // util.c
@@ -100,7 +102,7 @@ Node *new_node(int, Type*, Node*, Node*);
 Node *new_node_num(int);
 Node *new_node_ident(char*);
 Node *new_node_func(char*, Vector*);
-Type *new_vtype(int);
+Type *new_type(int);
 int consume(int);
 void program();
 Node *function();

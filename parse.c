@@ -1,9 +1,9 @@
 #include "wottocc.h"
 
 // create new Node
-Node *new_node(int ty, Type *value_ty, Node *lhs, Node *rhs) {
+Node *new_node(int node_ty, Type *value_ty, Node *lhs, Node *rhs) {
 	Node *node = malloc(sizeof(Node));
-	node->ty = ty;
+	node->node_ty = node_ty;
 	node->value_ty = value_ty;
 	node->lhs = lhs;
 	node->rhs = rhs;
@@ -11,48 +11,41 @@ Node *new_node(int ty, Type *value_ty, Node *lhs, Node *rhs) {
 }
 
 Node *new_node_num(int val) {
-	Node *node = malloc(sizeof(Node));
-	node->ty = ND_NUM;
+	Node *node = new_node(ND_NUM, new_type(TY_INT), NULL, NULL);
 	node->val = val;
-	Type *value_ty = new_vtype(TY_INT);
-	node->value_ty = value_ty;
-
 	return node;
 }
 
 Node *new_node_ident(char *name) {
-	Node *node = malloc(sizeof(Node));
-	node->ty = ND_IDENT;
-	node->name = name;
-
-	// ptr or other
+	
+	// decide value_ty
 	Map *variables = vec_get(env, envnum);
 	Type *value_ty = map_get_type(variables, name);
-	node->value_ty = value_ty;
 	if (value_ty->ty == TY_ARRAY) {
 		// read array a as if pointer a
 		// cf. int a[10]; a[0]=1; *a => 1
-		Type *newtype = new_vtype(TY_PTR);
+		Type *newtype = new_type(TY_PTR);
 		newtype->ptrof = value_ty->ptrof;
-		node->value_ty = newtype;
+		value_ty = newtype;
 	}
+
+	Node *node = new_node(ND_IDENT, value_ty, NULL, NULL);
+	node->name = name;
 	return node;
 }
 
 Node *new_node_func(char *name, Vector *args) {
-	Node *node = malloc(sizeof(Node));
-	node->ty = ND_FUNC;
+	Node *node = new_node(ND_FUNC, NULL, NULL, NULL);
 	node->name = name;
 	node->args = args;
 	return node;
 }
 
-Type *new_vtype(int ty) {
-	Type *value_ty = malloc(sizeof(Type));
-	value_ty->ty = ty;
-	return value_ty;
+Type *new_type(int ty) {
+	Type *type = malloc(sizeof(Type));
+	type->ty = ty;
+	return type;
 }
-
 
 // consume tokens if the next token is as expected.
 int consume(int ty) {
@@ -77,7 +70,7 @@ Node *function() {
 
 	if (consume(TK_INT) && consume(TK_IDENT) && consume('(') ){
 		node = malloc(sizeof(Node));
-		node->ty = ND_FUNCDEF;
+		node->node_ty = ND_FUNCDEF;
 		node->fname = ((Token *)vec_get(tokens, pos-2))->input;
 		Vector *args = new_vector();
 		// int foo(int *x, int y){ ... }
@@ -106,7 +99,7 @@ Node *function() {
 			map_put(variables, vname, 0, type);
 
 			Node *arg = malloc(sizeof(Node));
-		   	arg->ty = ND_INT;
+		   	arg->node_ty = ND_INT;
 			arg->name = vname;
 			arg->value_ty = type;
 			vec_push(args, arg);
@@ -138,13 +131,13 @@ Node *stmt() {
 
 	if (consume(TK_RETURN)) {
 		node = malloc(sizeof(Node));
-		node->ty = ND_RETURN;
+		node->node_ty = ND_RETURN;
 		node->lhs = assign();
 		if (!consume(';'))
 			error("It's not the token ';': %s\n", ((Token *)vec_get(tokens, pos++))->input);
 	} else if (consume(TK_IF)) {
 		node = malloc(sizeof(Node));
-		node->ty = ND_IF;
+		node->node_ty = ND_IF;
 		if (!consume('(')) {
 			error("no left-parenthesis at if: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
@@ -163,7 +156,7 @@ Node *stmt() {
 		
 	} else if (consume(TK_WHILE)) {
 		node = malloc(sizeof(Node));
-		node->ty = ND_WHILE;
+		node->node_ty = ND_WHILE;
 		if (!consume('(')) {
 			error("no left-parenthesis at while: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
@@ -177,7 +170,7 @@ Node *stmt() {
 
 	} else if (consume(TK_FOR)) {
 		node = malloc(sizeof(Node));
-		node->ty = ND_FOR;
+		node->node_ty = ND_FOR;
 		if (!consume('(')) {
 			error("no left-parenthesis at for: %s\n", ((Token *)vec_get(tokens,pos))->input);
 		}
@@ -199,7 +192,7 @@ Node *stmt() {
 
 	} else if (consume(TK_INT)) {
 		node = malloc(sizeof(Node));
-		node->ty = ND_INT;
+		node->node_ty = ND_INT;
 		// int x[10];
 		Type *type = malloc(sizeof(Type)); 
 		type->ty = TY_INT;
@@ -259,7 +252,7 @@ Node *assign() {
 				if (rhs->value_ty->ty != TY_INT) {
 					error("substitution from ptr to int: %s\n", ((Token *)vec_get(tokens, pos++))->input);
 				}
-				value_ty = new_vtype(TY_INT);
+				value_ty = new_type(TY_INT);
 			} else {
 				// ptr or array
 				if (rhs->value_ty->ty == TY_INT) {
@@ -279,9 +272,9 @@ Node *equal() {
 
 	for (;;) {
 		if (consume(TK_EQUAL))
-			node = new_node(ND_EQUAL, new_vtype(TY_INT), node, equal());
+			node = new_node(ND_EQUAL, new_type(TY_INT), node, equal());
 		else if (consume(TK_NEQUAL))
-			node = new_node(ND_NEQUAL, new_vtype(TY_INT), node, equal());
+			node = new_node(ND_NEQUAL, new_type(TY_INT), node, equal());
 		else
 			return node;
 	}
@@ -292,13 +285,13 @@ Node *compare() {
 	
 	for (;;) {
 		if (consume('<'))
-			node = new_node('<', new_vtype(TY_INT), node, add());
+			node = new_node('<', new_type(TY_INT), node, add());
 		else if (consume('>'))
-			node = new_node('>', new_vtype(TY_INT), node, add());
+			node = new_node('>', new_type(TY_INT), node, add());
 		else if (consume(TK_LEQ))
-			node = new_node(ND_LEQ, new_vtype(TY_INT), node, add());
+			node = new_node(ND_LEQ, new_type(TY_INT), node, add());
 		else if (consume(TK_GEQ))
-			node = new_node(ND_GEQ, new_vtype(TY_INT), node, add());
+			node = new_node(ND_GEQ, new_type(TY_INT), node, add());
 		else 
 			return node;
 	}
@@ -319,7 +312,7 @@ Node *add() {
 				else 
 					value_ty = rhs->value_ty;
 			} else {
-				value_ty = new_vtype(TY_INT);
+				value_ty = new_type(TY_INT);
 			}
 			node = new_node('+', value_ty, lhs, rhs);
 		} else if (consume('-')) {
@@ -328,9 +321,9 @@ Node *add() {
 			Type *value_ty;
 			if (lhs->value_ty->ty != TY_INT || rhs->value_ty->ty != TY_INT) {
 				// ptr
-				value_ty = new_vtype(TY_PTR);
+				value_ty = new_type(TY_PTR);
 			} else {
-				value_ty = new_vtype(TY_INT);
+				value_ty = new_type(TY_INT);
 			}
 			node = new_node('-', value_ty, lhs, rhs);
 		} else {
@@ -344,9 +337,9 @@ Node *mul() {
 
 	for (;;) {
 		if (consume('*'))
-			node = new_node('*', new_vtype(TY_INT), node, term());
+			node = new_node('*', new_type(TY_INT), node, term());
 		else if (consume('/'))
-			node = new_node('/', new_vtype(TY_INT), node, term());
+			node = new_node('/', new_type(TY_INT), node, term());
 		else
 			return node;
 	}
@@ -358,19 +351,19 @@ Node *monomial() {
 	// distinct repeatable and unrepeatable
 	for (;;) {
 		if (consume(TK_PREINC)) {
-			node = new_node(ND_PREINC, new_vtype(TY_INT), term(), NULL);
+			node = new_node(ND_PREINC, new_type(TY_INT), term(), NULL);
 			return node;
 		} else if (consume(TK_PREDEC)) {
-			node = new_node(ND_PREDEC, new_vtype(TY_INT), term(), NULL);
+			node = new_node(ND_PREDEC, new_type(TY_INT), term(), NULL);
 			return node;
 		} else if (consume('*')) {
 			Node *lhs = monomial();
 			if (lhs->value_ty->ty == TY_INT) {
 				error("illegal deref: %s\n", ((Token *)vec_get(tokens, pos))->input);
 			}
-			node = new_node(ND_DEREF, new_vtype(lhs->value_ty->ptrof->ty), lhs, NULL);
+			node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), lhs, NULL);
 		} else if (consume('&')) {
-			node = new_node('&', new_vtype(TY_PTR), term(), NULL);
+			node = new_node('&', new_type(TY_PTR), term(), NULL);
 			return node;
 		} else {
 			if (node == NULL) node = term();
@@ -421,8 +414,8 @@ Node *term() {
 			// a[3]; -> *(a + 3);			
 			Node *rhs = add();
 			Node *lhs = new_node_ident(t_name);
-			Node *plus = new_node('+', new_vtype(TY_PTR), lhs, rhs);
-			Node *node = new_node(ND_DEREF, new_vtype(lhs->value_ty->ptrof->ty), plus, NULL);
+			Node *plus = new_node('+', new_type(TY_PTR), lhs, rhs);
+			Node *node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), plus, NULL);
 			consume(']');
 			return node;
 		} else {

@@ -20,24 +20,18 @@ int get_stackpos(Map *variables, int ind) {
 	int variable_stack = 0;
 	for (int i = 0; i <= ind; i++) {
 		Type *type = variables->types->data[i];
-		switch(type->ty) {
-		case TY_INT:
-			variable_stack += 4;
-			break;
-		case TY_PTR:
-			variable_stack += 8;
-			break;
-		case TY_ARRAY:
-			if (type->ptrof->ty == TY_INT){
-				variable_stack += 8 * type->array_size;
-			} else {
-				variable_stack += 8 * type->array_size;
-			}
-			break;
-		}
+		variable_stack += get_typesize(type);
 	}
 	return variable_stack;
 }
+
+int get_typesize(Type *type) {
+	if (type->ty == TY_INT) return 4;
+	else if (type->ty == TY_PTR) return 8;
+	else if (type->ty == TY_ARRAY) return get_typesize(type->ptrof) * type->array_size;
+	return 0;
+}
+
 
 // create new Node
 Node *new_node(int node_ty, Type *value_ty, Node *lhs, Node *rhs) {

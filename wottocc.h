@@ -85,11 +85,17 @@ typedef struct {
 	int len;		// the length of the map
 } Map;
 
+typedef struct Env {
+	Vector *variables;
+	struct Env *outer;
+} Env;
+
 typedef struct Node {
 	int node_ty;		// the type of Node
 	Type *value_ty;		// the type of value of the tree under this Node
 	struct Node *lhs;	// LHS
 	struct Node *rhs;	// RHS
+	struct Env *env;
 
 	int val;			// use if ty==ND_NUM
 	char *name;			// use if ty==ND_IDENT or ND_FUNC
@@ -150,17 +156,18 @@ char *new_str(const char*);
 void error(const char*, ...);
 int get_stackpos(Map*, int);
 int get_typesize(Type*);
-Node *new_node(int, Type*, Node*, Node*);
-Node *new_node_num(int);
-Node *new_node_ident(char*);
-Node *new_node_func(char*, Vector*);
+Node *new_node(int, Type*, Env*, Node*, Node*);
+Node *new_node_num(int, Env*);
+Node *new_node_ident(char*, Env*);
+Node *new_node_func(char*, Vector*, Env*);
 Type *new_type(int);
+Env *new_env(Vector*);
 int read_nextToken(int);
 int consume(int);
 int err_consume(int, const char*);
 
 extern Vector *tokens;
-extern Vector *env;
+extern Vector *genv;
 extern int pos;
 extern int loop_cnt;
 extern Vector *functions;

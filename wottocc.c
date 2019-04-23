@@ -1,7 +1,7 @@
 #include "wottocc.h"
 
 Vector *tokens;
-Vector *env;
+Vector *genv;
 int envnum;
 Vector *functions;
 
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 	}
 
 	tokens = new_vector();
-	env = new_vector();
+	genv = new_vector();
 	envnum = 0;
 	functions = new_vector();
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 	// generate assembly in order
 	for (int i = 0; i < functions->len; i++) {
 		Node *tmp = vec_get(functions, i);
-		Map *variables = vec_get(env, i);
+		Map *variables = vec_get(genv, i);
 		// output the first half part of assembly
 		printf("%s:\n", tmp->fname);
 

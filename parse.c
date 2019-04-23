@@ -3,7 +3,7 @@
 void program() {
 	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF) {
 		Map *variables = new_map();
-		vec_push(env, variables);
+		vec_push(genv, variables);
 		vec_push(functions, function());
 		envnum++;
 	}
@@ -17,11 +17,11 @@ Node *function() {
 	err_consume(TK_IDENT, "It's not suitable format for function");
 	err_consume('(', "It's not suitable format for function");
 
-	node = new_node(ND_FUNCDEF, NULL, NULL, NULL);
+	node = new_node(ND_FUNCDEF, NULL, new_env(NULL), NULL, NULL);
 	node->fname = ((Token *)vec_get(tokens, pos-2))->input;
 	Vector *args = new_vector();
 	// int foo(int *x, int y){ ... }
-	Map *variables = vec_get(env, envnum);
+	Map *variables = vec_get(genv, envnum);
 	while (1) {
 		if (consume(')')) {
 			break;
@@ -39,7 +39,7 @@ Node *function() {
 		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
 		map_put(variables, vname, 0, type);
 
-		Node *arg = new_node(ND_INT, type, NULL, NULL);
+		Node *arg = new_node(ND_INT, type, NULL, NULL, NULL);
 		arg->name = vname;
 		vec_push(args, arg);
 
@@ -50,7 +50,8 @@ Node *function() {
 
 	}
 	node->args = args;
-	node->lhs = compound_statement();
+
+	node->lhs = compound_statement(node->env);
 	/*consume('{');
 	node->stmts = new_vector();
 	while (!consume('}')) {
@@ -59,21 +60,21 @@ Node *function() {
 	return node;
 }
 
-Node *compound_statement() {
-	Node *node = new_node(ND_COMPOUND_STMT, NULL, NULL, NULL);
+Node *compound_statement(Env *env) {
+	Node *node = new_node(ND_COMPOUND_STMT, NULL, env, NULL, NULL);
 	err_consume('{', "no left-brace at compound_statement");
 	if(!consume('}')){
-		node->lhs = block_item_list();
+		node->lhs = block_item_list(env);
 	}
 	err_consume('}', "no right-brace at compound_statement");
 	return node;
 }
 
-Node *block_item_list() {
-	Node *node = new_node(ND_BLOCKITEMLIST, NULL, NULL, NULL);
+Node *block_item_list(Env *env) {
+	Node *node = new_node(ND_BLOCKITEMLIST, NULL, env, NULL, NULL);
 	Vector *args = new_vector();
 	while (1) {
-		Node *arg = block_item();
+		Node *arg = block_item(env);
 		if (arg == NULL) break;
 		else vec_push(args, arg);
 	}
@@ -81,15 +82,15 @@ Node *block_item_list() {
 	return node;
 }
 
-Node *block_item() {
-	Node *node = declaration();
+Node *block_item(Env *env) {
+	Node *node = declaration(env);
 	if (node == NULL){
-		node = statement();
+		node = statement(env);
 	}
 	return node;
 }
 
-Node *declaration() {
+Node *declaration(Env *env) {
 	Node *node = NULL;
 	if (consume(TK_INT)) {
 		Type *type = new_type(TY_INT); 
@@ -112,10 +113,10 @@ Node *declaration() {
 			err_consume(']', "no ']' at array-def");
 		}
 		
-		Map *variables = vec_get(env, envnum);
+		Map *variables = vec_get(genv, envnum);
 		map_put(variables, vname, 0, type);
 		
-		node = new_node(ND_INT, type, NULL, NULL);
+		node = new_node(ND_INT, type, env, NULL, NULL);
 		node->name = vname;
 
 		err_consume(';', "no ';' at declaration");
@@ -124,48 +125,48 @@ Node *declaration() {
 }
 
 
-Node *statement() {
+Node *statement(Env *env) {
 	Node *node = NULL;
 
 	if (read_nextToken(TK_RETURN)) {
-		node = jump_statement();
+		node = jump_statement(env);
 	} else if (read_nextToken(TK_IF)) {
-		node = selection_statement();
+		node = selection_statement(env);
 	} else if (read_nextToken(TK_WHILE) || read_nextToken(TK_FOR)) {
-		node = iteration_statement();
+		node = iteration_statement(env);
 	} else if (read_nextToken('{')) {
-		node = compound_statement();
+		node = compound_statement(env);
 	} else {
-		node = expression_statement();
+		node = expression_statement(env);
 	}
 	return node;
 }
 
-Node *jump_statement() {
+Node *jump_statement(Env *env) {
 	consume(TK_RETURN);
-	Node *node = new_node(ND_RETURN, NULL, assign(), NULL);
+	Node *node = new_node(ND_RETURN, NULL, env, assign(), NULL);
 	err_consume(';', "no ';' at return");
 	return node;
 }
 
-Node *expression_statement() {
-	Node *node = assign();
+Node *expression_statement(Env *env) {
+	Node *node = assign(env);
 	if (node != NULL) err_consume(';', "no ';' at end of the expression_statement\n");
 	return node;
 }
 
-Node *selection_statement() {
+Node *selection_statement(Env *env) {
 	Node *node;
 	if (consume(TK_IF)) {
-		node = new_node(ND_IF, NULL, NULL, NULL);
+		node = new_node(ND_IF, NULL, env, NULL, NULL);
 		err_consume('(', "no left-parenthesis at if");
 		Vector *arg = new_vector();
-		vec_push(arg, assign());
+		vec_push(arg, assign(env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at if");
-		node->lhs = statement();
+		node->lhs = statement(env);
 		if (consume(TK_ELSE)) {
-			node->rhs = statement();
+			node->rhs = statement(env);
 		} else {
 			node->rhs = NULL;
 		}
@@ -173,41 +174,41 @@ Node *selection_statement() {
 	return node;
 }
 
-Node *iteration_statement() {
+Node *iteration_statement(Env *env) {
 	Node *node;
 	if (consume(TK_WHILE)) {
-		node = new_node(ND_WHILE, NULL, NULL, NULL);
+		node = new_node(ND_WHILE, NULL, env, NULL, NULL);
 		err_consume('(', "no left-parenthesis at while");
 		Vector *arg = new_vector();
-		vec_push(arg, assign());
+		vec_push(arg, assign(env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at while");
-		node->lhs = statement();
+		node->lhs = statement(env);
 
 	} else if (consume(TK_FOR)) {
-		node = new_node(ND_FOR, NULL, NULL, NULL);
+		node = new_node(ND_FOR, NULL, env, NULL, NULL);
 		err_consume('(', "no left-parenthesis at for");
 		Vector *arg = new_vector();
-		vec_push(arg, assign());
+		vec_push(arg, assign(env));
 		err_consume(';', "no ';' at while");
-		vec_push(arg, equal());
+		vec_push(arg, equal(env));
 		err_consume(';', "no ';' at while");
-		vec_push(arg, assign());
+		vec_push(arg, assign(env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at for");
-		node->lhs = statement();
+		node->lhs = statement(env);
 	}
 	return node;
 }
 
 
-Node *assign() {
-	Node *node = equal();
+Node *assign(Env *env) {
+	Node *node = equal(env);
 
 	for (;;) {
 		if (consume('=')){
 			Node *lhs = node;
-			Node *rhs = assign();
+			Node *rhs = assign(env);
 			Type *value_ty;
 			if (lhs->value_ty->ty == TY_INT){
 				if (rhs->value_ty->ty != TY_INT) {
@@ -221,51 +222,51 @@ Node *assign() {
 				}
 				value_ty = rhs->value_ty;
 			}
-			node = new_node('=', value_ty, lhs, rhs);
+			node = new_node('=', value_ty, env, lhs, rhs);
 		} else {
 			return node;
 		}
 	}
 }
 
-Node *equal() {
-	Node *node = compare();
+Node *equal(Env *env) {
+	Node *node = compare(env);
 
 	for (;;) {
 		if (consume(TK_EQUAL))
-			node = new_node(ND_EQUAL, new_type(TY_INT), node, equal());
+			node = new_node(ND_EQUAL, new_type(TY_INT), env, node, equal(env));
 		else if (consume(TK_NEQUAL))
-			node = new_node(ND_NEQUAL, new_type(TY_INT), node, equal());
+			node = new_node(ND_NEQUAL, new_type(TY_INT), env, node, equal(env));
 		else
 			return node;
 	}
 }
 
-Node *compare() {
-	Node *node = add();
+Node *compare(Env *env) {
+	Node *node = add(env);
 	
 	for (;;) {
 		if (consume('<'))
-			node = new_node('<', new_type(TY_INT), node, add());
+			node = new_node('<', new_type(TY_INT), env, node, add(env));
 		else if (consume('>'))
-			node = new_node('>', new_type(TY_INT), node, add());
+			node = new_node('>', new_type(TY_INT), env, node, add(env));
 		else if (consume(TK_LEQ))
-			node = new_node(ND_LEQ, new_type(TY_INT), node, add());
+			node = new_node(ND_LEQ, new_type(TY_INT), env, node, add(env));
 		else if (consume(TK_GEQ))
-			node = new_node(ND_GEQ, new_type(TY_INT), node, add());
+			node = new_node(ND_GEQ, new_type(TY_INT), env, node, add(env));
 		else 
 			return node;
 	}
 }
 
-Node *add() {
-	Node *node = mul();
+Node *add(Env *env) {
+	Node *node = mul(env);
 
 	for (;;) {
 		if (consume('+')){
 			Type *value_ty;
 			Node *lhs = node;
-			Node *rhs = mul();
+			Node *rhs = mul(env);
 			if (lhs->value_ty->ty != TY_INT || rhs->value_ty->ty != TY_INT) {
 				// ptr
 				if (lhs->value_ty->ty != TY_INT)
@@ -275,10 +276,10 @@ Node *add() {
 			} else {
 				value_ty = new_type(TY_INT);
 			}
-			node = new_node('+', value_ty, lhs, rhs);
+			node = new_node('+', value_ty, env, lhs, rhs);
 		} else if (consume('-')) {
 			Node *lhs = node;
-			Node *rhs = mul();
+			Node *rhs = mul(env);
 			Type *value_ty;
 			if (lhs->value_ty->ty != TY_INT || rhs->value_ty->ty != TY_INT) {
 				// ptr
@@ -286,56 +287,56 @@ Node *add() {
 			} else {
 				value_ty = new_type(TY_INT);
 			}
-			node = new_node('-', value_ty, lhs, rhs);
+			node = new_node('-', value_ty, env, lhs, rhs);
 		} else {
 			return node;
 		}
 	}
 }
 
-Node *mul() {
-	Node *node = monomial();
+Node *mul(Env *env) {
+	Node *node = monomial(env);
 
 	for (;;) {
 		if (consume('*'))
-			node = new_node('*', new_type(TY_INT), node, term());
+			node = new_node('*', new_type(TY_INT), env, node, term(env));
 		else if (consume('/'))
-			node = new_node('/', new_type(TY_INT), node, term());
+			node = new_node('/', new_type(TY_INT), env, node, term(env));
 		else
 			return node;
 	}
 }
 
-Node *monomial() {
+Node *monomial(Env *env) {
 	Node *node = NULL;
 
 	// distinct repeatable and unrepeatable
 	for (;;) {
 		if (consume(TK_PREINC)) {
-			node = new_node(ND_PREINC, new_type(TY_INT), term(), NULL);
+			node = new_node(ND_PREINC, new_type(TY_INT), env, term(env), NULL);
 			return node;
 		} else if (consume(TK_PREDEC)) {
-			node = new_node(ND_PREDEC, new_type(TY_INT), term(), NULL);
+			node = new_node(ND_PREDEC, new_type(TY_INT), env, term(env), NULL);
 			return node;
 		} else if (consume('*')) {
-			Node *lhs = monomial();
+			Node *lhs = monomial(env);
 			if (lhs->value_ty->ty == TY_INT) {
 				error("illegal deref: %s\n", ((Token *)vec_get(tokens, pos))->input);
 			}
-			node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), lhs, NULL);
+			node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), env, lhs, NULL);
 		} else if (consume('&')) {
-			node = new_node('&', new_type(TY_PTR), term(), NULL);
+			node = new_node('&', new_type(TY_PTR), env, term(env), NULL);
 			return node;
 		} else {
-			if (node == NULL) node = term();
+			if (node == NULL) node = term(env);
 			return node;
 		}
 	}
 }
 
-Node *term() {
+Node *term(Env *env) {
 	if (consume('(')) {
-		Node *node = add();
+		Node *node = add(env);
 		if (!consume(')')) {
 			//error("there isn't right-parenthesis: %s", tokens[pos].input);
 			error("there isn't right-parenthesis: %s\n", 
@@ -349,7 +350,7 @@ Node *term() {
 
 	switch (((Token *)vec_get(tokens, pos))->ty){
 	case TK_NUM:
-		return new_node_num(((Token *)vec_get(tokens, pos++))->val);
+		return new_node_num(((Token *)vec_get(tokens, pos++))->val, env);
 		break;
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
@@ -360,23 +361,23 @@ Node *term() {
 				if (consume(')')) {
 					break;
 				}
-				vec_push(args, assign());
+				vec_push(args, assign(env));
 				if (!consume(',')) {
 					err_consume(')', "no right-parenthesis at func_call");
 					break;
 				}
 			}
-			return new_node_func(t_name, args);
+			return new_node_func(t_name, args, env);
 		} else if (consume('[')) {
 			// a[3]; -> *(a + 3);			
-			Node *rhs = add();
-			Node *lhs = new_node_ident(t_name);
-			Node *plus = new_node('+', new_type(TY_PTR), lhs, rhs);
-			Node *node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), plus, NULL);
+			Node *rhs = add(env);
+			Node *lhs = new_node_ident(t_name, env);
+			Node *plus = new_node('+', new_type(TY_PTR), env, lhs, rhs);
+			Node *node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), env, plus, NULL);
 			err_consume(']', "no right-bracket at array_suffix");
 			return node;
 		} else {
-			return new_node_ident(t_name);
+			return new_node_ident(t_name, env);
 		}
 		break;
 	}

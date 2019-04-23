@@ -34,25 +34,26 @@ int get_typesize(Type *type) {
 
 
 // create new Node
-Node *new_node(int node_ty, Type *value_ty, Node *lhs, Node *rhs) {
+Node *new_node(int node_ty, Type *value_ty, Env *env, Node *lhs, Node *rhs) {
 	Node *node = malloc(sizeof(Node));
 	node->node_ty = node_ty;
 	node->value_ty = value_ty;
+	node->env = env;
 	node->lhs = lhs;
 	node->rhs = rhs;
 	return node;
 }
 
-Node *new_node_num(int val) {
-	Node *node = new_node(ND_NUM, new_type(TY_INT), NULL, NULL);
+Node *new_node_num(int val, Env *env) {
+	Node *node = new_node(ND_NUM, new_type(TY_INT), env, NULL, NULL);
 	node->val = val;
 	return node;
 }
 
-Node *new_node_ident(char *name) {
+Node *new_node_ident(char *name, Env *env) {
 	
 	// decide value_ty
-	Map *variables = vec_get(env, envnum);
+	Map *variables = vec_get(genv, envnum);
 	Type *value_ty = map_get_type(variables, name);
 	if (value_ty->ty == TY_ARRAY) {
 		// read array a as if pointer a
@@ -62,13 +63,13 @@ Node *new_node_ident(char *name) {
 		value_ty = newtype;
 	}
 
-	Node *node = new_node(ND_IDENT, value_ty, NULL, NULL);
+	Node *node = new_node(ND_IDENT, value_ty, env, NULL, NULL);
 	node->name = name;
 	return node;
 }
 
-Node *new_node_func(char *name, Vector *args) {
-	Node *node = new_node(ND_FUNC, NULL, NULL, NULL);
+Node *new_node_func(char *name, Vector *args, Env *env) {
+	Node *node = new_node(ND_FUNC, NULL, env, NULL, NULL);
 	node->name = name;
 	node->args = args;
 	return node;
@@ -78,6 +79,13 @@ Type *new_type(int ty) {
 	Type *type = malloc(sizeof(Type));
 	type->ty = ty;
 	return type;
+}
+
+Env *new_env(Vector *variables) {
+	Env *env = malloc(sizeof(Env));
+	env->variables = variables;
+	env->outer = NULL;
+	return env;
 }
 
 int read_nextToken(int ty) {

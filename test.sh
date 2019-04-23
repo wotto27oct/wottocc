@@ -66,4 +66,6 @@ try 0 "int main(){int i; i=10; while(i>0) --i; return i;}"
 try 1 "int main(){int i; int a[5]; a[3] = 1; i = a[3]; return i;}"
 try 4 "int main(){int i;i=2;if(1){i=3;i=4;}return i;}"
 
+try 3 "int main(){int i;i=3;{int i;i=4;}return i;}"
+
 echo OK

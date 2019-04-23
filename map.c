@@ -33,7 +33,7 @@ int map_get_ind(Map *map, char *key) {
 	for (int i = map->keys->len - 1; i >= 0; i--)
 		if (strcmp(map->keys->data[i], key) == 0)
 			return i;
-	return NULL;
+	return -1;
 }
 
 

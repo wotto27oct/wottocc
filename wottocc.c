@@ -55,21 +55,24 @@ int main(int argc, char **argv) {
 	// generate assembly in order
 	for (int i = 0; i < functions->len; i++) {
 		Node *tmp = vec_get(functions, i);
-		Map *variables = vec_get(genv, i);
+		int variable_stack = gen_stackpos(tmp->env, 0);
+		//Map *variables = vec_get(genv, i);
 		// output the first half part of assembly
 		printf("%s:\n", tmp->fname);
 
 		// secure the range of variable
 		printf("  push rbp\n");
 		printf("  mov rbp, rsp\n");
-		int variable_stack = get_stackpos(variables, variables->keys->len-1);
+		// must remove
+		// variable_stack = get_stackpos(tmp->env->variables, tmp->env->variables->keys->len-1);
 		printf("  sub rsp, %d\n", variable_stack);
 
 		// apply values to args
 		for (int j = 0; j < tmp->args->len; j++) {
 			Node *arg = vec_get(tmp->args, j);
 			//int offset = (variables->keys->len - map_get_ind(variables, arg->name)) * 8;
-			int offset = get_stackpos(variables, map_get_ind(variables, arg->name));
+			//int offset = get_stackpos(tmp->env->variables, map_get_ind(tmp->env->variables, arg->name));
+			int offset = get_stackpos(tmp->env, arg->name);
 			printf("  mov rax, rbp\n");
 			printf("  sub rax, %d\n", offset);
 			if (arg->value_ty->ty == TY_INT)

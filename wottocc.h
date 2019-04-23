@@ -86,8 +86,10 @@ typedef struct {
 } Map;
 
 typedef struct Env {
-	Vector *variables;
+	Map *variables;
 	struct Env *outer;
+	Vector *inner;
+	int stackpos;
 } Env;
 
 typedef struct Node {
@@ -154,17 +156,20 @@ void test_map();
 // util.c
 char *new_str(const char*);
 void error(const char*, ...);
-int get_stackpos(Map*, int);
+int get_stackpos(Env*, char*);
+Type *get_valuetype(Env*, char*);
 int get_typesize(Type*);
 Node *new_node(int, Type*, Env*, Node*, Node*);
 Node *new_node_num(int, Env*);
 Node *new_node_ident(char*, Env*);
 Node *new_node_func(char*, Vector*, Env*);
 Type *new_type(int);
-Env *new_env(Vector*);
+Env *new_env(Env*);
 int read_nextToken(int);
 int consume(int);
 int err_consume(int, const char*);
+
+int gen_stackpos(Env*, int);
 
 extern Vector *tokens;
 extern Vector *genv;

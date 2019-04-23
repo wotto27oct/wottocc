@@ -8,9 +8,10 @@ void gen_lval(Node *node) {
 	if (node->node_ty != ND_IDENT)
 		error("lvalue of the substitution is not variable.\n");
 
-	Map *variables = vec_get(genv, envnum);	
+	//Map *variables = vec_get(genv, envnum);	
 	//int offset = (variables->keys->len - map_get_ind(variables, node->name)) * 8;
-	int offset = get_stackpos(variables, map_get_ind(variables, node->name));
+	//int offset = get_stackpos(node->env->variables, map_get_ind(node->env->variables, node->name));
+	int offset = get_stackpos(node->env, node->name);
 	printf("  mov rax, rbp\n");
 	printf("  sub rax, %d\n", offset);	
 	printf("  push rax\n");
@@ -123,8 +124,9 @@ void gen(Node *node) {
 
 	if (node->node_ty == ND_IDENT) {
 		gen_lval(node);
-		Map *variables = vec_get(genv, envnum);
-		Type *type = map_get_type(variables, node->name);
+		//Map *variables = vec_get(genv, envnum);
+		//Type *type = map_get_type(node->env->variables, node->name);
+		Type *type = get_valuetype(node->env, node->name);
 		if (type->ty == TY_ARRAY) return;
 		printf("  pop rax\n");
 		if (type->ty == TY_INT)

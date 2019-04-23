@@ -16,14 +16,42 @@ void error(const char *str, ...) {
 	exit(1);
 }
 
-int get_stackpos(Map *variables, int ind) {
-	int variable_stack = 0;
+int get_stackpos(Env *env, char *name) {
+	int variable_stack = env->stackpos;
+	int ind = map_get_ind(env->variables, name);
+	if (ind == -1) {
+		if (env->outer == NULL) return -1;
+		else return get_stackpos(env->outer, name);
+	}
 	for (int i = 0; i <= ind; i++) {
-		Type *type = variables->types->data[i];
+		Type *type = env->variables->types->data[i];
 		variable_stack += get_typesize(type);
 	}
 	return variable_stack;
 }
+
+// allocate stackpos and return total stack range of variables
+int gen_stackpos(Env *env, int startnum) {
+	env->stackpos = startnum;
+	int variable_stack = startnum;
+	for (int i = 0; i < env->variables->keys->len; i++) {
+		variable_stack += get_typesize(env->variables->types->data[i]);
+	}
+	for (int i = 0; i < env->inner->len; i++) {
+		variable_stack = gen_stackpos(vec_get(env->inner, i), variable_stack);
+	}
+	return variable_stack;
+}
+
+Type* get_valuetype(Env *env, char* name) {
+	Type *value_ty = map_get_type(env->variables, name);
+	if (value_ty == NULL) {
+		if (env->outer == NULL) value_ty = NULL;
+		else value_ty = get_valuetype(env->outer, name);
+	}
+	return value_ty;
+}
+
 
 int get_typesize(Type *type) {
 	if (type->ty == TY_INT) return 4;
@@ -53,8 +81,9 @@ Node *new_node_num(int val, Env *env) {
 Node *new_node_ident(char *name, Env *env) {
 	
 	// decide value_ty
-	Map *variables = vec_get(genv, envnum);
-	Type *value_ty = map_get_type(variables, name);
+	//Map *variables = vec_get(genv, envnum);
+	//Type *value_ty = map_get_type(env->variables, name);
+	Type *value_ty = get_valuetype(env, name);
 	if (value_ty->ty == TY_ARRAY) {
 		// read array a as if pointer a
 		// cf. int a[10]; a[0]=1; *a => 1
@@ -81,10 +110,12 @@ Type *new_type(int ty) {
 	return type;
 }
 
-Env *new_env(Vector *variables) {
+Env *new_env(Env *outer) {
 	Env *env = malloc(sizeof(Env));
-	env->variables = variables;
-	env->outer = NULL;
+	env->variables = new_map();
+	env->outer = outer;
+	env->inner = new_vector();
+	env->stackpos = 0;
 	return env;
 }
 
@@ -110,3 +141,4 @@ int err_consume(int ty, const char *str) {
 	}
 	return 1;
 }
+

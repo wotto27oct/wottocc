@@ -2,8 +2,8 @@
 
 void program() {
 	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF) {
-		Map *variables = new_map();
-		vec_push(genv, variables);
+		//Map *variables = new_map();
+		//vec_push(genv, variables);
 		vec_push(functions, function());
 		envnum++;
 	}
@@ -21,7 +21,7 @@ Node *function() {
 	node->fname = ((Token *)vec_get(tokens, pos-2))->input;
 	Vector *args = new_vector();
 	// int foo(int *x, int y){ ... }
-	Map *variables = vec_get(genv, envnum);
+	//Map *variables = vec_get(genv, envnum);
 	while (1) {
 		if (consume(')')) {
 			break;
@@ -37,7 +37,7 @@ Node *function() {
 		err_consume(TK_IDENT, "args is not variable");
 
 		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
-		map_put(variables, vname, 0, type);
+		map_put(node->env->variables, vname, 0, type);
 
 		Node *arg = new_node(ND_INT, type, NULL, NULL, NULL);
 		arg->name = vname;
@@ -64,7 +64,11 @@ Node *compound_statement(Env *env) {
 	Node *node = new_node(ND_COMPOUND_STMT, NULL, env, NULL, NULL);
 	err_consume('{', "no left-brace at compound_statement");
 	if(!consume('}')){
-		node->lhs = block_item_list(env);
+		Env *inner_env = new_env(env);
+		node->lhs = block_item_list(inner_env);
+		vec_push(env->inner, inner_env);
+	} else {
+		return node;
 	}
 	err_consume('}', "no right-brace at compound_statement");
 	return node;
@@ -113,8 +117,8 @@ Node *declaration(Env *env) {
 			err_consume(']', "no ']' at array-def");
 		}
 		
-		Map *variables = vec_get(genv, envnum);
-		map_put(variables, vname, 0, type);
+		//Map *variables = vec_get(genv, envnum);
+		map_put(env->variables, vname, 0, type);
 		
 		node = new_node(ND_INT, type, env, NULL, NULL);
 		node->name = vname;
@@ -127,7 +131,6 @@ Node *declaration(Env *env) {
 
 Node *statement(Env *env) {
 	Node *node = NULL;
-
 	if (read_nextToken(TK_RETURN)) {
 		node = jump_statement(env);
 	} else if (read_nextToken(TK_IF)) {
@@ -144,7 +147,7 @@ Node *statement(Env *env) {
 
 Node *jump_statement(Env *env) {
 	consume(TK_RETURN);
-	Node *node = new_node(ND_RETURN, NULL, env, assign(), NULL);
+	Node *node = new_node(ND_RETURN, NULL, env, assign(env), NULL);
 	err_consume(';', "no ';' at return");
 	return node;
 }
@@ -347,7 +350,7 @@ Node *term(Env *env) {
 	}
 
 	char *t_name;
-
+			
 	switch (((Token *)vec_get(tokens, pos))->ty){
 	case TK_NUM:
 		return new_node_num(((Token *)vec_get(tokens, pos++))->val, env);
@@ -377,7 +380,8 @@ Node *term(Env *env) {
 			err_consume(']', "no right-bracket at array_suffix");
 			return node;
 		} else {
-			return new_node_ident(t_name, env);
+			Node *node = new_node_ident(t_name, env);
+			return node;
 		}
 		break;
 	}

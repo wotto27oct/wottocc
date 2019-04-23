@@ -15,7 +15,7 @@ Node *function() {
 
 	err_consume(TK_INT, "It's not suitable format for function");
 	err_consume(TK_IDENT, "It's not suitable format for function");
-	err_consume('(', "It's not suitable format for function");
+	err_consume('(', "no left-parenthesis at declaration_list");
 
 	node = new_node(ND_FUNCDEF, NULL, new_env(NULL), NULL, NULL);
 	node->fname = ((Token *)vec_get(tokens, pos-2))->input;
@@ -60,6 +60,20 @@ Node *function() {
 	return node;
 }
 
+/*Node *declaration_list(Env *env)
+{
+	Node *node = new_node(ND_DECLARATIONLIST, NULL, env, NULL, NULL);
+	err_consume('(', "no left-parenthesis at declaration_list");
+	Vector *args = new_vector();
+	while (1) {
+		Node *arg = declaration(env);
+		if (arg == NULL) break;
+		else vec_push(args, arg);
+	}
+	node->args = args;
+	return node;
+}*/
+
 Node *compound_statement(Env *env) {
 	Node *node = new_node(ND_COMPOUND_STMT, NULL, env, NULL, NULL);
 	err_consume('{', "no left-brace at compound_statement");
@@ -97,9 +111,15 @@ Node *block_item(Env *env) {
 Node *declaration(Env *env) {
 	Node *node = NULL;
 	if (consume(TK_INT)) {
+		node = new_node(ND_DECLARATION, NULL, env, NULL, NULL);
 		Type *type = new_type(TY_INT); 
 
-		while (consume('*')) {
+		if (read_nextToken(';') == 0) {
+			node->lhs = init_declarator_list(env, type);
+		}
+			
+
+		/*while (consume('*')) {
 			Type *newtype = new_type(TY_PTR);
 			newtype->ptrof = type;
 			type = newtype;
@@ -121,12 +141,62 @@ Node *declaration(Env *env) {
 		map_put(env->variables, vname, 0, type);
 		
 		node = new_node(ND_INT, type, env, NULL, NULL);
-		node->name = vname;
+		node->name = vname;*/
 
 		err_consume(';', "no ';' at declaration");
 	}
 	return node;
 }
+
+Node *init_declarator_list(Env *env, Type *sp_type) {
+	Node *node = new_node(ND_INITDECLARATORLIST, NULL, env, NULL, NULL);
+	Vector *args = new_vector();
+	Node *arg = init_declarator(env, sp_type);
+	vec_push(args, arg);
+	while(1) {
+		if (!consume(',')) break;
+		Node *arg = init_declarator(env, sp_type);
+		vec_push(args, arg);
+	}
+	node->args = args;
+	return node;
+}	
+
+Node *init_declarator(Env *env, Type *sp_type) {
+	Node *node = declarator(env, sp_type);
+	return node;
+}
+
+Node *declarator(Env *env, Type *sp_type) {
+	Type *type = sp_type;
+
+	while (consume('*')) {
+		Type *newtype = new_type(TY_PTR);
+		newtype->ptrof = type;
+		type = newtype;
+	}
+
+	err_consume(TK_IDENT, "no identifier at declarator");
+	char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
+
+	if (consume('[')) {
+		err_consume(TK_NUM, "array initializer must be number");
+		Type *newtype = new_type(TY_ARRAY);
+		newtype->ptrof = type;
+		newtype->array_size = ((Token *)vec_get(tokens,pos-1))->val;
+		type = newtype;
+		err_consume(']', "no ']' at array-def");
+	}
+	
+	//Map *variables = vec_get(genv, envnum);
+	map_put(env->variables, vname, 0, type);
+	
+	Node *node = new_node(ND_DECLARATOR, type, env, NULL, NULL);
+	node->name = vname;
+
+	return node;
+}
+
 
 
 Node *statement(Env *env) {

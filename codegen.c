@@ -112,7 +112,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->node_ty == ND_INT) {
+	if (node->node_ty == ND_DECLARATION) {
 		printf("  push 1\n"); // must be one value on stack register
 		return;
 	}

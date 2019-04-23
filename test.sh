@@ -68,4 +68,6 @@ try 4 "int main(){int i;i=2;if(1){i=3;i=4;}return i;}"
 
 try 3 "int main(){int i;i=3;{int i;i=4;}return i;}"
 
+try 10 "int main(){int x,y;x=5;y=10;return y;}"
+
 echo OK

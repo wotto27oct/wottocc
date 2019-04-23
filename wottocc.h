@@ -50,6 +50,10 @@ enum {
 	ND_ADDRESS,
 	ND_BLOCKITEMLIST,
 	ND_COMPOUND_STMT,
+	ND_DECLARATION_LIST,
+	ND_INITDECLARATORLIST,
+	ND_DECLARATOR,
+	ND_DECLARATION,
 };
 
 enum {
@@ -113,22 +117,25 @@ void runtest();
 // parse.c 
 void program();
 Node *function();
-Node *compound_statement();
-Node *block_item_list();
-Node *block_item();
-Node *declaration();
-Node *statement();
-Node *jump_statement();
-Node *expression_statement();
-Node *selection_statement();
-Node *iteration_statement();
-Node *assign();
-Node *equal();
-Node *compare();
-Node *add();
-Node *mul();
-Node *monomial();
-Node *term();
+Node *compound_statement(Env*);
+Node *block_item_list(Env*);
+Node *block_item(Env*);
+Node *declaration(Env*);
+Node *init_declarator_list(Env*, Type*);
+Node *init_declarator(Env*, Type*);
+Node *declarator(Env *env, Type *type);
+Node *statement(Env*);
+Node *jump_statement(Env*);
+Node *expression_statement(Env*);
+Node *selection_statement(Env*);
+Node *iteration_statement(Env*);
+Node *assign(Env*);
+Node *equal(Env*);
+Node *compare(Env*);
+Node *add(Env*);
+Node *mul(Env*);
+Node *monomial(Env*);
+Node *term(Env*);
 
 // tokenize.c
 void tokenize(char*);

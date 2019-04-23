@@ -40,7 +40,7 @@ void gen(Node *node) {
 		for (; i < node->args->len; i++) {
 			gen(vec_get(node->args, i));
 			// as a result of statement, there must be one value at stack register
-			printf("  pop rax\n");
+			// printf("  pop rax\n");
 		}
 		return;
 	}

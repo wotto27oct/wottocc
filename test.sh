@@ -64,5 +64,6 @@ try 2 "int main(){int a;int b;int c;a=1;b=2;c=0;if(a==1)if(b==1)c=1;else c=2; el
 try 10 "int main(){int i; int b; b=0; for(i=0;i<10;++i) ++b; return b;}"
 try 0 "int main(){int i; i=10; while(i>0) --i; return i;}"
 try 1 "int main(){int i; int a[5]; a[3] = 1; i = a[3]; return i;}"
+try 4 "int main(){int i;i=2;if(1){i=3;i=4;}return i;}"
 
 echo OK

@@ -47,7 +47,9 @@ enum {
 	ND_INT,
 	ND_CHAR,
 	ND_DEREF,
-	ND_ADDRESS
+	ND_ADDRESS,
+	ND_BLOCKITEMLIST,
+	ND_COMPOUND_STMT,
 };
 
 enum {
@@ -103,7 +105,12 @@ void runtest();
 // parse.c 
 void program();
 Node *function();
+Node *compound_statement();
+Node *block_item_list();
+Node *block_item();
+Node *declaration();
 Node *statement();
+Node *jump_statement();
 Node *expression_statement();
 Node *selection_statement();
 Node *iteration_statement();

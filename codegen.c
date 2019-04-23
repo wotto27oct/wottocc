@@ -19,9 +19,26 @@ void gen_lval(Node *node) {
 // emurate stack machine
 void gen(Node *node) {
 	if (node->node_ty == ND_FUNCDEF) {
-		int i = 0;
+		/*int i = 0;
 		for (; i < node->stmts->len; i++) {
 			gen(vec_get(node->stmts, i));
+			// as a result of statement, there must be one value at stack register
+			printf("  pop rax\n");
+		}
+		return;*/
+		gen(node->lhs);
+		return;
+	}
+
+	if (node->node_ty == ND_COMPOUND_STMT) {
+		if (node->lhs != NULL) gen(node->lhs);
+		return;
+	}
+
+	if (node->node_ty == ND_BLOCKITEMLIST) {
+		int i = 0;
+		for (; i < node->args->len; i++) {
+			gen(vec_get(node->args, i));
 			// as a result of statement, there must be one value at stack register
 			printf("  pop rax\n");
 		}

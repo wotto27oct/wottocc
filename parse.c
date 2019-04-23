@@ -50,26 +50,48 @@ Node *function() {
 
 	}
 	node->args = args;
-	consume('{');
+	node->lhs = compound_statement();
+	/*consume('{');
 	node->stmts = new_vector();
 	while (!consume('}')) {
 		vec_push(node->stmts, statement());
+	}*/
+	return node;
+}
+
+Node *compound_statement() {
+	Node *node = new_node(ND_COMPOUND_STMT, NULL, NULL, NULL);
+	err_consume('{', "no left-brace at compound_statement");
+	if(!consume('}')){
+		node->lhs = block_item_list();
+	}
+	err_consume('}', "no right-brace at compound_statement");
+	return node;
+}
+
+Node *block_item_list() {
+	Node *node = new_node(ND_BLOCKITEMLIST, NULL, NULL, NULL);
+	Vector *args = new_vector();
+	while (1) {
+		Node *arg = block_item();
+		if (arg == NULL) break;
+		else vec_push(args, arg);
+	}
+	node->args = args;
+	return node;
+}
+
+Node *block_item() {
+	Node *node = declaration();
+	if (node == NULL){
+		node = statement();
 	}
 	return node;
 }
 
-Node *statement() {
-	Node *node;
-
-	if (consume(TK_RETURN)) {
-		node = new_node(ND_RETURN, NULL, assign(), NULL);
-		err_consume(';', "no ';' at return");
-	} else if (read_nextToken(TK_IF)) {
-		node = selection_statement();
-	} else if (read_nextToken(TK_WHILE) || read_nextToken(TK_FOR)) {
-		node = iteration_statement();
-	} else if (consume(TK_INT)) {
-		// int x[10];
+Node *declaration() {
+	Node *node = NULL;
+	if (consume(TK_INT)) {
 		Type *type = new_type(TY_INT); 
 
 		while (consume('*')) {
@@ -97,16 +119,38 @@ Node *statement() {
 		node->name = vname;
 
 		err_consume(';', "no ';' at declaration");
+	}
+	return node;
+}
 
+
+Node *statement() {
+	Node *node = NULL;
+
+	if (read_nextToken(TK_RETURN)) {
+		node = jump_statement();
+	} else if (read_nextToken(TK_IF)) {
+		node = selection_statement();
+	} else if (read_nextToken(TK_WHILE) || read_nextToken(TK_FOR)) {
+		node = iteration_statement();
+	} else if (read_nextToken('{')) {
+		node = compound_statement();
 	} else {
 		node = expression_statement();
 	}
 	return node;
 }
 
+Node *jump_statement() {
+	consume(TK_RETURN);
+	Node *node = new_node(ND_RETURN, NULL, assign(), NULL);
+	err_consume(';', "no ';' at return");
+	return node;
+}
+
 Node *expression_statement() {
 	Node *node = assign();
-	err_consume(';', "no ';' at end of the expression");
+	if (node != NULL) err_consume(';', "no ';' at end of the expression_statement\n");
 	return node;
 }
 
@@ -337,7 +381,8 @@ Node *term() {
 		break;
 	}
 	
-	error("the token is neither number nor left-parenthesis: %s\n", 
-			((Token *)vec_get(tokens, pos))->input);
-	exit(1);
+	//error("the token is neither number nor left-parenthesis: %s\n", 
+			//((Token *)vec_get(tokens, pos))->input);
+	//exit(1);
+	return NULL;
 }

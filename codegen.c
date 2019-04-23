@@ -187,15 +187,17 @@ void gen(Node *node) {
 		gen(node->lhs);
 		gen(node->rhs);
 		if (node->lhs->value_ty->ty == TY_PTR && node->rhs->value_ty->ty == TY_INT) {
-			int ptr_offset = 8;
-			if(node->lhs->value_ty->ptrof->ty == TY_INT) ptr_offset = 4;
+			//int ptr_offset = 8;
+			//if(node->lhs->value_ty->ptrof->ty == TY_INT) ptr_offset = 4;
+			int ptr_offset = get_typesize(node->lhs->value_ty->ptrof);
 			printf("  pop rax\n"); // rax = rhs
 			printf("  mov rdi, %d\n", ptr_offset);
 			printf("  mul rdi\n");
 			printf("  push rax\n");
 		} else if (node->lhs->value_ty->ty == TY_INT && node->rhs->value_ty->ty == TY_PTR) {
-			int ptr_offset = 8;
-			if(node->rhs->value_ty->ptrof->ty == TY_INT) ptr_offset = 4;
+			//int ptr_offset = 8;
+			//if(node->rhs->value_ty->ptrof->ty == TY_INT) ptr_offset = 4;
+			int ptr_offset = get_typesize(node->rhs->value_ty->ptrof);
 			printf("  pop rsi\n"); // rsi = rhs
 			printf("  pop rax\n"); // rax = lhs
 			printf("  mov rdi, %d\n", ptr_offset);

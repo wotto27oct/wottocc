@@ -53,53 +53,21 @@ Node *function() {
 	consume('{');
 	node->stmts = new_vector();
 	while (!consume('}')) {
-		vec_push(node->stmts, stmt());
+		vec_push(node->stmts, statement());
 	}
 	return node;
 }
 
-Node *stmt() {
+Node *statement() {
 	Node *node;
 
 	if (consume(TK_RETURN)) {
 		node = new_node(ND_RETURN, NULL, assign(), NULL);
 		err_consume(';', "no ';' at return");
-	} else if (consume(TK_IF)) {
-		node = new_node(ND_IF, NULL, NULL, NULL);
-		err_consume('(', "no left-parenthesis at if");
-		Vector *arg = new_vector();
-		vec_push(arg, assign());
-		node->args = arg;
-		err_consume(')', "no right-parenthesis at if");
-		node->lhs = stmt();
-		if (consume(TK_ELSE)) {
-			node->rhs = stmt();
-		} else {
-			node->rhs = NULL;
-		}
-		
-	} else if (consume(TK_WHILE)) {
-		node = new_node(ND_WHILE, NULL, NULL, NULL);
-		err_consume('(', "no left-parenthesis at while");
-		Vector *arg = new_vector();
-		vec_push(arg, assign());
-		node->args = arg;
-		err_consume(')', "no right-parenthesis at while");
-		node->lhs = stmt();
-
-	} else if (consume(TK_FOR)) {
-		node = new_node(ND_FOR, NULL, NULL, NULL);
-		err_consume('(', "no left-parenthesis at for");
-		Vector *arg = new_vector();
-		vec_push(arg, assign());
-		err_consume(';', "no ';' at while");
-		vec_push(arg, equal());
-		err_consume(';', "no ';' at while");
-		vec_push(arg, assign());
-		node->args = arg;
-		err_consume(')', "no right-parenthesis at for");
-		node->lhs = stmt();
-
+	} else if (read_nextToken(TK_IF)) {
+		node = selection_statement();
+	} else if (read_nextToken(TK_WHILE) || read_nextToken(TK_FOR)) {
+		node = iteration_statement();
 	} else if (consume(TK_INT)) {
 		// int x[10];
 		Type *type = new_type(TY_INT); 
@@ -131,11 +99,63 @@ Node *stmt() {
 		err_consume(';', "no ';' at declaration");
 
 	} else {
-		node = assign();
-		err_consume(';', "no ';' at end of the expression");
+		node = expression_statement();
 	}
 	return node;
 }
+
+Node *expression_statement() {
+	Node *node = assign();
+	err_consume(';', "no ';' at end of the expression");
+	return node;
+}
+
+Node *selection_statement() {
+	Node *node;
+	if (consume(TK_IF)) {
+		node = new_node(ND_IF, NULL, NULL, NULL);
+		err_consume('(', "no left-parenthesis at if");
+		Vector *arg = new_vector();
+		vec_push(arg, assign());
+		node->args = arg;
+		err_consume(')', "no right-parenthesis at if");
+		node->lhs = statement();
+		if (consume(TK_ELSE)) {
+			node->rhs = statement();
+		} else {
+			node->rhs = NULL;
+		}
+	}
+	return node;
+}
+
+Node *iteration_statement() {
+	Node *node;
+	if (consume(TK_WHILE)) {
+		node = new_node(ND_WHILE, NULL, NULL, NULL);
+		err_consume('(', "no left-parenthesis at while");
+		Vector *arg = new_vector();
+		vec_push(arg, assign());
+		node->args = arg;
+		err_consume(')', "no right-parenthesis at while");
+		node->lhs = statement();
+
+	} else if (consume(TK_FOR)) {
+		node = new_node(ND_FOR, NULL, NULL, NULL);
+		err_consume('(', "no left-parenthesis at for");
+		Vector *arg = new_vector();
+		vec_push(arg, assign());
+		err_consume(';', "no ';' at while");
+		vec_push(arg, equal());
+		err_consume(';', "no ';' at while");
+		vec_push(arg, assign());
+		node->args = arg;
+		err_consume(')', "no right-parenthesis at for");
+		node->lhs = statement();
+	}
+	return node;
+}
+
 
 Node *assign() {
 	Node *node = equal();

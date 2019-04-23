@@ -24,6 +24,7 @@ enum {
 	TK_WHILE,
 	TK_FOR,
 	TK_INT,			// token type of int
+	TK_CHAR,
 	TK_EOF,			// token type of EOF
 };
 
@@ -44,12 +45,14 @@ enum {
 	ND_WHILE,
 	ND_FOR,
 	ND_INT,
+	ND_CHAR,
 	ND_DEREF,
 	ND_ADDRESS
 };
 
 enum {
 	TY_INT = 512,
+	TY_CHAR,
 	TY_PTR,
 	TY_ARRAY
 };
@@ -100,7 +103,10 @@ void runtest();
 // parse.c 
 void program();
 Node *function();
-Node *stmt();
+Node *statement();
+Node *expression_statement();
+Node *selection_statement();
+Node *iteration_statement();
 Node *assign();
 Node *equal();
 Node *compare();
@@ -136,11 +142,13 @@ void test_map();
 char *new_str(const char*);
 void error(const char*, ...);
 int get_stackpos(Map*, int);
+int get_typesize(Type*);
 Node *new_node(int, Type*, Node*, Node*);
 Node *new_node_num(int);
 Node *new_node_ident(char*);
 Node *new_node_func(char*, Vector*);
 Type *new_type(int);
+int read_nextToken(int);
 int consume(int);
 int err_consume(int, const char*);
 

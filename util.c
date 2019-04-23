@@ -80,9 +80,14 @@ Type *new_type(int ty) {
 	return type;
 }
 
+int read_nextToken(int ty) {
+	if (((Token *)vec_get(tokens, pos))->ty == ty) return 1;
+	return 0;
+}
+
 // consume tokens if the next token is as expected.
 int consume(int ty) {
-	if (((Token *)vec_get(tokens, pos))->ty != ty)
+	if (read_nextToken(ty) != 1)
 		return 0;
 	pos++;
 	return 1;

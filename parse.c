@@ -117,31 +117,6 @@ Node *declaration(Env *env) {
 		if (read_nextToken(';') == 0) {
 			node->lhs = init_declarator_list(env, type);
 		}
-			
-
-		/*while (consume('*')) {
-			Type *newtype = new_type(TY_PTR);
-			newtype->ptrof = type;
-			type = newtype;
-		}
-
-		err_consume(TK_IDENT, "it's not suitable format for declaration");
-		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
-
-		if (consume('[')) {
-			err_consume(TK_NUM, "array initializer must be number");
-			Type *newtype = new_type(TY_ARRAY);
-			newtype->ptrof = type;
-			newtype->array_size = ((Token *)vec_get(tokens,pos-1))->val;
-			type = newtype;
-			err_consume(']', "no ']' at array-def");
-		}
-		
-		//Map *variables = vec_get(genv, envnum);
-		map_put(env->variables, vname, 0, type);
-		
-		node = new_node(ND_INT, type, env, NULL, NULL);
-		node->name = vname;*/
 
 		err_consume(';', "no ';' at declaration");
 	}
@@ -223,8 +198,14 @@ Node *jump_statement(Env *env) {
 }
 
 Node *expression_statement(Env *env) {
-	Node *node = assign(env);
-	if (node != NULL) err_consume(';', "no ';' at end of the expression_statement\n");
+	Node *node = new_node(ND_EXPRESSION_STMT, NULL, env, assign(env), NULL);
+	if (node->lhs == NULL) {
+		if (!consume(';')) {
+			return NULL;
+		}
+	} else {
+		err_consume(';', "no ';' at end of the expression_statement\n");
+	}
 	return node;
 }
 

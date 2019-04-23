@@ -55,6 +55,14 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->node_ty == ND_EXPRESSION_STMT) {
+		if (node->lhs != NULL) gen(node->lhs);
+		// there must not be a value at stack resister after statement
+		// (not expression)
+		printf("  pop rax\n");
+		return;
+	}
+
 	if (node->node_ty == ND_IF) {
 		int now_loop_cnt = loop_cnt;
 		loop_cnt++;
@@ -113,7 +121,7 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_DECLARATION) {
-		printf("  push 1\n"); // must be one value on stack register
+		//printf("  push 1\n"); // must be one value on stack register
 		return;
 	}
 

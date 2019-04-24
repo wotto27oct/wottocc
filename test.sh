@@ -80,4 +80,7 @@ try 1 "int main(){int i;i=0;switch(i){case 0: break; case 1: break;} return 1;}"
 try 2 "int main(){int i;i=0;switch(i){case 0: i=2;break; case 1: break;} return i;}"
 try 3 "int main(){int i;i=2;switch(i){case 0: i=0; break; case 2: i=3; break;} return i;}"
 
+try 3 "int main(){int i;i=0;while(i<3){while(i<2){++i;} ++i;}return i;}"
+try 5 "int main(){int i;i=0;while(1){while(1){++i; if(i==5){break;}} break;} return i;}"
+
 echo OK

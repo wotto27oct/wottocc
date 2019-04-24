@@ -102,6 +102,8 @@ typedef struct Env {
 	Vector *inner;
 	int stackpos;
 	Vector *cases;
+	int my_loop_cnt;
+	int my_switch_cnt;
 } Env;
 
 typedef struct Node {
@@ -111,7 +113,7 @@ typedef struct Node {
 	struct Node *rhs;	// RHS
 	struct Env *env;
 
-	int val;			// use if ty==ND_NUM
+	int val;			// use if ty==ND_NUM or ND_CASE
 	char *name;			// use if ty==ND_IDENT or ND_FUNC
 	char *fname;		// use if ty==ND_FUNCDEF
 	
@@ -192,7 +194,7 @@ extern Vector *genv;
 extern int pos;
 extern int loop_cnt;
 extern int while_loop_cnt;
-extern int case_loop_cnt;
+extern int switch_loop_cnt;
 extern Vector *functions;
 extern int envnum;
 

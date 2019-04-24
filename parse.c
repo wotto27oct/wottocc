@@ -60,6 +60,8 @@ Node *compound_statement(Env *env) {
 	err_consume('{', "no left-brace at compound_statement");
 	//if(!consume('}')){
 		Env *inner_env = new_env(env);
+		inner_env->my_switch_cnt = env->my_switch_cnt;
+		inner_env->my_loop_cnt = env->my_loop_cnt;
 		node->lhs = block_item_list(inner_env);
 		vec_push(env->inner, inner_env);
 	//} else {
@@ -215,17 +217,12 @@ Node *selection_statement(Env *env) {
 		err_consume('(', "no left-parenthesis at switch");
 		node = new_node(ND_SWITCH, NULL, env, assign(env), NULL);
 		err_consume(')', "no right-parenthesis at switch");
-		node->rhs = statement(env);
-		//err_consume('{', "no left-brace at switch");
-		/*Node *arg;
-		Vector *args = new_vector();
-		while (1) {
-			arg = labeled_statement(env);
-			if (arg == NULL) break;
-			vec_push(args, arg);
-		}
-		node->args = args;*/
-		//err_consume('}', "no right-brace at switch");
+		Env *inner_env = new_env(env);
+		switch_loop_cnt++;
+		inner_env->my_switch_cnt = switch_loop_cnt;
+		inner_env->my_loop_cnt = while_loop_cnt;
+		node->rhs = statement(inner_env);
+		vec_push(env->inner, inner_env);
 	}
 
 	return node;
@@ -234,8 +231,9 @@ Node *selection_statement(Env *env) {
 Node *labeled_statement(Env *env) {
 	Node *node = NULL;
 	if (consume(TK_CASE)) {
-		vec_push(env->cases, equal(env));
 		node = new_node(ND_CASE, NULL, env, NULL, NULL);
+		node->val = env->cases->len;
+		vec_push(env->cases, equal(env));
 		err_consume(':', "no colon at case");
 		node->rhs = statement(env);
 	}
@@ -252,7 +250,13 @@ Node *iteration_statement(Env *env) {
 		vec_push(arg, assign(env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at while");
-		node->lhs = statement(env);
+		Env *inner_env = new_env(env);
+		switch_loop_cnt++;
+		while_loop_cnt = switch_loop_cnt;
+		inner_env->my_switch_cnt = switch_loop_cnt;
+		inner_env->my_loop_cnt = while_loop_cnt;
+		node->lhs = statement(inner_env);
+		vec_push(env->inner, inner_env);
 
 	} else if (consume(TK_FOR)) {
 		node = new_node(ND_FOR, NULL, env, NULL, NULL);
@@ -265,7 +269,13 @@ Node *iteration_statement(Env *env) {
 		vec_push(arg, assign(env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at for");
-		node->lhs = statement(env);
+		Env *inner_env = new_env(env);
+		switch_loop_cnt++;
+		while_loop_cnt = switch_loop_cnt;
+		inner_env->my_switch_cnt = switch_loop_cnt;
+		inner_env->my_loop_cnt = while_loop_cnt;
+		node->lhs = statement(inner_env);
+		vec_push(env->inner, inner_env);
 	}
 	return node;
 }

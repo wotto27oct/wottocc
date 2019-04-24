@@ -56,7 +56,8 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_BREAK) {
-		printf("  jmp .Lend%d\n", while_loop_cnt);
+		//printf("  jmp .Lend%d\n", while_loop_cnt);
+		printf("  jmp .Lend%d\n", node->env->my_switch_cnt);
 		return;
 	}
 
@@ -76,24 +77,24 @@ void gen(Node *node) {
 		// result must be on top of the stack
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .Lend%d\n", now_loop_cnt);
+		printf("  je .ILend%d\n", now_loop_cnt);
 		gen(node->lhs);
 		if (node->rhs != NULL) {
-			printf("  jmp .ELend%d\n", now_loop_cnt);
+			printf("  jmp .IELend%d\n", now_loop_cnt);
 		}
-		printf(".Lend%d:\n", now_loop_cnt);
+		printf(".ILend%d:\n", now_loop_cnt);
 		if (node->rhs != NULL) {
 			// else
 			gen(node->rhs);
-			printf(".ELend%d:\n", now_loop_cnt);
+			printf(".IELend%d:\n", now_loop_cnt);
 		}
 		return;
 	}
 
 	if (node->node_ty == ND_SWITCH) {
-		int now_loop_cnt = loop_cnt;
-		while_loop_cnt = loop_cnt;
-		loop_cnt += node->rhs->env->cases->len;
+		//int now_loop_cnt = loop_cnt;
+		//while_loop_cnt = loop_cnt;
+		//loop_cnt += node->rhs->env->cases->len;
 		gen(node->lhs);
 		// switch value must be on top of the stack
 		for (int i = node->rhs->lhs->env->cases->len - 1; i >= 0; i--) {	
@@ -102,7 +103,8 @@ void gen(Node *node) {
 			printf("  pop rdi\n");
 			printf("  pop rax\n");
 			printf("  cmp rax, rdi\n");
-			printf("  je .Lbegin%d\n", now_loop_cnt + i);
+			//printf("  je .Lbegin%d\n", now_loop_cnt + i);
+			printf("  je .LC%dbegin%d\n", node->rhs->env->my_switch_cnt, i);
 			printf("  push rax\n");
 		}
 		printf("  pop rax\n");
@@ -112,14 +114,15 @@ void gen(Node *node) {
 			gen(tmp->rhs);
 		}*/
 		gen(node->rhs);
-		printf(".Lend%d:\n", now_loop_cnt);
+		//printf(".Lend%d:\n", now_loop_cnt);
+		printf(".Lend%d:\n", node->rhs->env->my_switch_cnt);
 		return;
 	}
 
 	if (node->node_ty == ND_CASE) {
-		int now_loop_cnt = case_loop_cnt;
-		case_loop_cnt++;
-		printf(".Lbegin%d:\n", now_loop_cnt);
+		//int now_loop_cnt = switch_loop_cnt;
+		//case_loop_cnt++;
+		printf(".LC%dbegin%d:\n", node->env->my_switch_cnt, node->val);
 		gen(node->rhs);
 		//gen(node->lhs);
 		// case * must be on top of the stack
@@ -135,39 +138,47 @@ void gen(Node *node) {
 
 
 	if (node->node_ty == ND_WHILE) {
-		int now_loop_cnt = loop_cnt;
-		while_loop_cnt = loop_cnt;
-		loop_cnt++;
-		printf(".Lbegin%d:\n", now_loop_cnt);
+		//int now_loop_cnt = loop_cnt;
+		//while_loop_cnt = loop_cnt;
+		//loop_cnt++;
+		//printf(".Lbegin%d:\n", now_loop_cnt);
+		printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
 		Node *arg = vec_get(node->args, 0);
 		gen(arg);
 		// result must be on top of the stack
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .Lend%d\n", now_loop_cnt);
+		printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
+		//printf("  je .Lend%d\n", now_loop_cnt);
 		gen(node->lhs);
-		printf("  jmp .Lbegin%d\n", now_loop_cnt);
-		printf(".Lend%d:\n", now_loop_cnt);
+		//printf("  jmp .Lbegin%d\n", now_loop_cnt);
+		printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
+		//printf(".Lend%d:\n", now_loop_cnt);
+		printf(".Lend%d:\n", node->lhs->env->my_loop_cnt);
 		return;
 	}	
 
 	if (node->node_ty == ND_FOR) {
-		int now_loop_cnt = loop_cnt;
-		while_loop_cnt = loop_cnt;
-		loop_cnt++;
+		//int now_loop_cnt = loop_cnt;
+		//while_loop_cnt = loop_cnt;
+		//loop_cnt++;
 		Node *arg = vec_get(node->args, 0);
 		gen(arg);
-		printf(".Lbegin%d:\n", now_loop_cnt);
+		//printf(".Lbegin%d:\n", now_loop_cnt);
+		printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
 		arg = vec_get(node->args, 1);
 		gen(arg);
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .Lend%d\n", now_loop_cnt);
+		//printf("  je .Lend%d\n", now_loop_cnt);
+		printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
 		gen(node->lhs);
 		arg = vec_get(node->args, 2);
 		gen(arg);
-		printf("  jmp .Lbegin%d\n", now_loop_cnt);
-		printf(".Lend%d:\n", now_loop_cnt);
+		//printf("  jmp .Lbegin%d\n", now_loop_cnt);
+		printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
+		//printf(".Lend%d:\n", now_loop_cnt);
+		printf(".Lend%d:\n", node->lhs->env->my_loop_cnt);
 		return;
 	}
 

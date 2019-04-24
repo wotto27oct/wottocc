@@ -117,6 +117,7 @@ Env *new_env(Env *outer) {
 	env->inner = new_vector();
 	env->stackpos = 0;
 	env->cases = new_vector();
+	env->my_loop_cnt = 0;
 	return env;
 }
 

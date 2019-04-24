@@ -52,27 +52,8 @@ Node *function() {
 	node->args = args;
 
 	node->lhs = compound_statement(node->env);
-	/*consume('{');
-	node->stmts = new_vector();
-	while (!consume('}')) {
-		vec_push(node->stmts, statement());
-	}*/
 	return node;
 }
-
-/*Node *declaration_list(Env *env)
-{
-	Node *node = new_node(ND_DECLARATIONLIST, NULL, env, NULL, NULL);
-	err_consume('(', "no left-parenthesis at declaration_list");
-	Vector *args = new_vector();
-	while (1) {
-		Node *arg = declaration(env);
-		if (arg == NULL) break;
-		else vec_push(args, arg);
-	}
-	node->args = args;
-	return node;
-}*/
 
 Node *compound_statement(Env *env) {
 	Node *node = new_node(ND_COMPOUND_STMT, NULL, env, NULL, NULL);
@@ -163,7 +144,6 @@ Node *declarator(Env *env, Type *sp_type) {
 		err_consume(']', "no ']' at array-def");
 	}
 	
-	//Map *variables = vec_get(genv, envnum);
 	map_put(env->variables, vname, 0, type);
 	
 	Node *node = new_node(ND_DECLARATOR, type, env, NULL, NULL);
@@ -176,7 +156,7 @@ Node *declarator(Env *env, Type *sp_type) {
 
 Node *statement(Env *env) {
 	Node *node = NULL;
-	if (read_nextToken(TK_RETURN)) {
+	if (read_nextToken(TK_RETURN) || read_nextToken(TK_BREAK)) {
 		node = jump_statement(env);
 	} else if (read_nextToken(TK_IF)) {
 		node = selection_statement(env);
@@ -191,9 +171,14 @@ Node *statement(Env *env) {
 }
 
 Node *jump_statement(Env *env) {
-	consume(TK_RETURN);
-	Node *node = new_node(ND_RETURN, NULL, env, assign(env), NULL);
-	err_consume(';', "no ';' at return");
+	Node *node = NULL;
+	if (consume(TK_RETURN)) {
+		node = new_node(ND_RETURN, NULL, env, assign(env), NULL);
+		err_consume(';', "no ';' at return");
+	} else if (consume(TK_BREAK)) {
+		node = new_node(ND_BREAK, NULL, env, NULL, NULL);
+		err_consume(';', "no ';' at break");
+	}
 	return node;
 }
 

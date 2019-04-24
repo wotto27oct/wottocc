@@ -55,6 +55,11 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->node_ty == ND_BREAK) {
+		printf("  jmp .Lend%d\n", while_loop_cnt);
+		return;
+	}
+
 	if (node->node_ty == ND_EXPRESSION_STMT) {
 		if (node->lhs != NULL) gen(node->lhs);
 		// there must not be a value at stack resister after statement
@@ -87,6 +92,7 @@ void gen(Node *node) {
 
 	if (node->node_ty == ND_WHILE) {
 		int now_loop_cnt = loop_cnt;
+		while_loop_cnt = loop_cnt;
 		loop_cnt++;
 		printf(".Lbegin%d:\n", now_loop_cnt);
 		Node *arg = vec_get(node->args, 0);
@@ -103,6 +109,7 @@ void gen(Node *node) {
 
 	if (node->node_ty == ND_FOR) {
 		int now_loop_cnt = loop_cnt;
+		while_loop_cnt = loop_cnt;
 		loop_cnt++;
 		Node *arg = vec_get(node->args, 0);
 		gen(arg);

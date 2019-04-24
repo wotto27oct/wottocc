@@ -69,5 +69,10 @@ try 4 "int main(){int i;i=2;if(1){i=3;i=4;}return i;}"
 try 3 "int main(){int i;i=3;{int i;i=4;}return i;}"
 
 try 10 "int main(){int x,y;x=5;y=10;return y;}"
+try 3 "int main(){int *x,y;y=3;return y;}"
+
+try 0 "int main(){while(1){break;}return 0;}"
+try 1 "int main(){int i;i=1;while(1){if(i==1)break;}return i;}"
+try 11 "int main(){int i;i=0;while(1){if(i>10) break; i=i+1;}return i;}"
 
 echo OK

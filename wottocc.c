@@ -10,6 +10,7 @@ int pos = 0;
 
 // number of loop_label
 int loop_cnt = 0;
+int while_loop_cnt = 0;
 
 void runtest() {
 	test_vector();

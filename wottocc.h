@@ -23,6 +23,7 @@ enum {
 	TK_ELSE,
 	TK_WHILE,
 	TK_FOR,
+	TK_BREAK,
 	TK_INT,			// token type of int
 	TK_CHAR,
 	TK_EOF,			// token type of EOF
@@ -44,6 +45,7 @@ enum {
 	ND_ELSE,
 	ND_WHILE,
 	ND_FOR,
+	ND_BREAK,
 	ND_INT,
 	ND_CHAR,
 	ND_DEREF,
@@ -183,6 +185,7 @@ extern Vector *tokens;
 extern Vector *genv;
 extern int pos;
 extern int loop_cnt;
+extern int while_loop_cnt;
 extern Vector *functions;
 extern int envnum;
 

@@ -146,6 +146,8 @@ void tokenize(char *p) {
 				tmp->ty = TK_WHILE;
 			} else if (strcmp(buf_str, "for") == 0) {
 				tmp->ty = TK_FOR;
+			} else if (strcmp(buf_str, "break") == 0) {
+				tmp->ty = TK_BREAK;
 			} else if (strcmp(buf_str, "int") == 0) {
 				tmp->ty = TK_INT;
 			} else if (strcmp(buf_str, "char") == 0) {

@@ -60,6 +60,12 @@ void gen(Node *node) {
 		printf("  jmp .Lend%d\n", node->env->my_switch_cnt);
 		return;
 	}
+	
+	if (node->node_ty == ND_CONTINUE) {
+		//printf("  jmp .Lend%d\n", while_loop_cnt);
+		printf("  jmp .contin%d\n", node->env->my_loop_cnt);
+		return;
+	}
 
 	if (node->node_ty == ND_EXPRESSION_STMT) {
 		if (node->lhs != NULL) gen(node->lhs);
@@ -151,6 +157,7 @@ void gen(Node *node) {
 		printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
 		//printf("  je .Lend%d\n", now_loop_cnt);
 		gen(node->lhs);
+		printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
 		//printf("  jmp .Lbegin%d\n", now_loop_cnt);
 		printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
 		//printf(".Lend%d:\n", now_loop_cnt);
@@ -173,6 +180,7 @@ void gen(Node *node) {
 		//printf("  je .Lend%d\n", now_loop_cnt);
 		printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
 		gen(node->lhs);
+		printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
 		arg = vec_get(node->args, 2);
 		gen(arg);
 		//printf("  jmp .Lbegin%d\n", now_loop_cnt);

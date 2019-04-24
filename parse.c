@@ -160,7 +160,7 @@ Node *statement(Env *env) {
 	Node *node = NULL;
 	if (read_nextToken(TK_CASE)) {
 		node = labeled_statement(env);
-	} else if (read_nextToken(TK_RETURN) || read_nextToken(TK_BREAK)) {
+	} else if (read_nextToken(TK_RETURN) || read_nextToken(TK_BREAK) || read_nextToken(TK_CONTINUE)) {
 		node = jump_statement(env);
 	} else if (read_nextToken(TK_IF) || read_nextToken(TK_SWITCH)) {
 		node = selection_statement(env);
@@ -182,7 +182,10 @@ Node *jump_statement(Env *env) {
 	} else if (consume(TK_BREAK)) {
 		node = new_node(ND_BREAK, NULL, env, NULL, NULL);
 		err_consume(';', "no ';' at break");
-	}
+	} else if (consume(TK_CONTINUE)) {
+		node = new_node(ND_CONTINUE, NULL, env, NULL, NULL);
+		err_consume(';', "no ';' at continue");
+	} 
 	return node;
 }
 

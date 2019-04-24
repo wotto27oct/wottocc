@@ -26,6 +26,7 @@ enum {
 	TK_WHILE,
 	TK_FOR,
 	TK_BREAK,
+	TK_CONTINUE,
 	TK_INT,			// token type of int
 	TK_CHAR,
 	TK_EOF,			// token type of EOF
@@ -50,6 +51,7 @@ enum {
 	ND_WHILE,
 	ND_FOR,
 	ND_BREAK,
+	ND_CONTINUE,
 	ND_INT,
 	ND_CHAR,
 	ND_DEREF,

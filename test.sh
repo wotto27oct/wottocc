@@ -83,4 +83,6 @@ try 3 "int main(){int i;i=2;switch(i){case 0: i=0; break; case 2: i=3; break;} r
 try 3 "int main(){int i;i=0;while(i<3){while(i<2){++i;} ++i;}return i;}"
 try 5 "int main(){int i;i=0;while(1){while(1){++i; if(i==5){break;}} break;} return i;}"
 
+try 5 "int main(){int i;int a;i=0;a=0;for(i=0;i<10;++i){if(i<5) continue; ++a;} return a;}"
+
 echo OK

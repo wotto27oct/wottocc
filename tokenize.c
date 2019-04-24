@@ -11,7 +11,7 @@ void tokenize(char *p) {
 
 		if (*p == '*' || *p == '/' || *p == '(' || *p == ')' 
 			|| *p == ';' || *p == ',' || *p == '{' || *p == '}'
-			|| *p == '&' || *p == '[' || *p == ']') {
+			|| *p == '&' || *p == '[' || *p == ']' || *p == ':') {
 			Token *tmp = malloc(sizeof(Token));
 			tmp->ty = *p;
 			tmp->input = p;
@@ -142,6 +142,10 @@ void tokenize(char *p) {
 				tmp->ty = TK_IF;
 			} else if (strcmp(buf_str, "else") == 0) {
 				tmp->ty = TK_ELSE;
+			} else if (strcmp(buf_str, "switch") == 0) {
+				tmp->ty = TK_SWITCH;
+			} else if (strcmp(buf_str, "case") == 0) {
+				tmp->ty = TK_CASE;
 			} else if (strcmp(buf_str, "while") == 0) {
 				tmp->ty = TK_WHILE;
 			} else if (strcmp(buf_str, "for") == 0) {

@@ -58,13 +58,13 @@ Node *function() {
 Node *compound_statement(Env *env) {
 	Node *node = new_node(ND_COMPOUND_STMT, NULL, env, NULL, NULL);
 	err_consume('{', "no left-brace at compound_statement");
-	if(!consume('}')){
+	//if(!consume('}')){
 		Env *inner_env = new_env(env);
 		node->lhs = block_item_list(inner_env);
 		vec_push(env->inner, inner_env);
-	} else {
-		return node;
-	}
+	//} else {
+	//	return node;
+	//}
 	err_consume('}', "no right-brace at compound_statement");
 	return node;
 }
@@ -156,9 +156,11 @@ Node *declarator(Env *env, Type *sp_type) {
 
 Node *statement(Env *env) {
 	Node *node = NULL;
-	if (read_nextToken(TK_RETURN) || read_nextToken(TK_BREAK)) {
+	if (read_nextToken(TK_CASE)) {
+		node = labeled_statement(env);
+	} else if (read_nextToken(TK_RETURN) || read_nextToken(TK_BREAK)) {
 		node = jump_statement(env);
-	} else if (read_nextToken(TK_IF)) {
+	} else if (read_nextToken(TK_IF) || read_nextToken(TK_SWITCH)) {
 		node = selection_statement(env);
 	} else if (read_nextToken(TK_WHILE) || read_nextToken(TK_FOR)) {
 		node = iteration_statement(env);
@@ -209,9 +211,37 @@ Node *selection_statement(Env *env) {
 		} else {
 			node->rhs = NULL;
 		}
+	} else if (consume(TK_SWITCH)) {
+		err_consume('(', "no left-parenthesis at switch");
+		node = new_node(ND_SWITCH, NULL, env, assign(env), NULL);
+		err_consume(')', "no right-parenthesis at switch");
+		node->rhs = statement(env);
+		//err_consume('{', "no left-brace at switch");
+		/*Node *arg;
+		Vector *args = new_vector();
+		while (1) {
+			arg = labeled_statement(env);
+			if (arg == NULL) break;
+			vec_push(args, arg);
+		}
+		node->args = args;*/
+		//err_consume('}', "no right-brace at switch");
+	}
+
+	return node;
+}
+
+Node *labeled_statement(Env *env) {
+	Node *node = NULL;
+	if (consume(TK_CASE)) {
+		vec_push(env->cases, equal(env));
+		node = new_node(ND_CASE, NULL, env, NULL, NULL);
+		err_consume(':', "no colon at case");
+		node->rhs = statement(env);
 	}
 	return node;
 }
+
 
 Node *iteration_statement(Env *env) {
 	Node *node;

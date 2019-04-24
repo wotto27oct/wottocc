@@ -116,6 +116,7 @@ Env *new_env(Env *outer) {
 	env->outer = outer;
 	env->inner = new_vector();
 	env->stackpos = 0;
+	env->cases = new_vector();
 	return env;
 }
 

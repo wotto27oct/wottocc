@@ -21,6 +21,8 @@ enum {
 	TK_FUNC,
 	TK_IF,			// token type of if
 	TK_ELSE,
+	TK_SWITCH,
+	TK_CASE,
 	TK_WHILE,
 	TK_FOR,
 	TK_BREAK,
@@ -43,6 +45,8 @@ enum {
 	ND_FUNCDEF,
 	ND_IF,
 	ND_ELSE,
+	ND_SWITCH,
+	ND_CASE,
 	ND_WHILE,
 	ND_FOR,
 	ND_BREAK,
@@ -97,6 +101,7 @@ typedef struct Env {
 	struct Env *outer;
 	Vector *inner;
 	int stackpos;
+	Vector *cases;
 } Env;
 
 typedef struct Node {
@@ -131,6 +136,7 @@ Node *statement(Env*);
 Node *jump_statement(Env*);
 Node *expression_statement(Env*);
 Node *selection_statement(Env*);
+Node *labeled_statement(Env*);
 Node *iteration_statement(Env*);
 Node *assign(Env*);
 Node *equal(Env*);
@@ -186,6 +192,7 @@ extern Vector *genv;
 extern int pos;
 extern int loop_cnt;
 extern int while_loop_cnt;
+extern int case_loop_cnt;
 extern Vector *functions;
 extern int envnum;
 

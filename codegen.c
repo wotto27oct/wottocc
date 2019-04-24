@@ -90,6 +90,50 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->node_ty == ND_SWITCH) {
+		int now_loop_cnt = loop_cnt;
+		while_loop_cnt = loop_cnt;
+		loop_cnt += node->rhs->env->cases->len;
+		gen(node->lhs);
+		// switch value must be on top of the stack
+		for (int i = node->rhs->lhs->env->cases->len - 1; i >= 0; i--) {	
+			Node *tmp = vec_get(node->rhs->lhs->env->cases, i);
+			gen(tmp);
+			printf("  pop rdi\n");
+			printf("  pop rax\n");
+			printf("  cmp rax, rdi\n");
+			printf("  je .Lbegin%d\n", now_loop_cnt + i);
+			printf("  push rax\n");
+		}
+		printf("  pop rax\n");
+		/*for (int i = node->args->len - 1; i >= 0; i--) {
+			printf(".Lbegin%d:\n", now_loop_cnt + i);
+			Node *tmp = vec_get(node->args, i);
+			gen(tmp->rhs);
+		}*/
+		gen(node->rhs);
+		printf(".Lend%d:\n", now_loop_cnt);
+		return;
+	}
+
+	if (node->node_ty == ND_CASE) {
+		int now_loop_cnt = case_loop_cnt;
+		case_loop_cnt++;
+		printf(".Lbegin%d:\n", now_loop_cnt);
+		gen(node->rhs);
+		//gen(node->lhs);
+		// case * must be on top of the stack
+		/*printf("  pop rdi\n");
+		printf("  pop rax\n");
+		printf("  cmp rax, rdi\n");
+		printf("  jne .Lend%d:\n", now_loop_cnt);
+		gen(node->rhs);
+		printf(".Lend%d:\n", now_loop_cnt);*/
+		
+		return;
+	}
+
+
 	if (node->node_ty == ND_WHILE) {
 		int now_loop_cnt = loop_cnt;
 		while_loop_cnt = loop_cnt;

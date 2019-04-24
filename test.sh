@@ -75,4 +75,9 @@ try 0 "int main(){while(1){break;}return 0;}"
 try 1 "int main(){int i;i=1;while(1){if(i==1)break;}return i;}"
 try 11 "int main(){int i;i=0;while(1){if(i>10) break; i=i+1;}return i;}"
 
+try 1 "int main(){int i;i=0;switch(i){}return 1;}"
+try 1 "int main(){int i;i=0;switch(i){case 0: break; case 1: break;} return 1;}"
+try 2 "int main(){int i;i=0;switch(i){case 0: i=2;break; case 1: break;} return i;}"
+try 3 "int main(){int i;i=2;switch(i){case 0: i=0; break; case 2: i=3; break;} return i;}"
+
 echo OK

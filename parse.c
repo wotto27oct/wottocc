@@ -274,8 +274,14 @@ Node *iteration_statement(Env *env) {
 		node = new_node(ND_FOR, NULL, env, NULL, NULL);
 		err_consume('(', "no left-parenthesis at for");
 		Vector *arg = new_vector();
-		vec_push(arg, assign(env));
-		err_consume(';', "no ';' at while");
+
+		Node *tmp = assign(env);
+		if (tmp != NULL) { 
+			vec_push(arg, tmp);
+			err_consume(';', "no ';' at for");
+		} else { 
+			vec_push(arg, declaration(env));
+		}
 		vec_push(arg, equal(env));
 		err_consume(';', "no ';' at while");
 		vec_push(arg, assign(env));

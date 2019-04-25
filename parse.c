@@ -107,7 +107,7 @@ Node *declaration(Env *env) {
 }
 
 Node *init_declarator_list(Env *env, Type *sp_type) {
-	Node *node = new_node(ND_INITDECLARATORLIST, NULL, env, NULL, NULL);
+	Node *node = new_node(ND_INIT_DECLARATOR_LIST, NULL, env, NULL, NULL);
 	Vector *args = new_vector();
 	Node *arg = init_declarator(env, sp_type);
 	vec_push(args, arg);
@@ -122,6 +122,15 @@ Node *init_declarator_list(Env *env, Type *sp_type) {
 
 Node *init_declarator(Env *env, Type *sp_type) {
 	Node *node = declarator(env, sp_type);
+
+	if (consume('=')) {
+		node = new_node(ND_INIT_DECLARATOR, sp_type, env, node, initializer(env));
+	}
+	return node;
+}
+
+Node *initializer(Env *env) {
+	Node *node = assign(env);
 	return node;
 }
 
@@ -148,7 +157,7 @@ Node *declarator(Env *env, Type *sp_type) {
 	
 	map_put(env->variables, vname, 0, type);
 	
-	Node *node = new_node(ND_DECLARATOR, type, env, NULL, NULL);
+	Node *node = new_node(ND_IDENT, type, env, NULL, NULL);
 	node->name = vname;
 
 	return node;

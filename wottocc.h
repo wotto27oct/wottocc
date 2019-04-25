@@ -59,10 +59,11 @@ enum {
 	ND_BLOCKITEMLIST,
 	ND_COMPOUND_STMT,
 	ND_DECLARATION_LIST,
-	ND_INITDECLARATORLIST,
+	ND_INIT_DECLARATOR_LIST,
 	ND_DECLARATOR,
 	ND_DECLARATION,
 	ND_EXPRESSION_STMT,
+	ND_INIT_DECLARATOR,
 };
 
 enum {
@@ -135,6 +136,7 @@ Node *block_item(Env*);
 Node *declaration(Env*);
 Node *init_declarator_list(Env*, Type*);
 Node *init_declarator(Env*, Type*);
+Node *initializer(Env*);
 Node *declarator(Env *env, Type *type);
 Node *statement(Env*);
 Node *jump_statement(Env*);

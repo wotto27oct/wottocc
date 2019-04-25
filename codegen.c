@@ -192,8 +192,30 @@ void gen(Node *node) {
 
 	if (node->node_ty == ND_DECLARATION) {
 		//printf("  push 1\n"); // must be one value on stack register
+		gen(node->lhs);
 		return;
 	}
+
+	if (node->node_ty == ND_INIT_DECLARATOR_LIST) {
+		for (int i = 0; i < node->args->len; i++) {
+			gen(vec_get(node->args, i));
+		}
+		return;
+	}
+
+	if (node->node_ty == ND_INIT_DECLARATOR) {
+		gen_lval(node->lhs);
+		gen(node->rhs);
+
+		printf("  pop rdi\n");
+		printf("  pop rax\n");
+		if (node->value_ty->ty == TY_INT)
+			printf("  mov [rax], edi\n");
+	    else 
+			printf("  mov [rax], rdi\n");
+		printf("  push rdi\n");
+		return;
+	}	
 
 	if (node->node_ty == ND_NUM) {
 		printf("  push %d\n", node->val);

@@ -85,4 +85,6 @@ try 5 "int main(){int i;i=0;while(1){while(1){++i; if(i==5){break;}} break;} ret
 
 try 5 "int main(){int i;int a;i=0;a=0;for(i=0;i<10;++i){if(i<5) continue; ++a;} return a;}"
 
+try 10 "int main(){int i=10;return i;}"
+
 echo OK

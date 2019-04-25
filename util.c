@@ -84,6 +84,12 @@ Node *new_node_ident(char *name, Env *env) {
 	//Map *variables = vec_get(genv, envnum);
 	//Type *value_ty = map_get_type(env->variables, name);
 	Type *value_ty = get_valuetype(env, name);
+	if (value_ty == NULL) {
+		Node *node = new_node(ND_IDENT, value_ty, env, NULL, NULL);
+		node->name = name;
+		return node;
+	}
+
 	if (value_ty->ty == TY_ARRAY) {
 		// read array a as if pointer a
 		// cf. int a[10]; a[0]=1; *a => 1
@@ -97,10 +103,9 @@ Node *new_node_ident(char *name, Env *env) {
 	return node;
 }
 
-Node *new_node_func(char *name, Vector *args, Env *env) {
+Node *new_node_func(char *name, Env *env) {
 	Node *node = new_node(ND_FUNC, NULL, env, NULL, NULL);
 	node->name = name;
-	node->args = args;
 	return node;
 }
 

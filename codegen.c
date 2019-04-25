@@ -237,19 +237,27 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->node_ty == ND_FUNC) {
+
+	if (node->node_ty == ND_FUNC_CALL) {
 		char registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-		int i = 0;
+		/*int i = 0;
 		for (; i < node->args->len; i++) {
 			gen(vec_get(node->args, i));
-		}
-		i--;
-		for (; i>=0; i--) {
-			printf("  pop %s\n", registers[i]);
+		}*/
+		if (node->rhs == NULL) return;
+		gen(node->rhs);
+		for (int i = node->rhs->length; i>0; i--) {
+			printf("  pop %s\n", registers[i-1]);
 		}
 
-		printf("  call %s\n", node->name);
+		printf("  call %s\n", node->lhs->name);
 		printf("  push rax\n");
+		return;
+	}
+
+	if (node->node_ty == ND_ARG_EXP_LIST) {
+		gen(node->lhs);
+		gen(node->rhs);
 		return;
 	}
 

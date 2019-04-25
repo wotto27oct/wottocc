@@ -19,6 +19,7 @@ Node *function() {
 
 	node = new_node(ND_FUNCDEF, NULL, new_env(NULL), NULL, NULL);
 	node->fname = ((Token *)vec_get(tokens, pos-2))->input;
+	//map_put(node->env->variables, node->fname, 0, NULL);
 	Vector *args = new_vector();
 	// int foo(int *x, int y){ ... }
 	//Map *variables = vec_get(genv, envnum);
@@ -396,9 +397,9 @@ Node *mul(Env *env) {
 
 	for (;;) {
 		if (consume('*'))
-			node = new_node('*', new_type(TY_INT), env, node, term(env));
+			node = new_node('*', new_type(TY_INT), env, node, monomial(env));
 		else if (consume('/'))
-			node = new_node('/', new_type(TY_INT), env, node, term(env));
+			node = new_node('/', new_type(TY_INT), env, node, monomial(env));
 		else
 			return node;
 	}
@@ -410,10 +411,10 @@ Node *monomial(Env *env) {
 	// distinct repeatable and unrepeatable
 	for (;;) {
 		if (consume(TK_PREINC)) {
-			node = new_node(ND_PREINC, new_type(TY_INT), env, term(env), NULL);
+			node = new_node(ND_PREINC, new_type(TY_INT), env, postfix_expression(env), NULL);
 			return node;
 		} else if (consume(TK_PREDEC)) {
-			node = new_node(ND_PREDEC, new_type(TY_INT), env, term(env), NULL);
+			node = new_node(ND_PREDEC, new_type(TY_INT), env, postfix_expression(env), NULL);
 			return node;
 		} else if (consume('*')) {
 			Node *lhs = monomial(env);
@@ -422,24 +423,58 @@ Node *monomial(Env *env) {
 			}
 			node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), env, lhs, NULL);
 		} else if (consume('&')) {
-			node = new_node('&', new_type(TY_PTR), env, term(env), NULL);
+			node = new_node('&', new_type(TY_PTR), env, postfix_expression(env), NULL);
 			return node;
 		} else {
-			if (node == NULL) node = term(env);
+			if (node == NULL) node = postfix_expression(env);
 			return node;
 		}
 	}
 }
 
-Node *term(Env *env) {
+Node *postfix_expression(Env *env) {
+	Node *node = primary_expression(env);
+
+	for(;;) {
+		if (consume('[')) {
+			// a[3] -> *(a + 3)
+			//char *t_name = ((Token *)vec_get(tokens, pos++))->input;
+			//Node *lhs = new_node_ident(t_name, env);
+			Node *rhs = assign(env); // to change
+			Node *plus = new_node('+', new_type(TY_PTR), env, node, rhs);
+			node = new_node(ND_DEREF, new_type(node->value_ty->ptrof->ty), env, plus, NULL);
+			err_consume(']', "no right_braket at array");
+		} else if (consume('(')) {
+			//char *t_name = ((Token *)vec_get(tokens, pos++))->input;
+			//node = new_node_ident(t_name, env);
+			node = new_node(ND_FUNC_CALL, NULL, env, node, argument_expression_list(env));
+			err_consume(')', "no right-parenthesis at func_call");
+		} else {
+			return node;
+		}
+	}
+}
+
+Node *argument_expression_list(Env *env) {
+	Node *node = assign(env);
+	int length = 1;
+	if (node == NULL) return NULL;
+	node->length = length;
+	for (;;) {
+		if (consume(',')) {
+			node = new_node(ND_ARG_EXP_LIST, NULL, env, node, assign(env));
+			node->length = ++length;
+		} else {
+			return node;
+		}
+	}
+}
+
+
+Node *primary_expression(Env *env) {
 	if (consume('(')) {
 		Node *node = add(env);
-		if (!consume(')')) {
-			//error("there isn't right-parenthesis: %s", tokens[pos].input);
-			error("there isn't right-parenthesis: %s\n", 
-					((Token *)vec_get(tokens, pos))->input);
-			exit(1);
-		}
+		err_consume(')', "there isn't right-parenthesis at primary_expression");
 		return node;
 	}
 
@@ -451,8 +486,7 @@ Node *term(Env *env) {
 		break;
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
-		if (consume('(')) {
-			// foo(x, y);
+		/*if (consume('(')) {
 			Vector *args = new_vector();
 			while (1) {
 				if (consume(')')) {
@@ -473,15 +507,12 @@ Node *term(Env *env) {
 			Node *node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), env, plus, NULL);
 			err_consume(']', "no right-bracket at array_suffix");
 			return node;
-		} else {
-			Node *node = new_node_ident(t_name, env);
-			return node;
-		}
+		} else {*/
+		Node *node = new_node_ident(t_name, env);
+		return node;
+		//}
 		break;
 	}
 	
-	//error("the token is neither number nor left-parenthesis: %s\n", 
-			//((Token *)vec_get(tokens, pos))->input);
-	//exit(1);
 	return NULL;
 }

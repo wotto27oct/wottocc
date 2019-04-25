@@ -18,6 +18,8 @@ void runtest() {
 	test_map();
 }
 
+Env *global;
+
 int main(int argc, char **argv) {
 
 	if (argc != 2) {
@@ -34,6 +36,7 @@ int main(int argc, char **argv) {
 	genv = new_vector();
 	envnum = 0;
 	functions = new_vector();
+	global = new_env(NULL);
 
 	// tokenize and parse
 	tokenize(argv[1]);

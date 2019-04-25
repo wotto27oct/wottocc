@@ -64,6 +64,8 @@ enum {
 	ND_DECLARATION,
 	ND_EXPRESSION_STMT,
 	ND_INIT_DECLARATOR,
+	ND_ARG_EXP_LIST,
+	ND_FUNC_CALL,
 };
 
 enum {
@@ -119,6 +121,7 @@ typedef struct Node {
 	int val;			// use if ty==ND_NUM or ND_CASE
 	char *name;			// use if ty==ND_IDENT or ND_FUNC
 	char *fname;		// use if ty==ND_FUNCDEF
+	int length;			// use if ty==ND_ARG_EXP_LIST
 	
 	Vector *args;		// use if ty==ND_FUNC
 	Vector *stmts;		// use if ty==ND_FUNCDEF
@@ -150,7 +153,9 @@ Node *compare(Env*);
 Node *add(Env*);
 Node *mul(Env*);
 Node *monomial(Env*);
-Node *term(Env*);
+Node *postfix_expression(Env*);
+Node *argument_expression_list(Env*);
+Node *primary_expression(Env*);
 
 // tokenize.c
 void tokenize(char*);
@@ -184,7 +189,7 @@ int get_typesize(Type*);
 Node *new_node(int, Type*, Env*, Node*, Node*);
 Node *new_node_num(int, Env*);
 Node *new_node_ident(char*, Env*);
-Node *new_node_func(char*, Vector*, Env*);
+Node *new_node_func(char*, Env*);
 Type *new_type(int);
 Env *new_env(Env*);
 int read_nextToken(int);
@@ -201,5 +206,6 @@ extern int while_loop_cnt;
 extern int switch_loop_cnt;
 extern Vector *functions;
 extern int envnum;
+extern Env *global;
 
 #endif

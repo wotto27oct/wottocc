@@ -36,6 +36,8 @@ try 10 "int main(){int x; x=10; return x;}"
 
 try 4 "int main(){int i; int a; a = 10; i = 4;return i;}"
 
+try 3 "int main(){int x; x=3; int *y; y = &x; return *y;}"
+
 try 20 "int main(){int i; int a; a = 10; for(i = 0; i < 10; ++i) ++a; return a;}"
 
 try 2 "int main(int x){x = 2; return x;}"

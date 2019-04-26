@@ -16,6 +16,8 @@ enum {
 	TK_NEQUAL,		// token type of !=
 	TK_LEQ,			// token type of <=
 	TK_GEQ,			// token type of >=
+	TK_PLUSEQ,		// +=
+	TK_MINUSEQ,		// -=
 	TK_INC,		// token type of ++
 	TK_DEC,		// token type of --
 	TK_FUNC,
@@ -40,6 +42,8 @@ enum {
 	ND_NEQUAL,		// node type of !=
 	ND_LEQ,			// node type of <=
 	ND_GEQ,			// node type of >=
+	ND_PLUSEQ,
+	ND_MINUSEQ,
 	ND_PREINC,		// node type of ++ (pre)
 	ND_PREDEC,		// node type of -- (pre)
 	ND_FUNC,

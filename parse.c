@@ -339,6 +339,40 @@ Node *assignment_expression(Env *env) {
 			value_ty = rhs->value_ty;
 		}
 		node = new_node('=', value_ty, env, lhs, rhs);
+	} else if (consume(TK_PLUSEQ)) {
+		Node *lhs = node;
+		Node *rhs = assignment_expression(env);
+		Type *value_ty;
+		if (lhs->value_ty->ty == TY_INT){
+			if (rhs->value_ty->ty != TY_INT) {
+				error("+= from ptr to int: %s\n", ((Token *)vec_get(tokens, pos++))->input);
+			}
+			value_ty = new_type(TY_INT);
+		} else {
+			// ptr or array
+			if (rhs->value_ty->ty == TY_INT) {
+				error("+= from int to ptr: %s\n", ((Token *)vec_get(tokens, pos++))->input);
+			}
+			value_ty = rhs->value_ty;
+		}
+		node = new_node(ND_PLUSEQ, value_ty, env, lhs, rhs);
+	} else if (consume(TK_MINUSEQ)) {
+		Node *lhs = node;
+		Node *rhs = assignment_expression(env);
+		Type *value_ty;
+		if (lhs->value_ty->ty == TY_INT){
+			if (rhs->value_ty->ty != TY_INT) {
+				error("-= from ptr to int: %s\n", ((Token *)vec_get(tokens, pos++))->input);
+			}
+			value_ty = new_type(TY_INT);
+		} else {
+			// ptr or array
+			if (rhs->value_ty->ty == TY_INT) {
+				error("-= from int to ptr: %s\n", ((Token *)vec_get(tokens, pos++))->input);
+			}
+			value_ty = rhs->value_ty;
+		}
+		node = new_node(ND_MINUSEQ, value_ty, env, lhs, rhs);
 	}
 	return node;
 }

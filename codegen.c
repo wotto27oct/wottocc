@@ -284,6 +284,34 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->node_ty == ND_PLUSEQ) {
+		gen_lval(node->lhs);
+		gen(node->rhs);
+
+		printf("  pop rdi\n");
+		printf("  pop rax\n");
+		if (node->value_ty->ty == TY_INT)
+			printf("  add [rax], edi\n");
+		else 
+			printf("  add [rax], rdi\n");
+		printf("  push [rax]\n");
+		return;
+	}
+
+	if (node->node_ty == ND_MINUSEQ) {
+		gen_lval(node->lhs);
+		gen(node->rhs);
+
+		printf("  pop rdi\n");
+		printf("  pop rax\n");
+		if (node->value_ty->ty == TY_INT)
+			printf("  sub [rax], edi\n");
+		else 
+			printf("  sub [rax], rdi\n");
+		printf("  push [rax]\n");
+		return;
+	}
+
 	if (node->node_ty == ND_PREINC) {
 		gen_lval(node->lhs);
 		printf("  pop rax\n");

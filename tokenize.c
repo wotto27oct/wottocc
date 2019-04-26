@@ -22,14 +22,18 @@ void tokenize(char *p) {
 
 		if (*p == '+') {
 			Token *tmp = malloc(sizeof(Token));
-			if (*(p+1) != '+') {
+			if (*(p+1) == '+') {
+				tmp->ty = TK_INC;
+				tmp->input = "++";
+				p += 2;
+			} else if (*(p+1) == '=') {
+				tmp->ty = TK_PLUSEQ;
+				tmp->input = "+=";
+				p += 2;
+			} else {
 				tmp->ty = '+';
 				tmp->input = p;
 				p++;
-			} else {
-				tmp->ty = TK_INC;
-				tmp->input = "++";
-				p+=2;
 			}
 			vec_push(tokens, (void *)tmp);
 			continue;
@@ -37,14 +41,18 @@ void tokenize(char *p) {
 		
 		if (*p == '-') {
 			Token *tmp = malloc(sizeof(Token));
-			if (*(p+1) != '-') {
+			if (*(p+1) == '-') {
+				tmp->ty = TK_DEC;
+				tmp->input = "--";
+				p += 2;
+			} else if (*(p+1) == '=') {
+				tmp->ty = TK_MINUSEQ;
+				tmp->input = "-=";
+				p += 2;
+			} else {
 				tmp->ty = '-';
 				tmp->input = p;
 				p++;
-			} else {
-				tmp->ty = TK_DEC;
-				tmp->input = "--";
-				p+=2;
 			}
 			vec_push(tokens, (void *)tmp);
 			continue;

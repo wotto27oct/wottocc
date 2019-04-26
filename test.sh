@@ -92,5 +92,9 @@ try 10 "int main(){for(int i=0;i<10;++i){1;}return i;}"
 
 try 10 "int main(){int i=0;for(;i<10;++i){} return i;}"
 try 10 "int main(){int i=1;for(;;) { ++i; if(i == 10) break;} return i;}"
+try 7 "int main(){int i=4; int j=1; for(i=2,j=0;i<10,j<5;++i,++j){} return i;}"
+
+try 0 "int main(){int i=0; int j=i++; return j;}"
+try 1 "int main(){int i=0; int j=i++; return i;}"
 
 echo OK

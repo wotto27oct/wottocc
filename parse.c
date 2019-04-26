@@ -470,9 +470,9 @@ Node *cast_expression(Env *env) {
 Node *unary_expression(Env *env) {
 	Node *node = NULL;
 
-	if (consume(TK_PREINC)) {
+	if (consume(TK_INC)) {
 		node = new_node(ND_PREINC, new_type(TY_INT), env, unary_expression(env), NULL);
-	} else if (consume(TK_PREDEC)) {
+	} else if (consume(TK_DEC)) {
 		node = new_node(ND_PREDEC, new_type(TY_INT), env, unary_expression(env), NULL);
 	} else if (consume('*')) {
 		Node *lhs = cast_expression(env);
@@ -502,6 +502,10 @@ Node *postfix_expression(Env *env) {
 			// foo(1 ,2)
 			node = new_node(ND_FUNC_CALL, NULL, env, node, argument_expression_list(env));
 			err_consume(')', "no right-parenthesis at func_call");
+		} else if (consume(TK_INC)) {
+			node = new_node(ND_POSTINC, new_type(TY_INT), env, node, NULL);
+		} else if (consume(TK_DEC)) {
+			node = new_node(ND_POSTDEC, new_type(TY_INT), env, node, NULL);
 		} else {
 			return node;
 		}
@@ -527,7 +531,7 @@ Node *argument_expression_list(Env *env) {
 
 Node *primary_expression(Env *env) {
 	if (consume('(')) {
-		Node *node = additive_expression(env); // TODO: NEED TO CHANGE
+		Node *node = expression(env); // TODO: NEED TO CHANGE
 		err_consume(')', "there isn't right-parenthesis at primary_expression");
 		return node;
 	}

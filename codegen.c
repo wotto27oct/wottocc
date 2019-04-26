@@ -195,6 +195,7 @@ void gen(Node *node) {
 	if (node->node_ty == ND_DECLARATION) {
 		//printf("  push 1\n"); // must be one value on stack register
 		gen(node->lhs);
+		printf("  pop rax\n"); // statement must not be one value on stack
 		return;
 	}
 
@@ -215,7 +216,7 @@ void gen(Node *node) {
 			printf("  mov [rax], edi\n");
 	    else 
 			printf("  mov [rax], rdi\n");
-		//printf("  push rdi\n");
+		printf("  push rdi\n");
 		return;
 	}	
 
@@ -298,6 +299,24 @@ void gen(Node *node) {
 		printf("  mov rdi, 1\n");
 		printf("  sub [rax], rdi\n");
 		printf("  push [rax]\n");
+		return;
+	}
+
+	if (node->node_ty == ND_POSTINC) {
+		gen_lval(node->lhs);
+		printf("  pop rax\n");
+		printf("  push [rax]\n");
+		printf("  mov rdi, 1\n");
+		printf("  add [rax], rdi\n");
+		return;
+	}
+
+	if (node->node_ty == ND_POSTDEC) {
+		gen_lval(node->lhs);
+		printf("  pop rax\n");
+		printf("  push [rax]\n");
+		printf("  mov rdi, 1\n");
+		printf("  sub [rax], rdi\n");
 		return;
 	}
 

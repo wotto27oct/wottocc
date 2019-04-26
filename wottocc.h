@@ -16,8 +16,8 @@ enum {
 	TK_NEQUAL,		// token type of !=
 	TK_LEQ,			// token type of <=
 	TK_GEQ,			// token type of >=
-	TK_PREINC,		// token type of ++ (pre)
-	TK_PREDEC,		// token type of -- (pre)
+	TK_INC,		// token type of ++
+	TK_DEC,		// token type of --
 	TK_FUNC,
 	TK_IF,			// token type of if
 	TK_ELSE,
@@ -67,6 +67,8 @@ enum {
 	ND_ARG_EXP_LIST,
 	ND_FUNC_CALL,
 	ND_EXP,
+	ND_POSTINC,
+	ND_POSTDEC,
 };
 
 enum {

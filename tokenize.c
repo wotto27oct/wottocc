@@ -27,7 +27,7 @@ void tokenize(char *p) {
 				tmp->input = p;
 				p++;
 			} else {
-				tmp->ty = TK_PREINC;
+				tmp->ty = TK_INC;
 				tmp->input = "++";
 				p+=2;
 			}
@@ -42,7 +42,7 @@ void tokenize(char *p) {
 				tmp->input = p;
 				p++;
 			} else {
-				tmp->ty = TK_PREDEC;
+				tmp->ty = TK_DEC;
 				tmp->input = "--";
 				p+=2;
 			}

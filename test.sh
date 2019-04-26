@@ -91,5 +91,6 @@ try 10 "int main(){int i=10;return i;}"
 try 10 "int main(){for(int i=0;i<10;++i){1;}return i;}"
 
 try 10 "int main(){int i=0;for(;i<10;++i){} return i;}"
+try 10 "int main(){int i=1;for(;;) { ++i; if(i == 10) break;} return i;}"
 
 echo OK

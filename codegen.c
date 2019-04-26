@@ -174,15 +174,17 @@ void gen(Node *node) {
 		//printf(".Lbegin%d:\n", now_loop_cnt);
 		printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
 		arg = vec_get(node->args, 1);
-		gen(arg);
-		printf("  pop rax\n");
-		printf("  cmp rax, 0\n");
-		//printf("  je .Lend%d\n", now_loop_cnt);
-		printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
+		if (arg != NULL) {
+			gen(arg);
+			printf("  pop rax\n");
+			printf("  cmp rax, 0\n");
+			//printf("  je .Lend%d\n", now_loop_cnt);
+			printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
+		}
 		gen(node->lhs);
 		printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
 		arg = vec_get(node->args, 2);
-		gen(arg);
+		if (arg != NULL) gen(arg);
 		//printf("  jmp .Lbegin%d\n", now_loop_cnt);
 		printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
 		//printf(".Lend%d:\n", now_loop_cnt);
@@ -213,7 +215,7 @@ void gen(Node *node) {
 			printf("  mov [rax], edi\n");
 	    else 
 			printf("  mov [rax], rdi\n");
-		printf("  push rdi\n");
+		//printf("  push rdi\n");
 		return;
 	}	
 

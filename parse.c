@@ -281,7 +281,13 @@ Node *iteration_statement(Env *env) {
 			vec_push(arg, tmp);
 			err_consume(';', "no ';' at for");
 		} else { 
-			vec_push(arg, declaration(env));
+			tmp = declaration(env);
+			if (tmp != NULL) {
+				vec_push(arg, tmp);
+			} else {
+				err_consume(';', "no ';' at for");
+				vec_push(arg, NULL);
+			}
 		}
 		vec_push(arg, expression(env));
 		err_consume(';', "no ';' at while");

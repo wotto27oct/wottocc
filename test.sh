@@ -90,4 +90,6 @@ try 5 "int main(){int i;int a;i=0;a=0;for(i=0;i<10;++i){if(i<5) continue; ++a;} 
 try 10 "int main(){int i=10;return i;}"
 try 10 "int main(){for(int i=0;i<10;++i){1;}return i;}"
 
+try 10 "int main(){int i=0;for(;i<10;++i){} return i;}"
+
 echo OK

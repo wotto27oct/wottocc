@@ -170,7 +170,7 @@ void gen(Node *node) {
 		//while_loop_cnt = loop_cnt;
 		//loop_cnt++;
 		Node *arg = vec_get(node->args, 0);
-		gen(arg);
+		if (arg != NULL) gen(arg);
 		//printf(".Lbegin%d:\n", now_loop_cnt);
 		printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
 		arg = vec_get(node->args, 1);

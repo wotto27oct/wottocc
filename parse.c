@@ -131,7 +131,7 @@ Node *init_declarator(Env *env, Type *sp_type) {
 }
 
 Node *initializer(Env *env) {
-	Node *node = assign(env);
+	Node *node = assignment_expression(env);
 	return node;
 }
 
@@ -187,7 +187,7 @@ Node *statement(Env *env) {
 Node *jump_statement(Env *env) {
 	Node *node = NULL;
 	if (consume(TK_RETURN)) {
-		node = new_node(ND_RETURN, NULL, env, assign(env), NULL);
+		node = new_node(ND_RETURN, NULL, env, expression(env), NULL);
 		err_consume(';', "no ';' at return");
 	} else if (consume(TK_BREAK)) {
 		node = new_node(ND_BREAK, NULL, env, NULL, NULL);
@@ -200,7 +200,7 @@ Node *jump_statement(Env *env) {
 }
 
 Node *expression_statement(Env *env) {
-	Node *node = new_node(ND_EXPRESSION_STMT, NULL, env, assign(env), NULL);
+	Node *node = new_node(ND_EXPRESSION_STMT, NULL, env, expression(env), NULL);
 	if (node->lhs == NULL) {
 		if (!consume(';')) {
 			return NULL;
@@ -217,7 +217,7 @@ Node *selection_statement(Env *env) {
 		node = new_node(ND_IF, NULL, env, NULL, NULL);
 		err_consume('(', "no left-parenthesis at if");
 		Vector *arg = new_vector();
-		vec_push(arg, assign(env));
+		vec_push(arg, expression(env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at if");
 		node->lhs = statement(env);
@@ -228,7 +228,7 @@ Node *selection_statement(Env *env) {
 		}
 	} else if (consume(TK_SWITCH)) {
 		err_consume('(', "no left-parenthesis at switch");
-		node = new_node(ND_SWITCH, NULL, env, assign(env), NULL);
+		node = new_node(ND_SWITCH, NULL, env, expression(env), NULL);
 		err_consume(')', "no right-parenthesis at switch");
 		Env *inner_env = new_env(env);
 		switch_loop_cnt++;
@@ -260,7 +260,7 @@ Node *iteration_statement(Env *env) {
 		node = new_node(ND_WHILE, NULL, env, NULL, NULL);
 		err_consume('(', "no left-parenthesis at while");
 		Vector *arg = new_vector();
-		vec_push(arg, assign(env));
+		vec_push(arg, expression(env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at while");
 		Env *inner_env = new_env(env);
@@ -276,16 +276,16 @@ Node *iteration_statement(Env *env) {
 		err_consume('(', "no left-parenthesis at for");
 		Vector *arg = new_vector();
 
-		Node *tmp = assign(env);
+		Node *tmp = expression(env);
 		if (tmp != NULL) { 
 			vec_push(arg, tmp);
 			err_consume(';', "no ';' at for");
 		} else { 
 			vec_push(arg, declaration(env));
 		}
-		vec_push(arg, equality_expression(env));
+		vec_push(arg, expression(env));
 		err_consume(';', "no ';' at while");
-		vec_push(arg, assign(env));
+		vec_push(arg, expression(env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at for");
 		Env *inner_env = new_env(env);
@@ -299,33 +299,42 @@ Node *iteration_statement(Env *env) {
 	return node;
 }
 
-
-Node *assign(Env *env) {
-	Node *node = conditional_expression(env);
-	//Node *node = NULL;
+Node *expression(Env *env) {
+	Node *node = assignment_expression(env);
 
 	for (;;) {
-		if (consume('=')){
-			Node *lhs = node;
-			Node *rhs = assign(env);
-			Type *value_ty;
-			if (lhs->value_ty->ty == TY_INT){
-				if (rhs->value_ty->ty != TY_INT) {
-					error("substitution from ptr to int: %s\n", ((Token *)vec_get(tokens, pos++))->input);
-				}
-				value_ty = new_type(TY_INT);
-			} else {
-				// ptr or array
-				if (rhs->value_ty->ty == TY_INT) {
-					error("substitution from int to ptr: %s\n", ((Token *)vec_get(tokens, pos++))->input);
-				}
-				value_ty = rhs->value_ty;
-			}
-			node = new_node('=', value_ty, env, lhs, rhs);
+		if (consume(',')) {
+			node = new_node(ND_EXP, NULL, env, node, assignment_expression(env));
 		} else {
 			return node;
 		}
 	}
+}
+
+
+Node *assignment_expression(Env *env) {
+	Node *node = conditional_expression(env); // analyzeで=の場合は左辺がunary_expressionであることを確認
+	//Node *node = NULL;
+
+	if (consume('=')){
+		Node *lhs = node;
+		Node *rhs = assignment_expression(env);
+		Type *value_ty;
+		if (lhs->value_ty->ty == TY_INT){
+			if (rhs->value_ty->ty != TY_INT) {
+				error("substitution from ptr to int: %s\n", ((Token *)vec_get(tokens, pos++))->input);
+			}
+			value_ty = new_type(TY_INT);
+		} else {
+			// ptr or array
+			if (rhs->value_ty->ty == TY_INT) {
+				error("substitution from int to ptr: %s\n", ((Token *)vec_get(tokens, pos++))->input);
+			}
+			value_ty = rhs->value_ty;
+		}
+		node = new_node('=', value_ty, env, lhs, rhs);
+	}
+	return node;
 }
 
 Node *conditional_expression(Env *env) {
@@ -479,7 +488,7 @@ Node *postfix_expression(Env *env) {
 	for(;;) {
 		if (consume('[')) {
 			// a[3] -> *(a + 3)
-			Node *rhs = assign(env); // to change
+			Node *rhs = expression(env);
 			Node *plus = new_node('+', new_type(TY_PTR), env, node, rhs);
 			node = new_node(ND_DEREF, new_type(node->value_ty->ptrof->ty), env, plus, NULL);
 			err_consume(']', "no right_braket at array");
@@ -495,13 +504,13 @@ Node *postfix_expression(Env *env) {
 
 Node *argument_expression_list(Env *env) {
 	// 1, 2, 3
-	Node *node = assign(env);
+	Node *node = assignment_expression(env);
 	int length = 1;
 	if (node == NULL) return NULL;
 	node->length = length;
 	for (;;) {
 		if (consume(',')) {
-			node = new_node(ND_ARG_EXP_LIST, NULL, env, node, assign(env));
+			node = new_node(ND_ARG_EXP_LIST, NULL, env, node, assignment_expression(env));
 			node->length = ++length;
 		} else {
 			return node;

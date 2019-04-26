@@ -261,6 +261,12 @@ void gen(Node *node) {
 		return;
 	}
 
+	if (node->node_ty == ND_EXP) {
+		gen(node->lhs);
+		gen(node->rhs);
+		return;
+	}
+
 	if (node->node_ty == '=') {
 		gen_lval(node->lhs);
 		gen(node->rhs);

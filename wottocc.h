@@ -66,6 +66,7 @@ enum {
 	ND_INIT_DECLARATOR,
 	ND_ARG_EXP_LIST,
 	ND_FUNC_CALL,
+	ND_EXP,
 };
 
 enum {
@@ -147,7 +148,8 @@ Node *expression_statement(Env*);
 Node *selection_statement(Env*);
 Node *labeled_statement(Env*);
 Node *iteration_statement(Env*);
-Node *assign(Env*);
+Node *expression(Env*);
+Node *assignment_expression(Env*);
 Node *conditional_expression(Env*);
 Node *logical_OR_expression(Env*);
 Node *logical_AND_expression(Env*);

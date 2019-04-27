@@ -19,10 +19,9 @@ Node *function() {
 
 	node = new_node(ND_FUNCDEF, NULL, new_env(NULL), NULL, NULL);
 	node->fname = ((Token *)vec_get(tokens, pos-2))->input;
-	//map_put(node->env->variables, node->fname, 0, NULL);
 	Vector *args = new_vector();
+
 	// int foo(int *x, int y){ ... }
-	//Map *variables = vec_get(genv, envnum);
 	while (1) {
 		if (consume(')')) {
 			break;
@@ -37,7 +36,7 @@ Node *function() {
 		}
 		err_consume(TK_IDENT, "args is not variable");
 
-		char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
+		char *vname = ((Token *)vec_get(tokens,pos-1))->input; //variable name
 		map_put(node->env->variables, vname, 0, type);
 
 		Node *arg = new_node(ND_INT, type, NULL, NULL, NULL);
@@ -50,29 +49,62 @@ Node *function() {
 		}
 
 	}
-	node->args = args;
+	node->args = args; // set of arguments of function
 
-	node->lhs = compound_statement(node->env);
+	node->lhs = compound_statement(node->env); // { ... }
 	return node;
 }
 
+// 6.8
+Node *statement(Env *env) {
+	Node *node = NULL;
+	if (read_nextToken(TK_CASE)) {
+		node = labeled_statement(env);
+	} else if (read_nextToken('{')) {
+		node = compound_statement(env);
+	} else if (read_nextToken(TK_IF) || read_nextToken(TK_SWITCH)) {
+		node = selection_statement(env);
+	} else if (read_nextToken(TK_RETURN) || read_nextToken(TK_BREAK) || read_nextToken(TK_CONTINUE)) {
+		node = jump_statement(env);
+	} else if (read_nextToken(TK_WHILE) || read_nextToken(TK_FOR)) {
+		node = iteration_statement(env);
+	} else {
+		node = expression_statement(env);
+	}
+	return node;
+}
+
+// 6.8.1
+Node *labeled_statement(Env *env) {
+	Node *node = NULL;
+	if (consume(TK_CASE)) {
+		node = new_node(ND_CASE, NULL, env, NULL, NULL);
+		node->val = env->cases->len; // the order of this case
+		vec_push(env->cases, constant_expression(env));
+		err_consume(':', "no colon at case");
+		node->rhs = statement(env);
+	}
+	return node;
+}
+
+// 6.8.2
 Node *compound_statement(Env *env) {
 	Node *node = new_node(ND_COMPOUND_STMT, NULL, env, NULL, NULL);
 	err_consume('{', "no left-brace at compound_statement");
-	//if(!consume('}')){
-		Env *inner_env = new_env(env);
-		inner_env->my_switch_cnt = env->my_switch_cnt;
-		inner_env->my_loop_cnt = env->my_loop_cnt;
-		node->lhs = block_item_list(inner_env);
-		vec_push(env->inner, inner_env);
-	//} else {
-	//	return node;
-	//}
+
+	// update env
+	Env *inner_env = new_env(env);
+	//inner_env->my_switch_cnt = env->my_switch_cnt;
+	//inner_env->my_loop_cnt = env->my_loop_cnt;
+	node->lhs = block_item_list(inner_env);
+	vec_push(env->inner, inner_env);
+
 	err_consume('}', "no right-brace at compound_statement");
 	return node;
 }
 
 Node *block_item_list(Env *env) {
+	// node->args has the vector of block_item
 	Node *node = new_node(ND_BLOCKITEMLIST, NULL, env, NULL, NULL);
 	Vector *args = new_vector();
 	while (1) {
@@ -80,14 +112,68 @@ Node *block_item_list(Env *env) {
 		if (arg == NULL) break;
 		else vec_push(args, arg);
 	}
-	node->args = args;
+	node->args = args; // args can have nothing
 	return node;
 }
 
 Node *block_item(Env *env) {
 	Node *node = declaration(env);
 	if (node == NULL){
-		node = statement(env);
+		node = statement(env); // it can be NULL
+	}
+	return node;
+}
+
+// 6.8.3
+Node *expression_statement(Env *env) {
+	Node *node = new_node(ND_EXPRESSION_STMT, NULL, env, expression(env), NULL);
+	// only ";" is the expression, but " " is illegal.
+	// but here " " returns NULL for block_item_list.
+	if (node->lhs == NULL) {
+		if (!consume(';')) {
+			return NULL;
+		}
+	} else {
+		err_consume(';', "no ; at end of the expression_statement\n");
+	}
+	return node;
+}
+
+// 6.8.4
+Node *selection_statement(Env *env) {
+	// it's guaranteed that the next token is TK_IF or TK_SWITCH
+	Node *node;
+	if (consume(TK_IF)) {
+		// if (node->args) node->lhs else node->rhs
+		// update env
+		Env *inner_env = new_env(env);
+		vec_push(env->inner, inner_env);
+		//inner_env->my_switch_cnt = switch_loop_cnt;
+		//inner_env->my_loop_cnt = while_loop_cnt;
+
+		node = new_node(ND_IF, NULL, inner_env, NULL, NULL);
+		err_consume('(', "no left-parenthesis at if");
+		Vector *arg = new_vector();
+		vec_push(arg, expression(inner_env));
+		node->args = arg;
+		err_consume(')', "no right-parenthesis at if");
+		node->lhs = statement(inner_env);
+		if (consume(TK_ELSE)) {
+			node->rhs = statement(inner_env);
+		} else {
+			node->rhs = NULL;
+		}
+	} else if (consume(TK_SWITCH)) {
+		// switch (node->lhs) node->rhs
+		err_consume('(', "no left-parenthesis at switch");
+		node = new_node(ND_SWITCH, NULL, env, expression(env), NULL);
+		err_consume(')', "no right-parenthesis at switch");
+		Env *inner_env = new_env(env);
+		//switch_loop_cnt++;
+		//inner_env->my_switch_cnt = switch_loop_cnt;
+		//inner_env->my_loop_cnt = while_loop_cnt;
+		node->rhs = statement(inner_env);
+		vec_push(env->inner, inner_env);
 	}
 	return node;
 }
@@ -166,23 +252,6 @@ Node *declarator(Env *env, Type *sp_type) {
 
 
 
-Node *statement(Env *env) {
-	Node *node = NULL;
-	if (read_nextToken(TK_CASE)) {
-		node = labeled_statement(env);
-	} else if (read_nextToken(TK_RETURN) || read_nextToken(TK_BREAK) || read_nextToken(TK_CONTINUE)) {
-		node = jump_statement(env);
-	} else if (read_nextToken(TK_IF) || read_nextToken(TK_SWITCH)) {
-		node = selection_statement(env);
-	} else if (read_nextToken(TK_WHILE) || read_nextToken(TK_FOR)) {
-		node = iteration_statement(env);
-	} else if (read_nextToken('{')) {
-		node = compound_statement(env);
-	} else {
-		node = expression_statement(env);
-	}
-	return node;
-}
 
 Node *jump_statement(Env *env) {
 	Node *node = NULL;
@@ -199,59 +268,8 @@ Node *jump_statement(Env *env) {
 	return node;
 }
 
-Node *expression_statement(Env *env) {
-	Node *node = new_node(ND_EXPRESSION_STMT, NULL, env, expression(env), NULL);
-	if (node->lhs == NULL) {
-		if (!consume(';')) {
-			return NULL;
-		}
-	} else {
-		err_consume(';', "no ';' at end of the expression_statement\n");
-	}
-	return node;
-}
 
-Node *selection_statement(Env *env) {
-	Node *node;
-	if (consume(TK_IF)) {
-		node = new_node(ND_IF, NULL, env, NULL, NULL);
-		err_consume('(', "no left-parenthesis at if");
-		Vector *arg = new_vector();
-		vec_push(arg, expression(env));
-		node->args = arg;
-		err_consume(')', "no right-parenthesis at if");
-		node->lhs = statement(env);
-		if (consume(TK_ELSE)) {
-			node->rhs = statement(env);
-		} else {
-			node->rhs = NULL;
-		}
-	} else if (consume(TK_SWITCH)) {
-		err_consume('(', "no left-parenthesis at switch");
-		node = new_node(ND_SWITCH, NULL, env, expression(env), NULL);
-		err_consume(')', "no right-parenthesis at switch");
-		Env *inner_env = new_env(env);
-		switch_loop_cnt++;
-		inner_env->my_switch_cnt = switch_loop_cnt;
-		inner_env->my_loop_cnt = while_loop_cnt;
-		node->rhs = statement(inner_env);
-		vec_push(env->inner, inner_env);
-	}
 
-	return node;
-}
-
-Node *labeled_statement(Env *env) {
-	Node *node = NULL;
-	if (consume(TK_CASE)) {
-		node = new_node(ND_CASE, NULL, env, NULL, NULL);
-		node->val = env->cases->len;
-		vec_push(env->cases, equality_expression(env));
-		err_consume(':', "no colon at case");
-		node->rhs = statement(env);
-	}
-	return node;
-}
 
 
 Node *iteration_statement(Env *env) {
@@ -264,10 +282,10 @@ Node *iteration_statement(Env *env) {
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at while");
 		Env *inner_env = new_env(env);
-		switch_loop_cnt++;
-		while_loop_cnt = switch_loop_cnt;
-		inner_env->my_switch_cnt = switch_loop_cnt;
-		inner_env->my_loop_cnt = while_loop_cnt;
+		//switch_loop_cnt++;
+		//while_loop_cnt = switch_loop_cnt;
+		//inner_env->my_switch_cnt = switch_loop_cnt;
+		//inner_env->my_loop_cnt = while_loop_cnt;
 		node->lhs = statement(inner_env);
 		vec_push(env->inner, inner_env);
 
@@ -295,10 +313,10 @@ Node *iteration_statement(Env *env) {
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at for");
 		Env *inner_env = new_env(env);
-		switch_loop_cnt++;
-		while_loop_cnt = switch_loop_cnt;
-		inner_env->my_switch_cnt = switch_loop_cnt;
-		inner_env->my_loop_cnt = while_loop_cnt;
+		//switch_loop_cnt++;
+		//while_loop_cnt = switch_loop_cnt;
+		//inner_env->my_switch_cnt = switch_loop_cnt;
+		//inner_env->my_loop_cnt = while_loop_cnt;
 		node->lhs = statement(inner_env);
 		vec_push(env->inner, inner_env);
 	}
@@ -569,4 +587,10 @@ Node *primary_expression(Env *env) {
 	}
 	
 	return NULL;
+}
+
+Node *constant_expression(Env *env) {
+	Node *node = conditional_expression(env);
+	// TODO: need to change for analyze
+	return node;
 }

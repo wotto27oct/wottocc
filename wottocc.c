@@ -9,9 +9,10 @@ Vector *functions;
 int pos = 0;
 
 // number of loop_label
+int if_cnt = 0;
 int loop_cnt = 0;
-int while_loop_cnt = 0;
-int switch_loop_cnt = 0;
+int now_while_cnt = 0;
+int now_switch_cnt = 0;
 
 void runtest() {
 	test_vector();

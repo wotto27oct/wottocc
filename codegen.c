@@ -56,14 +56,14 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_BREAK) {
-		//printf("  jmp .Lend%d\n", while_loop_cnt);
-		printf("  jmp .Lend%d\n", node->env->my_switch_cnt);
+		printf("  jmp .Lend%d\n", now_switch_cnt);
+		//printf("  jmp .Lend%d\n", node->env->my_switch_cnt);
 		return;
 	}
 	
 	if (node->node_ty == ND_CONTINUE) {
-		//printf("  jmp .Lend%d\n", while_loop_cnt);
-		printf("  jmp .contin%d\n", node->env->my_loop_cnt);
+		printf("  jmp .contin%d\n", now_while_cnt);
+		//printf("  jmp .contin%d\n", node->env->my_loop_cnt);
 		return;
 	}
 
@@ -76,23 +76,23 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_IF) {
-		int now_loop_cnt = loop_cnt;
-		loop_cnt++;
+		int now_if_cnt = if_cnt;
+		if_cnt++;
 		Node *arg = vec_get(node->args, 0);
 		gen(arg);
 		// result must be on top of the stack
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .ILend%d\n", now_loop_cnt);
+		printf("  je .ILend%d\n", now_if_cnt);
 		gen(node->lhs);
 		if (node->rhs != NULL) {
-			printf("  jmp .IELend%d\n", now_loop_cnt);
+			printf("  jmp .IELend%d\n", now_if_cnt);
 		}
-		printf(".ILend%d:\n", now_loop_cnt);
+		printf(".ILend%d:\n", now_if_cnt);
 		if (node->rhs != NULL) {
 			// else
 			gen(node->rhs);
-			printf(".IELend%d:\n", now_loop_cnt);
+			printf(".IELend%d:\n", now_if_cnt);
 		}
 		return;
 	}
@@ -101,6 +101,9 @@ void gen(Node *node) {
 		//int now_loop_cnt = loop_cnt;
 		//while_loop_cnt = loop_cnt;
 		//loop_cnt += node->rhs->env->cases->len;
+		int past_switch_cnt = now_switch_cnt;
+		now_switch_cnt = loop_cnt;
+		loop_cnt++;
 		gen(node->lhs);
 		// switch value must be on top of the stack
 		for (int i = node->rhs->lhs->env->cases->len - 1; i >= 0; i--) {	
@@ -109,8 +112,9 @@ void gen(Node *node) {
 			printf("  pop rdi\n");
 			printf("  pop rax\n");
 			printf("  cmp rax, rdi\n");
-			//printf("  je .Lbegin%d\n", now_loop_cnt + i);
-			printf("  je .LC%dbegin%d\n", node->rhs->env->my_switch_cnt, i);
+			//printf("  je .Lbegin%d\n", now_switch_cnt + i);
+			//printf("  je .LC%dbegin%d\n", node->rhs->env->my_switch_cnt, i);
+			printf("  je .LC%dbegin%d\n", now_switch_cnt, i);
 			printf("  push rax\n");
 		}
 		printf("  pop rax\n");
@@ -120,15 +124,18 @@ void gen(Node *node) {
 			gen(tmp->rhs);
 		}*/
 		gen(node->rhs);
-		//printf(".Lend%d:\n", now_loop_cnt);
-		printf(".Lend%d:\n", node->rhs->env->my_switch_cnt);
+		printf(".Lend%d:\n", now_switch_cnt);
+		//printf(".Lend%d:\n", node->rhs->env->my_switch_cnt);
+
+		now_switch_cnt = past_switch_cnt;
 		return;
 	}
 
 	if (node->node_ty == ND_CASE) {
 		//int now_loop_cnt = switch_loop_cnt;
 		//case_loop_cnt++;
-		printf(".LC%dbegin%d:\n", node->env->my_switch_cnt, node->val);
+		//printf(".LC%dbegin%d:\n", node->env->my_switch_cnt, node->val);
+		printf(".LC%dbegin%d:\n", now_switch_cnt, node->val);
 		gen(node->rhs);
 		//gen(node->lhs);
 		// case * must be on top of the stack
@@ -148,20 +155,32 @@ void gen(Node *node) {
 		//while_loop_cnt = loop_cnt;
 		//loop_cnt++;
 		//printf(".Lbegin%d:\n", now_loop_cnt);
-		printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
+		int past_while_cnt = now_while_cnt;
+		int past_switch_cnt = now_switch_cnt;
+		now_while_cnt = loop_cnt;
+		now_switch_cnt = loop_cnt;
+		loop_cnt++;
+		//printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
+		printf(".Lbegin%d:\n", now_while_cnt);
 		Node *arg = vec_get(node->args, 0);
 		gen(arg);
 		// result must be on top of the stack
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
-		printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
+		printf("  je .Lend%d\n", now_while_cnt);
+		//printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
 		//printf("  je .Lend%d\n", now_loop_cnt);
 		gen(node->lhs);
-		printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
+		printf(".contin%d:\n", now_while_cnt);
+		//printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
 		//printf("  jmp .Lbegin%d\n", now_loop_cnt);
-		printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
+		//printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
+		printf("  jmp .Lbegin%d\n", now_while_cnt);
 		//printf(".Lend%d:\n", now_loop_cnt);
-		printf(".Lend%d:\n", node->lhs->env->my_loop_cnt);
+		//printf(".Lend%d:\n", node->lhs->env->my_loop_cnt);
+		printf(".Lend%d:\n", now_while_cnt);
+		now_while_cnt = past_while_cnt;
+		now_switch_cnt = past_switch_cnt;
 		return;
 	}	
 
@@ -169,26 +188,34 @@ void gen(Node *node) {
 		//int now_loop_cnt = loop_cnt;
 		//while_loop_cnt = loop_cnt;
 		//loop_cnt++;
+		int past_while_cnt = now_while_cnt;
+		int past_switch_cnt = now_switch_cnt;
+		now_while_cnt = loop_cnt;
+		now_switch_cnt = loop_cnt;
+		loop_cnt++;
 		Node *arg = vec_get(node->args, 0);
 		if (arg != NULL) gen(arg);
-		//printf(".Lbegin%d:\n", now_loop_cnt);
-		printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
+		printf(".Lbegin%d:\n", now_while_cnt);
+		//printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
 		arg = vec_get(node->args, 1);
 		if (arg != NULL) {
 			gen(arg);
 			printf("  pop rax\n");
 			printf("  cmp rax, 0\n");
-			//printf("  je .Lend%d\n", now_loop_cnt);
-			printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
+			printf("  je .Lend%d\n", now_while_cnt);
+			//printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
 		}
 		gen(node->lhs);
-		printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
+		//printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
+		printf(".contin%d:\n", now_while_cnt);
 		arg = vec_get(node->args, 2);
 		if (arg != NULL) gen(arg);
-		//printf("  jmp .Lbegin%d\n", now_loop_cnt);
-		printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
-		//printf(".Lend%d:\n", now_loop_cnt);
-		printf(".Lend%d:\n", node->lhs->env->my_loop_cnt);
+		printf("  jmp .Lbegin%d\n", now_while_cnt);
+		//printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
+		printf(".Lend%d:\n", now_while_cnt);
+		//printf(".Lend%d:\n", node->lhs->env->my_loop_cnt);
+		now_while_cnt = past_while_cnt;
+		now_switch_cnt = past_switch_cnt;
 		return;
 	}
 

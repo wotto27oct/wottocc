@@ -172,6 +172,7 @@ Node *unary_expression(Env*);
 Node *postfix_expression(Env*);
 Node *argument_expression_list(Env*);
 Node *primary_expression(Env*);
+Node *constant_expression(Env*);
 
 // tokenize.c
 void tokenize(char*);
@@ -217,9 +218,10 @@ int gen_stackpos(Env*, int);
 extern Vector *tokens;
 extern Vector *genv;
 extern int pos;
+extern int if_cnt;
 extern int loop_cnt;
-extern int while_loop_cnt;
-extern int switch_loop_cnt;
+extern int now_while_cnt;
+extern int now_switch_cnt;
 extern Vector *functions;
 extern int envnum;
 extern Env *global;

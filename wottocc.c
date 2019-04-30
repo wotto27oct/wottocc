@@ -4,6 +4,7 @@ Vector *tokens;
 Vector *genv;
 int envnum;
 Vector *functions;
+Node *now_switch_node;
 
 // position of tokens
 int pos = 0;

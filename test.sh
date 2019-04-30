@@ -101,4 +101,7 @@ try 2 "int main(){int i=4; int j=2; i-=j; return i;}"
 
 try 1 "int main(){int i=0;if(i==0)if(i==1)i=2;else i=1;return i;}"
 
+try 1 "int main(){int i=1; {} return i;}"
+try 1 "int main(){int i=1; ; ; return i;}"
+
 echo OK

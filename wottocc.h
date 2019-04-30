@@ -114,8 +114,6 @@ typedef struct Env {
 	Vector *inner;
 	int stackpos;
 	Vector *cases;
-	int my_loop_cnt;
-	int my_switch_cnt;
 } Env;
 
 typedef struct Node {
@@ -225,5 +223,6 @@ extern int now_switch_cnt;
 extern Vector *functions;
 extern int envnum;
 extern Env *global;
+extern Node *now_switch_node;
 
 #endif

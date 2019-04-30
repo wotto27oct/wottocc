@@ -20,29 +20,82 @@ void gen_lval(Node *node) {
 // emurate stack machine
 void gen(Node *node) {
 	if (node->node_ty == ND_FUNCDEF) {
-		/*int i = 0;
-		for (; i < node->stmts->len; i++) {
-			gen(vec_get(node->stmts, i));
-			// as a result of statement, there must be one value at stack register
-			printf("  pop rax\n");
-		}
-		return;*/
+		gen(node->lhs);
+		return;
+	}
+	
+	if (node->node_ty == ND_CASE) {
+		printf(".LC%dbegin%d:\n", now_switch_cnt, node->val);
 		gen(node->lhs);
 		return;
 	}
 
 	if (node->node_ty == ND_COMPOUND_STMT) {
-		if (node->lhs != NULL) gen(node->lhs);
+		gen(node->lhs);
 		return;
 	}
 
 	if (node->node_ty == ND_BLOCKITEMLIST) {
-		int i = 0;
-		for (; i < node->args->len; i++) {
+		for (int i = 0; i < node->args->len; i++) {
 			gen(vec_get(node->args, i));
-			// as a result of statement, there must be one value at stack register
-			// printf("  pop rax\n");
 		}
+		return;
+	}
+	
+	if (node->node_ty == ND_EXPRESSION_STMT) {
+		// exclude " ;"
+		if (node->lhs != NULL) {
+			gen(node->lhs);
+			// there must not be a value at stack resister after statement
+			// (not expression)
+			printf("  pop rax\n");
+		}
+		return;
+	}
+	
+	if (node->node_ty == ND_IF) {
+		int now_if_cnt = if_cnt;
+		if_cnt++;
+		Node *arg = vec_get(node->args, 0);
+		gen(arg);
+		// result must be on top of the stack
+		printf("  pop rax\n");
+		printf("  cmp rax, 0\n");
+		printf("  je .ILend%d\n", now_if_cnt);
+		gen(node->lhs);
+		if (node->rhs != NULL) {
+			printf("  jmp .IELend%d\n", now_if_cnt);
+		}
+		printf(".ILend%d:\n", now_if_cnt);
+		if (node->rhs != NULL) {
+			// else
+			gen(node->rhs);
+			printf(".IELend%d:\n", now_if_cnt);
+		}
+		return;
+	}
+	
+	if (node->node_ty == ND_SWITCH) {
+		int past_switch_cnt = now_switch_cnt;
+		now_switch_cnt = loop_cnt;
+		loop_cnt++;
+		gen(node->lhs);
+		// switch value must be on top of the stack
+		// TODO: change
+		for (int i = node->rhs->lhs->env->cases->len - 1; i >= 0; i--) {	
+			Node *tmp = vec_get(node->rhs->lhs->env->cases, i);
+			gen(tmp);
+			printf("  pop rdi\n");
+			printf("  pop rax\n");
+			printf("  cmp rax, rdi\n");
+			printf("  je .LC%dbegin%d\n", now_switch_cnt, i);
+			printf("  push rax\n");
+		}
+		printf("  pop rax\n");
+		gen(node->rhs);
+		printf(".Lend%d:\n", now_switch_cnt);
+
+		now_switch_cnt = past_switch_cnt;
 		return;
 	}
 
@@ -67,118 +120,27 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->node_ty == ND_EXPRESSION_STMT) {
-		if (node->lhs != NULL) gen(node->lhs);
-		// there must not be a value at stack resister after statement
-		// (not expression)
-		printf("  pop rax\n");
-		return;
-	}
-
-	if (node->node_ty == ND_IF) {
-		int now_if_cnt = if_cnt;
-		if_cnt++;
-		Node *arg = vec_get(node->args, 0);
-		gen(arg);
-		// result must be on top of the stack
-		printf("  pop rax\n");
-		printf("  cmp rax, 0\n");
-		printf("  je .ILend%d\n", now_if_cnt);
-		gen(node->lhs);
-		if (node->rhs != NULL) {
-			printf("  jmp .IELend%d\n", now_if_cnt);
-		}
-		printf(".ILend%d:\n", now_if_cnt);
-		if (node->rhs != NULL) {
-			// else
-			gen(node->rhs);
-			printf(".IELend%d:\n", now_if_cnt);
-		}
-		return;
-	}
-
-	if (node->node_ty == ND_SWITCH) {
-		//int now_loop_cnt = loop_cnt;
-		//while_loop_cnt = loop_cnt;
-		//loop_cnt += node->rhs->env->cases->len;
-		int past_switch_cnt = now_switch_cnt;
-		now_switch_cnt = loop_cnt;
-		loop_cnt++;
-		gen(node->lhs);
-		// switch value must be on top of the stack
-		for (int i = node->rhs->lhs->env->cases->len - 1; i >= 0; i--) {	
-			Node *tmp = vec_get(node->rhs->lhs->env->cases, i);
-			gen(tmp);
-			printf("  pop rdi\n");
-			printf("  pop rax\n");
-			printf("  cmp rax, rdi\n");
-			//printf("  je .Lbegin%d\n", now_switch_cnt + i);
-			//printf("  je .LC%dbegin%d\n", node->rhs->env->my_switch_cnt, i);
-			printf("  je .LC%dbegin%d\n", now_switch_cnt, i);
-			printf("  push rax\n");
-		}
-		printf("  pop rax\n");
-		/*for (int i = node->args->len - 1; i >= 0; i--) {
-			printf(".Lbegin%d:\n", now_loop_cnt + i);
-			Node *tmp = vec_get(node->args, i);
-			gen(tmp->rhs);
-		}*/
-		gen(node->rhs);
-		printf(".Lend%d:\n", now_switch_cnt);
-		//printf(".Lend%d:\n", node->rhs->env->my_switch_cnt);
-
-		now_switch_cnt = past_switch_cnt;
-		return;
-	}
-
-	if (node->node_ty == ND_CASE) {
-		//int now_loop_cnt = switch_loop_cnt;
-		//case_loop_cnt++;
-		//printf(".LC%dbegin%d:\n", node->env->my_switch_cnt, node->val);
-		printf(".LC%dbegin%d:\n", now_switch_cnt, node->val);
-		gen(node->rhs);
-		//gen(node->lhs);
-		// case * must be on top of the stack
-		/*printf("  pop rdi\n");
-		printf("  pop rax\n");
-		printf("  cmp rax, rdi\n");
-		printf("  jne .Lend%d:\n", now_loop_cnt);
-		gen(node->rhs);
-		printf(".Lend%d:\n", now_loop_cnt);*/
-		
-		return;
-	}
 
 
 	if (node->node_ty == ND_WHILE) {
-		//int now_loop_cnt = loop_cnt;
-		//while_loop_cnt = loop_cnt;
-		//loop_cnt++;
-		//printf(".Lbegin%d:\n", now_loop_cnt);
 		int past_while_cnt = now_while_cnt;
 		int past_switch_cnt = now_switch_cnt;
 		now_while_cnt = loop_cnt;
 		now_switch_cnt = loop_cnt;
 		loop_cnt++;
-		//printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
+		
 		printf(".Lbegin%d:\n", now_while_cnt);
-		Node *arg = vec_get(node->args, 0);
-		gen(arg);
+		gen(node->lhs);
 		// result must be on top of the stack
 		printf("  pop rax\n");
 		printf("  cmp rax, 0\n");
 		printf("  je .Lend%d\n", now_while_cnt);
-		//printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
-		//printf("  je .Lend%d\n", now_loop_cnt);
-		gen(node->lhs);
+		
+		gen(node->rhs);
 		printf(".contin%d:\n", now_while_cnt);
-		//printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
-		//printf("  jmp .Lbegin%d\n", now_loop_cnt);
-		//printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
 		printf("  jmp .Lbegin%d\n", now_while_cnt);
-		//printf(".Lend%d:\n", now_loop_cnt);
-		//printf(".Lend%d:\n", node->lhs->env->my_loop_cnt);
 		printf(".Lend%d:\n", now_while_cnt);
+
 		now_while_cnt = past_while_cnt;
 		now_switch_cnt = past_switch_cnt;
 		return;
@@ -293,6 +255,7 @@ void gen(Node *node) {
 
 	if (node->node_ty == ND_EXP) {
 		gen(node->lhs);
+		printf("  pop rax\n");
 		gen(node->rhs);
 		return;
 	}

@@ -79,9 +79,10 @@ Node *labeled_statement(Env *env) {
 	Node *node = NULL;
 	if (consume(TK_CASE)) {
 		// case env->cases : node->lhs
+		if (now_switch_node == NULL) error("case must be in switch\n");
 		node = new_node(ND_CASE, NULL, env, NULL, NULL);
-		node->val = env->cases->len; // the order of this case
-		vec_push(env->cases, constant_expression(env));
+		node->val = now_switch_node->env->cases->len; // the order of this case
+		vec_push(now_switch_node->env->cases, constant_expression(env));
 		err_consume(':', "no colon at case");
 		node->lhs = statement(env);
 	}
@@ -170,11 +171,16 @@ Node *selection_statement(Env *env) {
 		// update env
 		Env *inner_env = new_env(env);
 		vec_push(env->inner, inner_env);
+
 		
 		err_consume('(', "no left-parenthesis at switch");
 		node = new_node(ND_SWITCH, NULL, inner_env, expression(env), NULL);
+		Node *old_switch_node = now_switch_node;
+		now_switch_node = node;
 		err_consume(')', "no right-parenthesis at switch");
 		node->rhs = statement(inner_env);
+		now_switch_node = old_switch_node;
+		
 	}
 	return node;
 }
@@ -318,10 +324,6 @@ Node *jump_statement(Env *env) {
 	} 
 	return node;
 }
-
-
-
-
 
 
 Node *expression(Env *env) {

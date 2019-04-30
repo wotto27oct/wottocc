@@ -82,7 +82,7 @@ void gen(Node *node) {
 		gen(node->lhs);
 		// switch value must be on top of the stack
 		// TODO: change
-		for (int i = node->rhs->lhs->env->cases->len - 1; i >= 0; i--) {	
+		/*for (int i = node->rhs->lhs->env->cases->len - 1; i >= 0; i--) {	
 			Node *tmp = vec_get(node->rhs->lhs->env->cases, i);
 			gen(tmp);
 			printf("  pop rdi\n");
@@ -90,7 +90,17 @@ void gen(Node *node) {
 			printf("  cmp rax, rdi\n");
 			printf("  je .LC%dbegin%d\n", now_switch_cnt, i);
 			printf("  push rax\n");
+		}*/
+		for (int i = node->env->cases->len - 1; i >= 0; i--) {
+			Node *tmp = vec_get(node->env->cases, i);
+			gen(tmp);
+			printf("  pop rdi\n");
+			printf("  pop rax\n");
+			printf("  cmp rax, rdi\n");
+			printf("  je .LC%dbegin%d\n", now_switch_cnt, i);
+			printf("  push rax\n");
 		}
+
 		printf("  pop rax\n");
 		gen(node->rhs);
 		printf(".Lend%d:\n", now_switch_cnt);

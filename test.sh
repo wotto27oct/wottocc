@@ -104,4 +104,6 @@ try 1 "int main(){int i=0;if(i==0)if(i==1)i=2;else i=1;return i;}"
 try 1 "int main(){int i=1; {} return i;}"
 try 1 "int main(){int i=1; ; ; return i;}"
 
+try 2 "int main(){int a=0; int b=1; switch(b){ case 0: a=1; break; {case 1: a=2; break;}} return a;}"
+
 echo OK

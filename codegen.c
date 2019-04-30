@@ -81,16 +81,6 @@ void gen(Node *node) {
 		loop_cnt++;
 		gen(node->lhs);
 		// switch value must be on top of the stack
-		// TODO: change
-		/*for (int i = node->rhs->lhs->env->cases->len - 1; i >= 0; i--) {	
-			Node *tmp = vec_get(node->rhs->lhs->env->cases, i);
-			gen(tmp);
-			printf("  pop rdi\n");
-			printf("  pop rax\n");
-			printf("  cmp rax, rdi\n");
-			printf("  je .LC%dbegin%d\n", now_switch_cnt, i);
-			printf("  push rax\n");
-		}*/
 		for (int i = node->env->cases->len - 1; i >= 0; i--) {
 			Node *tmp = vec_get(node->env->cases, i);
 			gen(tmp);
@@ -105,6 +95,61 @@ void gen(Node *node) {
 		gen(node->rhs);
 		printf(".Lend%d:\n", now_switch_cnt);
 
+		now_switch_cnt = past_switch_cnt;
+		return;
+	}
+	
+	if (node->node_ty == ND_WHILE) {
+		int past_while_cnt = now_while_cnt;
+		int past_switch_cnt = now_switch_cnt;
+		now_while_cnt = loop_cnt;
+		now_switch_cnt = loop_cnt;
+		loop_cnt++;
+		
+		printf(".Lbegin%d:\n", now_while_cnt);
+		gen(node->lhs);
+		// result must be on top of the stack
+		printf("  pop rax\n");
+		printf("  cmp rax, 0\n");
+		printf("  je .Lend%d\n", now_while_cnt);
+		
+		gen(node->rhs);
+		printf(".contin%d:\n", now_while_cnt);
+		printf("  jmp .Lbegin%d\n", now_while_cnt);
+		printf(".Lend%d:\n", now_while_cnt);
+
+		now_while_cnt = past_while_cnt;
+		now_switch_cnt = past_switch_cnt;
+		return;
+	}	
+	
+	if (node->node_ty == ND_FOR) {
+		int past_while_cnt = now_while_cnt;
+		int past_switch_cnt = now_switch_cnt;
+		now_while_cnt = loop_cnt;
+		now_switch_cnt = loop_cnt;
+		loop_cnt++;
+		
+		Node *arg = vec_get(node->args, 0);
+		if (arg != NULL) gen(arg);
+		
+		printf(".Lbegin%d:\n", now_while_cnt);
+		arg = vec_get(node->args, 1);
+		if (arg != NULL) {
+			gen(arg);
+			printf("  pop rax\n");
+			printf("  cmp rax, 0\n");
+			printf("  je .Lend%d\n", now_while_cnt);
+		}
+	
+		gen(node->lhs);
+		printf(".contin%d:\n", now_while_cnt);
+		arg = vec_get(node->args, 2);
+		if (arg != NULL) gen(arg);
+		printf("  jmp .Lbegin%d\n", now_while_cnt);
+		printf(".Lend%d:\n", now_while_cnt);
+		
+		now_while_cnt = past_while_cnt;
 		now_switch_cnt = past_switch_cnt;
 		return;
 	}
@@ -132,64 +177,7 @@ void gen(Node *node) {
 
 
 
-	if (node->node_ty == ND_WHILE) {
-		int past_while_cnt = now_while_cnt;
-		int past_switch_cnt = now_switch_cnt;
-		now_while_cnt = loop_cnt;
-		now_switch_cnt = loop_cnt;
-		loop_cnt++;
-		
-		printf(".Lbegin%d:\n", now_while_cnt);
-		gen(node->lhs);
-		// result must be on top of the stack
-		printf("  pop rax\n");
-		printf("  cmp rax, 0\n");
-		printf("  je .Lend%d\n", now_while_cnt);
-		
-		gen(node->rhs);
-		printf(".contin%d:\n", now_while_cnt);
-		printf("  jmp .Lbegin%d\n", now_while_cnt);
-		printf(".Lend%d:\n", now_while_cnt);
 
-		now_while_cnt = past_while_cnt;
-		now_switch_cnt = past_switch_cnt;
-		return;
-	}	
-
-	if (node->node_ty == ND_FOR) {
-		//int now_loop_cnt = loop_cnt;
-		//while_loop_cnt = loop_cnt;
-		//loop_cnt++;
-		int past_while_cnt = now_while_cnt;
-		int past_switch_cnt = now_switch_cnt;
-		now_while_cnt = loop_cnt;
-		now_switch_cnt = loop_cnt;
-		loop_cnt++;
-		Node *arg = vec_get(node->args, 0);
-		if (arg != NULL) gen(arg);
-		printf(".Lbegin%d:\n", now_while_cnt);
-		//printf(".Lbegin%d:\n", node->lhs->env->my_loop_cnt);
-		arg = vec_get(node->args, 1);
-		if (arg != NULL) {
-			gen(arg);
-			printf("  pop rax\n");
-			printf("  cmp rax, 0\n");
-			printf("  je .Lend%d\n", now_while_cnt);
-			//printf("  je .Lend%d\n", node->lhs->env->my_loop_cnt);
-		}
-		gen(node->lhs);
-		//printf(".contin%d:\n", node->lhs->env->my_loop_cnt);
-		printf(".contin%d:\n", now_while_cnt);
-		arg = vec_get(node->args, 2);
-		if (arg != NULL) gen(arg);
-		printf("  jmp .Lbegin%d\n", now_while_cnt);
-		//printf("  jmp .Lbegin%d\n", node->lhs->env->my_loop_cnt);
-		printf(".Lend%d:\n", now_while_cnt);
-		//printf(".Lend%d:\n", node->lhs->env->my_loop_cnt);
-		now_while_cnt = past_while_cnt;
-		now_switch_cnt = past_switch_cnt;
-		return;
-	}
 
 	if (node->node_ty == ND_DECLARATION) {
 		//printf("  push 1\n"); // must be one value on stack register

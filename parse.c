@@ -202,16 +202,18 @@ Node *iteration_statement(Env *env) {
 		node->rhs = statement(inner_env);
 
 	} else if (consume(TK_FOR)) {
-		node = new_node(ND_FOR, NULL, env, NULL, NULL);
+		Env *for_env = new_env(env);
+		vec_push(env->inner, for_env);
+		node = new_node(ND_FOR, NULL, for_env, NULL, NULL);
 		err_consume('(', "no left-parenthesis at for");
 		Vector *arg = new_vector();
 
-		Node *tmp = expression(env);
+		Node *tmp = expression(for_env);
 		if (tmp != NULL) { 
 			vec_push(arg, tmp);
 			err_consume(';', "no ';' at for");
 		} else { 
-			tmp = declaration(env);
+			tmp = declaration(for_env);
 			if (tmp != NULL) {
 				vec_push(arg, tmp);
 			} else {
@@ -219,18 +221,12 @@ Node *iteration_statement(Env *env) {
 				vec_push(arg, NULL);
 			}
 		}
-		vec_push(arg, expression(env));
+		vec_push(arg, expression(for_env));
 		err_consume(';', "no ';' at while");
-		vec_push(arg, expression(env));
+		vec_push(arg, expression(for_env));
 		node->args = arg;
 		err_consume(')', "no right-parenthesis at for");
-		Env *inner_env = new_env(env);
-		//switch_loop_cnt++;
-		//while_loop_cnt = switch_loop_cnt;
-		//inner_env->my_switch_cnt = switch_loop_cnt;
-		//inner_env->my_loop_cnt = while_loop_cnt;
-		node->lhs = statement(inner_env);
-		vec_push(env->inner, inner_env);
+		node->lhs = statement(for_env);
 	}
 	return node;
 }

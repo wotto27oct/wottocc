@@ -147,3 +147,25 @@ int err_consume(int ty, const char *str) {
 	return 1;
 }
 
+Type *read_type() {
+	Type *type = NULL;
+	if (consume(TK_INT)) {
+		type = new_type(TY_INT);
+	}
+	return type;
+}
+
+Type *err_read_type() {
+	Type *type = read_type();
+	if (type == NULL) error("no specifier\n");
+	return type;
+}
+
+Type *read_ptr(Type *type) {
+	while(consume('*')) {
+		Type *newtype = new_type(TY_PTR);
+		newtype->ptrof = type;
+		type = newtype;
+	}
+	return type;
+}

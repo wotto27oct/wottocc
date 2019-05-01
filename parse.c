@@ -13,7 +13,7 @@ void program() {
 Node *function() {
 	Node *node;
 
-	err_consume(TK_INT, "It's not suitable format for function");
+	err_read_type();
 	err_consume(TK_IDENT, "It's not suitable format for function");
 	err_consume('(', "no left-parenthesis at declaration_list");
 
@@ -26,14 +26,8 @@ Node *function() {
 		if (consume(')')) {
 			break;
 		}
-		err_consume(TK_INT, "no type at args");
-		Type *type = new_type(TY_INT);
-
-		while (consume('*')) {
-			Type *newtype = new_type(TY_PTR);
-			newtype->ptrof = type;
-			type = newtype;
-		}
+		Type *type = err_read_type();
+		type = read_ptr(type);
 		err_consume(TK_IDENT, "args is not variable");
 
 		char *vname = ((Token *)vec_get(tokens,pos-1))->input; //variable name
@@ -251,9 +245,10 @@ Node *jump_statement(Env *env) {
 // 6.7
 Node *declaration(Env *env) {
 	Node *node = NULL;
-	if (consume(TK_INT)) {
+	// allow NULL
+	Type *type = read_type();
+	if (type != NULL) {
 		node = new_node(ND_DECLARATION, NULL, env, NULL, NULL);
-		Type *type = new_type(TY_INT); 
 
 		// allow "int;"
 		if (read_nextToken(';') == 0) {
@@ -291,12 +286,7 @@ Node *init_declarator(Env *env, Type *sp_type) {
 // 6.7.6
 Node *declarator(Env *env, Type *sp_type) {
 	Type *type = sp_type;
-
-	while (consume('*')) {
-		Type *newtype = new_type(TY_PTR);
-		newtype->ptrof = type;
-		type = newtype;
-	}
+	type = read_ptr(type);
 
 	err_consume(TK_IDENT, "no identifier at declarator");
 	char *vname = ((Token *)vec_get(tokens,pos-1))->input;	

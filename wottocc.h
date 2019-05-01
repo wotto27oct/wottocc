@@ -211,6 +211,9 @@ Env *new_env(Env*);
 int read_nextToken(int);
 int consume(int);
 int err_consume(int, const char*);
+Type *read_type();
+Type *err_read_type();
+Type *read_ptr(Type*);
 
 int gen_stackpos(Env*, int);
 

@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
 
 	for (int i = 0; i < functions->len; i++) {
 		Node *tmp = vec_get(functions, i);
+		if (tmp->node_ty == ND_GVARDEC) continue;
 		printf(".global %s\n", tmp->fname);
 	}
 
@@ -62,6 +63,10 @@ int main(int argc, char **argv) {
 	// generate assembly in order
 	for (int i = 0; i < functions->len; i++) {
 		Node *tmp = vec_get(functions, i);
+		if (tmp->node_ty == ND_GVARDEC) {
+			gen(tmp);
+			continue;
+		}
 		int variable_stack = gen_stackpos(tmp->env, 0);
 		//Map *variables = vec_get(genv, i);
 		// output the first half part of assembly

@@ -5,16 +5,18 @@ void gen_lval(Node *node) {
 		gen(node->lhs);
 		return;
 	}
-	if (node->node_ty != ND_IDENT)
+	if (node->node_ty != ND_IDENT && node->node_ty != ND_G_IDENT)
 		error("lvalue of the substitution is not variable.\n");
 
-	//Map *variables = vec_get(genv, envnum);	
-	//int offset = (variables->keys->len - map_get_ind(variables, node->name)) * 8;
-	//int offset = get_stackpos(node->env->variables, map_get_ind(node->env->variables, node->name));
-	int offset = get_stackpos(node->env, node->name);
-	printf("  mov rax, rbp\n");
-	printf("  sub rax, %d\n", offset);	
-	printf("  push rax\n");
+	if (node->node_ty == ND_IDENT) {
+		int offset = get_stackpos(node->env, node->name);
+		printf("  mov rax, rbp\n");
+		printf("  sub rax, %d\n", offset);	
+		printf("  push rax\n");
+	} else if (node->node_ty == ND_G_IDENT) {
+		printf("  mov rax, qword ptr [rip + %s@GOTPCREL]\n", node->name);
+		printf("  push rax\n");
+	}
 }
 
 // emurate stack machine
@@ -24,8 +26,10 @@ void gen(Node *node) {
 		return;
 	}
 
-	//if (node->node_ty == ND_GVARDEC) {
-
+	if (node->node_ty == ND_GVARDEC) {
+		gen(node->lhs);
+		return;
+	}
 	
 	if (node->node_ty == ND_CASE) {
 		printf(".LC%dbegin%d:\n", now_switch_cnt, node->val);
@@ -203,14 +207,26 @@ void gen(Node *node) {
 		return;
 	}	
 
+	if (node->node_ty == ND_GVAR_DEF) {
+		printf(".data\n");
+		printf("%s:\n", node->name);
+		printf("  .zero %d\n", get_typesize(node->value_ty));
+		printf(".text\n");
+		gen(node->lhs);
+		return;
+	}
+
 	if (node->node_ty == ND_NUM) {
 		printf("  push %d\n", node->val);
 		return;
 	}
 
-	if (node->node_ty == ND_IDENT) {
+	if (node->node_ty == ND_IDENT || node->node_ty == ND_G_IDENT) {
 		gen_lval(node);
 		Type *type = get_valuetype(node->env, node->name);
+		if (type == NULL) type = get_valuetype(g_env, node->name);
+		// int a[2]; a means the address of a[0],
+		// not contents
 		if (type->ty == TY_ARRAY) return;
 		printf("  pop rax\n");
 		if (type->ty == TY_INT)
@@ -221,13 +237,8 @@ void gen(Node *node) {
 		return;
 	}
 
-
 	if (node->node_ty == ND_FUNC_CALL) {
 		char registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-		/*int i = 0;
-		for (; i < node->args->len; i++) {
-			gen(vec_get(node->args, i));
-		}*/
 		if (node->rhs == NULL) return;
 		gen(node->rhs);
 		for (int i = node->rhs->length; i>0; i--) {

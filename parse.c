@@ -57,6 +57,7 @@ Node *function() {
 		node->name = name;
 		pos -= 1; // read from the identifier
 		node->lhs = init_declarator_list(g_env, toptype);
+		err_consume(';', "no ; at def of global variable");
 	}
 
 	return node;
@@ -313,8 +314,12 @@ Node *declarator(Env *env, Type *sp_type) {
 	
 	map_put(env->variables, vname, 0, type);
 	
-	Node *node = new_node(ND_IDENT, type, env, NULL, NULL);
-	node->name = vname;
+	Node *node = new_node_ident(vname, env);
+	
+	if (env == g_env) {
+		node = new_node(ND_GVAR_DEF, type, env, node, NULL);
+		node->name = vname;
+	}
 
 	return node;
 }

@@ -75,6 +75,8 @@ enum {
 	ND_POSTINC,
 	ND_POSTDEC,
 	ND_GVARDEC,
+	ND_GVAR_DEF,
+	ND_G_IDENT,
 };
 
 enum {

@@ -79,18 +79,34 @@ Node *new_node_num(int val, Env *env) {
 }
 
 Node *new_node_ident(char *name, Env *env) {
-	
 	// decide value_ty
+	// if env is g_env, then variable is in env
 	Type *value_ty = get_valuetype(env, name);
-	if (value_ty == NULL) {
-		Node *node = new_node(ND_IDENT, value_ty, env, NULL, NULL);
-		node->name = name;
-		return node;
+	if (value_ty == NULL || env == g_env) {
+		value_ty = get_valuetype(g_env, name);
+		if (value_ty == NULL) {
+			// may be function call c.f. foo(3)
+			Node *node = new_node(ND_IDENT, value_ty, env, NULL, NULL);
+			node->name = name;
+			return node;
+		} else {
+			// global variable
+			if (value_ty->ty == TY_ARRAY) {
+				// read array a as if pointer a
+				// cf. int a[10]; a[0]=1; *a => 1
+				Type *newtype = new_type(TY_PTR);
+				newtype->ptrof = value_ty->ptrof;
+				newtype->array_size = value_ty->array_size;
+				value_ty = newtype;
+			}
+			Node *node = new_node(ND_G_IDENT, value_ty, env, NULL, NULL);
+			node->name = name;
+			return node;
+		}
 	}
 
 	if (value_ty->ty == TY_ARRAY) {
 		// read array a as if pointer a
-		// if the next token is '['
 		// cf. int a[10]; a[0]=1; *a => 1
 		Type *newtype = new_type(TY_PTR);
 		newtype->ptrof = value_ty->ptrof;

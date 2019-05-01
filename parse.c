@@ -231,12 +231,31 @@ Node *iteration_statement(Env *env) {
 	return node;
 }
 
+// 6.8.6
+Node *jump_statement(Env *env) {
+	Node *node = NULL;
+	if (consume(TK_CONTINUE)) {
+		node = new_node(ND_CONTINUE, NULL, env, NULL, NULL);
+		err_consume(';', "no ';' at continue");
+	} else if (consume(TK_BREAK)) {
+		node = new_node(ND_BREAK, NULL, env, NULL, NULL);
+		err_consume(';', "no ';' at break");
+	} else if (consume(TK_RETURN)) {
+		node = new_node(ND_RETURN, NULL, env, expression(env), NULL);
+		err_consume(';', "no ';' at return");
+	}
+	return node;
+}
+
+
+// 6.7
 Node *declaration(Env *env) {
 	Node *node = NULL;
 	if (consume(TK_INT)) {
 		node = new_node(ND_DECLARATION, NULL, env, NULL, NULL);
 		Type *type = new_type(TY_INT); 
 
+		// allow "int;"
 		if (read_nextToken(';') == 0) {
 			node->lhs = init_declarator_list(env, type);
 		}
@@ -269,11 +288,7 @@ Node *init_declarator(Env *env, Type *sp_type) {
 	return node;
 }
 
-Node *initializer(Env *env) {
-	Node *node = assignment_expression(env);
-	return node;
-}
-
+// 6.7.6
 Node *declarator(Env *env, Type *sp_type) {
 	Type *type = sp_type;
 
@@ -303,21 +318,9 @@ Node *declarator(Env *env, Type *sp_type) {
 	return node;
 }
 
-
-
-
-Node *jump_statement(Env *env) {
-	Node *node = NULL;
-	if (consume(TK_RETURN)) {
-		node = new_node(ND_RETURN, NULL, env, expression(env), NULL);
-		err_consume(';', "no ';' at return");
-	} else if (consume(TK_BREAK)) {
-		node = new_node(ND_BREAK, NULL, env, NULL, NULL);
-		err_consume(';', "no ';' at break");
-	} else if (consume(TK_CONTINUE)) {
-		node = new_node(ND_CONTINUE, NULL, env, NULL, NULL);
-		err_consume(';', "no ';' at continue");
-	} 
+// 6.7.9
+Node *initializer(Env *env) {
+	Node *node = assignment_expression(env);
 	return node;
 }
 

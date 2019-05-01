@@ -153,6 +153,16 @@ void gen(Node *node) {
 		now_switch_cnt = past_switch_cnt;
 		return;
 	}
+	
+	if (node->node_ty == ND_CONTINUE) {
+		printf("  jmp .contin%d\n", now_while_cnt);
+		return;
+	}
+	
+	if (node->node_ty == ND_BREAK) {
+		printf("  jmp .Lend%d\n", now_switch_cnt);
+		return;
+	}
 
 	if (node->node_ty == ND_RETURN) {
 		gen(node->lhs);
@@ -163,24 +173,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->node_ty == ND_BREAK) {
-		printf("  jmp .Lend%d\n", now_switch_cnt);
-		//printf("  jmp .Lend%d\n", node->env->my_switch_cnt);
-		return;
-	}
-	
-	if (node->node_ty == ND_CONTINUE) {
-		printf("  jmp .contin%d\n", now_while_cnt);
-		//printf("  jmp .contin%d\n", node->env->my_loop_cnt);
-		return;
-	}
-
-
-
-
-
 	if (node->node_ty == ND_DECLARATION) {
-		//printf("  push 1\n"); // must be one value on stack register
 		gen(node->lhs);
 		printf("  pop rax\n"); // statement must not be one value on stack
 		return;
@@ -214,8 +207,6 @@ void gen(Node *node) {
 
 	if (node->node_ty == ND_IDENT) {
 		gen_lval(node);
-		//Map *variables = vec_get(genv, envnum);
-		//Type *type = map_get_type(node->env->variables, node->name);
 		Type *type = get_valuetype(node->env, node->name);
 		if (type->ty == TY_ARRAY) return;
 		printf("  pop rax\n");

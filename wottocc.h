@@ -19,6 +19,7 @@ enum {
 	TK_PLUSEQ,		// +=
 	TK_MINUSEQ,		// -=
 	TK_INC,		// token type of ++
+	TK_SIZEOF,
 	TK_DEC,		// token type of --
 	TK_FUNC,
 	TK_IF,			// token type of if

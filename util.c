@@ -81,8 +81,6 @@ Node *new_node_num(int val, Env *env) {
 Node *new_node_ident(char *name, Env *env) {
 	
 	// decide value_ty
-	//Map *variables = vec_get(genv, envnum);
-	//Type *value_ty = map_get_type(env->variables, name);
 	Type *value_ty = get_valuetype(env, name);
 	if (value_ty == NULL) {
 		Node *node = new_node(ND_IDENT, value_ty, env, NULL, NULL);
@@ -92,9 +90,11 @@ Node *new_node_ident(char *name, Env *env) {
 
 	if (value_ty->ty == TY_ARRAY) {
 		// read array a as if pointer a
+		// if the next token is '['
 		// cf. int a[10]; a[0]=1; *a => 1
 		Type *newtype = new_type(TY_PTR);
 		newtype->ptrof = value_ty->ptrof;
+		newtype->array_size = value_ty->array_size;
 		value_ty = newtype;
 	}
 

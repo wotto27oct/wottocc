@@ -536,6 +536,16 @@ Node *unary_expression(Env *env) {
 		node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), env, lhs, NULL);
 	} else if (consume('&')) {
 		node = new_node('&', new_type(TY_PTR), env, cast_expression(env), NULL);
+	} else if (consume(TK_SIZEOF)) {
+		// sizeof(a)
+		node = unary_expression(env);
+		if (node->value_ty->ty == TY_PTR && node->value_ty->array_size != 0) {
+			node = new_node_num(node->value_ty->array_size * get_typesize(node->value_ty->ptrof), env);
+		} else {
+			node = new_node_num(get_typesize(node->value_ty), env);
+		}
+		return node;
+
 	} else {
 		node = postfix_expression(env);
 	}
@@ -549,6 +559,7 @@ Node *postfix_expression(Env *env) {
 		if (consume('[')) {
 			// a[3] -> *(a + 3)
 			Node *rhs = expression(env);
+			
 			Node *plus = new_node('+', new_type(TY_PTR), env, node, rhs);
 			node = new_node(ND_DEREF, new_type(node->value_ty->ptrof->ty), env, plus, NULL);
 			err_consume(']', "no right_braket at array");
@@ -585,7 +596,7 @@ Node *argument_expression_list(Env *env) {
 
 Node *primary_expression(Env *env) {
 	if (consume('(')) {
-		Node *node = expression(env); // TODO: NEED TO CHANGE
+		Node *node = expression(env);
 		err_consume(')', "there isn't right-parenthesis at primary_expression");
 		return node;
 	}
@@ -598,31 +609,8 @@ Node *primary_expression(Env *env) {
 		break;
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
-		/*if (consume('(')) {
-			Vector *args = new_vector();
-			while (1) {
-				if (consume(')')) {
-					break;
-				}
-				vec_push(args, assign(env));
-				if (!consume(',')) {
-					err_consume(')', "no right-parenthesis at func_call");
-					break;
-				}
-			}
-			return new_node_func(t_name, args, env);
-		} else if (consume('[')) {
-			// a[3]; -> *(a + 3);			
-			Node *rhs = add(env);
-			Node *lhs = new_node_ident(t_name, env);
-			Node *plus = new_node('+', new_type(TY_PTR), env, lhs, rhs);
-			Node *node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), env, plus, NULL);
-			err_consume(']', "no right-bracket at array_suffix");
-			return node;
-		} else {*/
 		Node *node = new_node_ident(t_name, env);
 		return node;
-		//}
 		break;
 	}
 	

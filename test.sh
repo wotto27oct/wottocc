@@ -106,4 +106,10 @@ try 1 "int main(){int i=1; ; ; return i;}"
 
 try 2 "int main(){int a=0; int b=1; switch(b){ case 0: a=1; break; {case 1: a=2; break;}} return a;}"
 
+try 4 "int main(){int x; return sizeof(x + 3);}"
+try 8 "int main(){int *y; return sizeof(y + 3);}"
+try 4 "int main(){int *y; return sizeof(*y);}"
+try 4 "int main(){return sizeof(sizeof(1));}"
+try 12 "int main(){int x[3]; return sizeof(x);}"
+
 echo OK

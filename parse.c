@@ -13,39 +13,52 @@ void program() {
 Node *function() {
 	Node *node;
 
-	err_read_type();
+	Type *toptype = err_read_type();
+	toptype = read_ptr(toptype);
+
 	err_consume(TK_IDENT, "It's not suitable format for function");
-	err_consume('(', "no left-parenthesis at declaration_list");
+	char *name = ((Token *)vec_get(tokens, pos - 1))->input;
+	//err_consume('(', "no left-parenthesis at declaration_list");
 
-	node = new_node(ND_FUNCDEF, NULL, new_env(NULL), NULL, NULL);
-	node->fname = ((Token *)vec_get(tokens, pos-2))->input;
-	Vector *args = new_vector();
+	if (consume('(')) {
+		// function_definition
+		node = new_node(ND_FUNCDEF, toptype, new_env(NULL), NULL, NULL);
+		node->fname = name;
+		Vector *args = new_vector();
 
-	// int foo(int *x, int y){ ... }
-	while (1) {
-		if (consume(')')) {
-			break;
+		// int foo(int *x, int y){ ... }
+		while (1) {
+			if (consume(')')) {
+				break;
+			}
+			Type *type = err_read_type();
+			type = read_ptr(type);
+			err_consume(TK_IDENT, "args is not variable");
+
+			char *vname = ((Token *)vec_get(tokens,pos-1))->input; //variable name
+			map_put(node->env->variables, vname, 0, type);
+
+			Node *arg = new_node(ND_INT, type, NULL, NULL, NULL);
+			arg->name = vname;
+			vec_push(args, arg);
+
+			if (!consume(',')) {
+				err_consume(')', "there's no right-parenthesis at args");
+				break;
+			}
+
 		}
-		Type *type = err_read_type();
-		type = read_ptr(type);
-		err_consume(TK_IDENT, "args is not variable");
+		node->args = args; // set of arguments of function
 
-		char *vname = ((Token *)vec_get(tokens,pos-1))->input; //variable name
-		map_put(node->env->variables, vname, 0, type);
-
-		Node *arg = new_node(ND_INT, type, NULL, NULL, NULL);
-		arg->name = vname;
-		vec_push(args, arg);
-
-		if (!consume(',')) {
-			err_consume(')', "there's no right-parenthesis at args");
-			break;
-		}
-
+		node->lhs = compound_statement(node->env); // { ... }
+	} else {
+		// def of global variable
+		node = new_node(ND_GVARDEC, NULL, NULL, NULL, NULL);
+		node->name = name;
+		pos -= 1; // read from the identifier
+		node->lhs = init_declarator_list(g_env, toptype);
 	}
-	node->args = args; // set of arguments of function
 
-	node->lhs = compound_statement(node->env); // { ... }
 	return node;
 }
 
@@ -261,17 +274,15 @@ Node *declaration(Env *env) {
 }
 
 Node *init_declarator_list(Env *env, Type *sp_type) {
-	Node *node = new_node(ND_INIT_DECLARATOR_LIST, NULL, env, NULL, NULL);
-	Vector *args = new_vector();
-	Node *arg = init_declarator(env, sp_type);
-	vec_push(args, arg);
-	while(1) {
-		if (!consume(',')) break;
-		Node *arg = init_declarator(env, sp_type);
-		vec_push(args, arg);
+	Node *node = init_declarator(env, sp_type);
+
+	for (;;) {
+		if (consume(',')) {
+			node = new_node(ND_INIT_DECLARATOR_LIST, NULL, env, node, init_declarator(env, sp_type));
+		} else {
+			return node;
+		}
 	}
-	node->args = args;
-	return node;
 }	
 
 Node *init_declarator(Env *env, Type *sp_type) {

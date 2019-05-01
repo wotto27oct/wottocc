@@ -23,6 +23,9 @@ void gen(Node *node) {
 		gen(node->lhs);
 		return;
 	}
+
+	//if (node->node_ty == ND_GVARDEC) {
+
 	
 	if (node->node_ty == ND_CASE) {
 		printf(".LC%dbegin%d:\n", now_switch_cnt, node->val);
@@ -180,9 +183,9 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_INIT_DECLARATOR_LIST) {
-		for (int i = 0; i < node->args->len; i++) {
-			gen(vec_get(node->args, i));
-		}
+		gen(node->lhs);
+		printf("  pop rax\n");
+		gen(node->rhs);	
 		return;
 	}
 

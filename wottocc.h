@@ -74,6 +74,7 @@ enum {
 	ND_EXP,
 	ND_POSTINC,
 	ND_POSTDEC,
+	ND_GVARDEC,
 };
 
 enum {
@@ -226,7 +227,7 @@ extern int now_while_cnt;
 extern int now_switch_cnt;
 extern Vector *functions;
 extern int envnum;
-extern Env *global;
+extern Env *g_env;
 extern Node *now_switch_node;
 
 #endif

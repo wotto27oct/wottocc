@@ -77,6 +77,9 @@ enum {
 	ND_GVARDEC,
 	ND_GVAR_DEF,
 	ND_G_IDENT,
+	ND_INIT_G_DECLARATOR_LIST,
+	ND_INIT_G_DECLARATOR,
+	ND_G_DECLARATOR,
 };
 
 enum {
@@ -147,9 +150,12 @@ Node *block_item_list(Env*);
 Node *block_item(Env*);
 Node *declaration(Env*);
 Node *init_declarator_list(Env*, Type*);
+Node *init_g_declarator_list(Env*, Type*);
 Node *init_declarator(Env*, Type*);
+Node *init_g_declarator(Env*, Type*);
 Node *initializer(Env*);
 Node *declarator(Env *env, Type *type);
+Node *g_declarator(Env *env, Type *type);
 Node *statement(Env*);
 Node *jump_statement(Env*);
 Node *expression_statement(Env*);

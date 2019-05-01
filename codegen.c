@@ -5,8 +5,10 @@ void gen_lval(Node *node) {
 		gen(node->lhs);
 		return;
 	}
-	if (node->node_ty != ND_IDENT && node->node_ty != ND_G_IDENT)
+	if (node->node_ty != ND_IDENT && node->node_ty != ND_G_IDENT) {
+		printf("%d\n", node->node_ty);
 		error("lvalue of the substitution is not variable.\n");
+	}
 
 	if (node->node_ty == ND_IDENT) {
 		int offset = get_stackpos(node->env, node->name);
@@ -186,7 +188,7 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->node_ty == ND_INIT_DECLARATOR_LIST) {
+	if (node->node_ty == ND_INIT_DECLARATOR_LIST || node->node_ty == ND_INIT_G_DECLARATOR_LIST) {
 		gen(node->lhs);
 		printf("  pop rax\n");
 		gen(node->rhs);	
@@ -206,15 +208,16 @@ void gen(Node *node) {
 		printf("  push rdi\n");
 		return;
 	}	
-
-	if (node->node_ty == ND_GVAR_DEF) {
+	
+	if (node->node_ty == ND_INIT_G_DECLARATOR) {
 		printf(".data\n");
-		printf("%s:\n", node->name);
-		printf("  .zero %d\n", get_typesize(node->value_ty));
+		printf("%s:\n", node->lhs->name);
+		if (node->value_ty->ty == TY_INT) {
+			printf("  .long %d\n", node->rhs->val);
+		}
 		printf(".text\n");
-		gen(node->lhs);
 		return;
-	}
+	}	
 
 	if (node->node_ty == ND_NUM) {
 		printf("  push %d\n", node->val);
@@ -234,8 +237,18 @@ void gen(Node *node) {
 		else 
 			printf("  mov rax, [rax]\n");
 		printf("  push rax\n");
+	
 		return;
 	}
+
+	if (node->node_ty == ND_G_DECLARATOR) {
+		printf(".data\n");
+		printf("%s:\n", node->name);
+		printf("  .zero %d\n", get_typesize(node->value_ty));
+		printf(".text\n");
+		return;
+	}
+
 
 	if (node->node_ty == ND_FUNC_CALL) {
 		char registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};

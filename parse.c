@@ -56,7 +56,7 @@ Node *function() {
 		node = new_node(ND_GVARDEC, NULL, NULL, NULL, NULL);
 		node->name = name;
 		pos -= 1; // read from the identifier
-		node->lhs = init_declarator_list(g_env, toptype);
+		node->lhs = init_g_declarator_list(g_env, toptype);
 		err_consume(';', "no ; at def of global variable");
 	}
 
@@ -286,12 +286,38 @@ Node *init_declarator_list(Env *env, Type *sp_type) {
 	}
 }	
 
+Node *init_g_declarator_list(Env *env, Type *sp_type) {
+	Node *node = init_g_declarator(env, sp_type);
+	for (;;) {
+		if (consume(',')) {
+			node = new_node(ND_INIT_G_DECLARATOR_LIST, NULL, env, node,init_g_declarator(env, sp_type));
+		} else {
+			return node;
+		}
+	}
+}
+
 Node *init_declarator(Env *env, Type *sp_type) {
 	Node *node = declarator(env, sp_type);
 
 	if (consume('=')) {
 		node = new_node(ND_INIT_DECLARATOR, sp_type, env, node, initializer(env));
 	}
+
+	return node;
+}
+
+Node *init_g_declarator(Env *env, Type *sp_type) {
+	Node *node = g_declarator(env, sp_type);
+
+	if (consume('=')) {
+		if (sp_type->ty == TY_INT) {
+			err_consume(TK_NUM, "initialization must be number\n");
+			Node *rhs = new_node_num(((Token *)vec_get(tokens, pos-1))->val, env);
+			node = new_node(ND_INIT_G_DECLARATOR, sp_type, env, node, rhs);
+		}
+	}
+
 	return node;
 }
 
@@ -317,10 +343,34 @@ Node *declarator(Env *env, Type *sp_type) {
 	Node *node = new_node_ident(vname, env);
 	
 	if (env == g_env) {
-		node = new_node(ND_GVAR_DEF, type, env, node, NULL);
-		node->name = vname;
+		Node *lhs = new_node(ND_GVAR_DEF, type, env, NULL, NULL);
+		lhs->name = vname;
+		node->lhs = lhs;
 	}
 
+	return node;
+}
+
+Node *g_declarator(Env *env, Type *sp_type) {
+	Type *type = sp_type;
+	type = read_ptr(type);
+
+	err_consume(TK_IDENT, "no identifier at declarator");
+	char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
+
+	if (consume('[')) {
+		err_consume(TK_NUM, "array initializer must be number");
+		Type *newtype = new_type(TY_ARRAY);
+		newtype->ptrof = type;
+		newtype->array_size = ((Token *)vec_get(tokens,pos-1))->val;
+		type = newtype;
+		err_consume(']', "no ']' at array-def");
+	}
+	
+	map_put(env->variables, vname, 0, type);
+	
+	Node *node = new_node(ND_G_DECLARATOR, type, env, NULL, NULL);
+	node->name = vname;
 	return node;
 }
 

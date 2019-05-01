@@ -115,5 +115,8 @@ try 12 "int main(){int x[3]; return sizeof(x);}"
 try 0 "int a; int main(){return 0;}"
 try 1 "int a; int main(){a = 1; return a;}"
 try 3 "int a[2]; int main(){a[1] = 3; return *(a+1);}"
+try 1 "int a=1; int main(){return a;}"
+try 3 "int a=1,b=5; int main(){a=3;b=a;return b;}"
+try 3 "int a=3; int *b; int main(){b=&a; return *b;}"
 
 echo OK

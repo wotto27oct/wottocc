@@ -41,7 +41,12 @@ void tokenize(char *p) {
 		
 		if (*p == '-') {
 			Token *tmp = malloc(sizeof(Token));
-			if (*(p+1) == '-') {
+			if (isdigit(*(p+1))) {
+				p += 1;
+				tmp->ty = TK_NUM;
+				tmp->input = p;
+				tmp->val = strtol(p, &p, 10) * (-1);
+			} else if (*(p+1) == '-') {
 				tmp->ty = TK_DEC;
 				tmp->input = "--";
 				p += 2;

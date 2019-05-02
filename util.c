@@ -185,3 +185,50 @@ Type *read_ptr(Type *type) {
 	}
 	return type;
 }
+
+Type *assignment_check(Type *lhs, Type *rhs) {
+	Type *value_ty;
+	switch(lhs->ty){
+	case TY_INT:
+		if (rhs->ty == TY_INT) {
+			value_ty = new_type(TY_INT);
+		} else {
+			error("illegal assignment\n");
+		}
+		break;
+	case TY_PTR:
+	case TY_ARRAY:
+		if (rhs->ty == TY_INT) {
+			error("illegal assignment\n");
+		} else {
+			// 本当はまずい(何重ポインタか考慮していない)
+			value_ty = lhs;
+		}
+		break;
+	}
+	return value_ty;
+}
+
+Type *plus_check(Type *lhs, Type *rhs) {
+	Type *value_ty;
+	switch(lhs->ty) {
+	case TY_INT:
+		if (rhs->ty == TY_INT) {
+			value_ty = new_type(TY_INT);
+		} else if (rhs->ty == TY_PTR || rhs->ty == TY_ARRAY) {
+			// (1 + a)
+			value_ty = rhs;
+		}
+		break;
+	case TY_PTR:
+	case TY_ARRAY:
+		if (rhs->ty == TY_INT) {
+			value_ty = lhs;
+		} else if (rhs->ty == TY_PTR || rhs->ty == TY_ARRAY) {
+			value_ty = lhs;
+		}
+		break;
+	}
+	return value_ty;
+}
+

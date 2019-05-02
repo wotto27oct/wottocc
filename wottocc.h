@@ -223,6 +223,8 @@ int err_consume(int, const char*);
 Type *read_type();
 Type *err_read_type();
 Type *read_ptr(Type*);
+Type *assignment_check(Type*, Type*);
+Type *plus_check(Type*, Type*);
 
 int gen_stackpos(Env*, int);
 

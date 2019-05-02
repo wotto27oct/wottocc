@@ -126,4 +126,7 @@ try 3 "int *foo(int x){int *y; y= &x; return y;} int main(){int *a; a = foo(3); 
 
 try 3 "int main(){int y=3; int *x=&y; return *x;}"
 
+try 1 "int main(){int a=1;int *x=&a; int *y; y=x; return *y;}"
+try 3 "int main(){int a[2]; a[1]=3; int *x; x=1+a; return *x;}"
+
 echo OK

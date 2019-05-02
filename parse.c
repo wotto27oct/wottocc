@@ -495,12 +495,13 @@ Node *equality_expression(Env *env) {
 	Node *node = relational_expression(env);
 
 	for (;;) {
-		if (consume(TK_EQUAL))
+		if (consume(TK_EQUAL)) {
 			node = new_node(ND_EQUAL, new_type(TY_INT), env, node, relational_expression(env));
-		else if (consume(TK_NEQUAL))
+		} else if (consume(TK_NEQUAL)) {
 			node = new_node(ND_NEQUAL, new_type(TY_INT), env, node, relational_expression(env));
-		else
+		} else {
 			return node;
+		}
 	}
 }
 

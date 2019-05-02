@@ -205,28 +205,29 @@ int map_get_ind(Map*, char*);
 void *map_get_type(Map*, char*);
 void test_map();
 
-// util.c
-char *new_str(const char*);
-void error(const char*, ...);
-int get_stackpos(Env*, char*);
-Type *get_valuetype(Env*, char*);
-int get_typesize(Type*);
-Node *new_node(int, Type*, Env*, Node*, Node*);
-Node *new_node_num(int, Env*);
-Node *new_node_ident(char*, Env*);
-Node *new_node_func(char*, Env*);
+// type.c
 Type *new_type(int);
-Env *new_env(Env*);
-int read_nextToken(int);
-int consume(int);
-int err_consume(int, const char*);
+int get_typesize(Type*);
 Type *read_type();
 Type *err_read_type();
 Type *read_ptr(Type*);
 Type *assignment_check(Type*, Type*);
 Type *plus_check(Type*, Type*);
 
+// util.c
+char *new_str(const char*);
+void error(const char*, ...);
+int get_stackpos(Env*, char*);
 int gen_stackpos(Env*, int);
+Type *get_valuetype(Env*, char*);
+Node *new_node(int, Type*, Env*, Node*, Node*);
+Node *new_node_num(int, Env*);
+Node *new_node_ident(char*, Env*);
+Node *new_node_func(char*, Env*);
+Env *new_env(Env*);
+int read_nextToken(int);
+int consume(int);
+int err_consume(int, const char*);
 
 extern Vector *tokens;
 extern Vector *genv;

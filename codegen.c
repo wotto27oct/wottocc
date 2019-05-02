@@ -197,6 +197,7 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_INIT_DECLARATOR) {
+		// 当面,variableのinitializeはint,char,ptrのみ
 		gen_lval(node->lhs);
 		gen(node->rhs);
 
@@ -204,17 +205,22 @@ void gen(Node *node) {
 		printf("  pop rax\n");
 		if (node->value_ty->ty == TY_INT)
 			printf("  mov [rax], edi\n");
-	    else 
+		else if (node->value_ty->ty == TY_CHAR)
+			printf("  mov byte ptr [rax], dil\n");
+		else
 			printf("  mov [rax], rdi\n");
 		printf("  push rdi\n");
 		return;
 	}	
 	
 	if (node->node_ty == ND_INIT_G_DECLARATOR) {
+		// 当面，global variableのinitializeはint,charのみ
 		printf(".data\n");
 		printf("%s:\n", node->lhs->name);
 		if (node->value_ty->ty == TY_INT) {
 			printf("  .long %d\n", node->rhs->val);
+		} else if (node->value_ty->ty == TY_CHAR) {
+			printf("  .byte %d\n", node->rhs->val);
 		}
 		printf(".text\n");
 		return;
@@ -239,6 +245,8 @@ void gen(Node *node) {
 		printf("  pop rax\n");
 		if (type->ty == TY_INT)
 			printf("  mov eax, [rax]\n");
+		else if (type->ty == TY_CHAR)
+			printf("  movzx eax, byte ptr [rax]\n");
 		else 
 			printf("  mov rax, [rax]\n");
 		printf("  push rax\n");
@@ -290,6 +298,8 @@ void gen(Node *node) {
 		printf("  pop rax\n");
 		if (node->value_ty->ty == TY_INT)
 			printf("  mov [rax], edi\n");
+		else if (node->value_ty->ty == TY_CHAR) 
+			printf("  mov byte ptr [rax], dil\n");
 	    else 
 			printf("  mov [rax], rdi\n");
 		printf("  push rdi\n");
@@ -304,6 +314,8 @@ void gen(Node *node) {
 		printf("  pop rax\n");
 		if (node->value_ty->ty == TY_INT)
 			printf("  add [rax], edi\n");
+		else if (node->value_ty->ty == TY_CHAR)
+			printf("  add byte ptr [rax], dil\n");
 		else 
 			printf("  add [rax], rdi\n");
 		printf("  push [rax]\n");
@@ -318,6 +330,8 @@ void gen(Node *node) {
 		printf("  pop rax\n");
 		if (node->value_ty->ty == TY_INT)
 			printf("  sub [rax], edi\n");
+		else if (node->value_ty->ty == TY_CHAR)
+			printf("  sub byte ptr [rax], dil\n");
 		else 
 			printf("  sub [rax], rdi\n");
 		printf("  push [rax]\n");
@@ -366,6 +380,8 @@ void gen(Node *node) {
 		printf("  pop rax\n");
 		if (node->value_ty->ty == TY_INT)
 			printf("  mov eax, [rax]\n");
+		else if (node->value_ty->ty == TY_CHAR)
+			printf("  movzx eax, byte ptr [rax]\n");
 		else
 			printf("  mov rax, [rax]\n");
 		printf("  push rax\n");
@@ -380,17 +396,13 @@ void gen(Node *node) {
 	if (node->node_ty == '+') {
 		gen(node->lhs);
 		gen(node->rhs);
-		if (node->lhs->value_ty->ty == TY_PTR && node->rhs->value_ty->ty == TY_INT) {
-			//int ptr_offset = 8;
-			//if(node->lhs->value_ty->ptrof->ty == TY_INT) ptr_offset = 4;
+		if (node->lhs->value_ty->ty == TY_PTR && (node->rhs->value_ty->ty == TY_INT || node->rhs->value_ty->ty == TY_CHAR)) {
 			int ptr_offset = get_typesize(node->lhs->value_ty->ptrof);
 			printf("  pop rax\n"); // rax = rhs
 			printf("  mov rdi, %d\n", ptr_offset);
 			printf("  mul rdi\n");
 			printf("  push rax\n");
-		} else if (node->lhs->value_ty->ty == TY_INT && node->rhs->value_ty->ty == TY_PTR) {
-			//int ptr_offset = 8;
-			//if(node->rhs->value_ty->ptrof->ty == TY_INT) ptr_offset = 4;
+		} else if ((node->lhs->value_ty->ty == TY_INT || node->lhs->value_ty->ty == TY_CHAR) && node->rhs->value_ty->ty == TY_PTR) {
 			int ptr_offset = get_typesize(node->rhs->value_ty->ptrof);
 			printf("  pop rsi\n"); // rsi = rhs
 			printf("  pop rax\n"); // rax = lhs
@@ -410,12 +422,12 @@ void gen(Node *node) {
 	if (node->node_ty == '-') {
 		gen(node->lhs);
 		gen(node->rhs);
-		if (node->lhs->value_ty->ty == TY_PTR && node->rhs->value_ty->ty == TY_INT) {
+		if (node->lhs->value_ty->ty == TY_PTR && (node->rhs->value_ty->ty == TY_INT || node->rhs->value_ty->ty == TY_CHAR)) {
 			printf("  pop rax\n"); // rax = rhs
 			printf("  mov rdi, 4\n");
 			printf("  mul rdi\n");
 			printf("  push rax\n");
-		} else if (node->lhs->value_ty->ty == TY_INT && node->rhs->value_ty->ty == TY_PTR) {
+		} else if ((node->lhs->value_ty->ty == TY_CHAR || node->lhs->value_ty->ty == TY_INT) && node->rhs->value_ty->ty == TY_PTR) {
 			printf("  pop rsi\n"); // rsi = rhs
 			printf("  pop rax\n"); // rax = lhs
 			printf("  mov rdi, 4\n");

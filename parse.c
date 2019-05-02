@@ -304,9 +304,7 @@ Node *init_declarator(Env *env, Type *sp_type) {
 
 	if (consume('=')) {
 		Node *rhs = initializer(env);
-		if (rhs->value_ty->ty != node->value_ty->ty) {
-			error("illegal substitution at init_declarator\n");
-		}
+		assignment_check(node->value_ty, rhs->value_ty);
 		node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
 	}
 
@@ -317,7 +315,7 @@ Node *init_g_declarator(Env *env, Type *sp_type) {
 	Node *node = g_declarator(env, sp_type);
 
 	if (consume('=')) {
-		if (sp_type->ty == TY_INT) {
+		if (sp_type->ty == TY_INT || sp_type->ty == TY_CHAR) {
 			err_consume(TK_NUM, "initialization must be number\n");
 			Node *rhs = new_node_num(((Token *)vec_get(tokens, pos-1))->val, env);
 			node = new_node(ND_INIT_G_DECLARATOR, sp_type, env, node, rhs);
@@ -348,11 +346,11 @@ Node *declarator(Env *env, Type *sp_type) {
 	
 	Node *node = new_node_ident(vname, env);
 	
-	if (env == g_env) {
+	/*if (env == g_env) {
 		Node *lhs = new_node(ND_GVAR_DEF, type, env, NULL, NULL);
 		lhs->name = vname;
 		node->lhs = lhs;
-	}
+	}*/
 
 	return node;
 }

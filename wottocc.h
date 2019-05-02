@@ -9,7 +9,7 @@
 
 // トークンの型を表す値
 enum {
-	TK_NUM = 256,	// token type of integer
+	TK_NUM = 0,	// token type of integer
 	TK_IDENT,		// token type of identifier
 	TK_RETURN,		// token type of return
 	TK_EQUAL,		// token type of ==

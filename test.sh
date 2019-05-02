@@ -129,4 +129,10 @@ try 3 "int main(){int y=3; int *x=&y; return *x;}"
 try 1 "int main(){int a=1;int *x=&a; int *y; y=x; return *y;}"
 try 3 "int main(){int a[2]; a[1]=3; int *x; x=1+a; return *x;}"
 
+try 1 "int main(){char a = 1; return 1;}"
+try 1 "char x[3]; int main(){x[0]=1; x[1]=2; return x[0];}"
+try 2 "char x=1; int main(){x+=1; return x;}"
+try 5 "char x[3]; int main(){x[0]=1;x[1]=2;int y=4;return x[0]+y;}"
+try 3 "int main(){char x=1; int a[2]; a[1]=3; return *(a+x);}"
+
 echo OK

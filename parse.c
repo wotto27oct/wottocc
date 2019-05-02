@@ -24,6 +24,7 @@ Node *function() {
 		// function_definition
 		node = new_node(ND_FUNCDEF, toptype, new_env(NULL), NULL, NULL);
 		node->fname = name;
+		map_put(g_funcs, name, 0, toptype);
 		Vector *args = new_vector();
 
 		// int foo(int *x, int y){ ... }
@@ -49,6 +50,7 @@ Node *function() {
 
 		}
 		node->args = args; // set of arguments of function
+
 
 		node->lhs = compound_statement(node->env); // { ... }
 	} else {
@@ -621,7 +623,8 @@ Node *postfix_expression(Env *env) {
 			err_consume(']', "no right_braket at array");
 		} else if (consume('(')) {
 			// foo(1 ,2)
-			node = new_node(ND_FUNC_CALL, NULL, env, node, argument_expression_list(env));
+			Type *type = map_get_type(g_funcs, node->name);
+			node = new_node(ND_FUNC_CALL, type, env, node, argument_expression_list(env));
 			err_consume(')', "no right-parenthesis at func_call");
 		} else if (consume(TK_INC)) {
 			node = new_node(ND_POSTINC, new_type(TY_INT), env, node, NULL);

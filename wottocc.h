@@ -236,6 +236,7 @@ extern int now_switch_cnt;
 extern Vector *functions;
 extern int envnum;
 extern Env *g_env;
+extern Map *g_funcs;
 extern Node *now_switch_node;
 
 #endif

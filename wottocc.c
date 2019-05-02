@@ -21,6 +21,7 @@ void runtest() {
 }
 
 Env *g_env;
+Map *g_funcs;
 
 int main(int argc, char **argv) {
 
@@ -39,6 +40,7 @@ int main(int argc, char **argv) {
 	envnum = 0;
 	functions = new_vector();
 	g_env = new_env(NULL);
+	g_funcs = new_map(NULL);
 
 	// tokenize and parse
 	tokenize(argv[1]);

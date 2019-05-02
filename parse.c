@@ -303,7 +303,11 @@ Node *init_declarator(Env *env, Type *sp_type) {
 	Node *node = declarator(env, sp_type);
 
 	if (consume('=')) {
-		node = new_node(ND_INIT_DECLARATOR, sp_type, env, node, initializer(env));
+		Node *rhs = initializer(env);
+		if (rhs->value_ty->ty != node->value_ty->ty) {
+			error("illegal substitution at init_declarator\n");
+		}
+		node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
 	}
 
 	return node;

@@ -16,7 +16,8 @@ void gen_lval(Node *node) {
 		printf("  sub rax, %d\n", offset);	
 		printf("  push rax\n");
 	} else if (node->node_ty == ND_G_IDENT) {
-		printf("  mov rax, qword ptr [rip + %s@GOTPCREL]\n", node->name);
+		//printf("  mov rax, qword ptr [rip + %s@GOTPCREL]\n", node->name);
+		printf("  lea rax, %s[rip]\n", node->name);
 		printf("  push rax\n");
 	}
 }
@@ -226,8 +227,12 @@ void gen(Node *node) {
 
 	if (node->node_ty == ND_IDENT || node->node_ty == ND_G_IDENT) {
 		gen_lval(node);
-		Type *type = get_valuetype(node->env, node->name);
-		if (type == NULL) type = get_valuetype(g_env, node->name);
+		Type *type;
+		if (node->node_ty == ND_IDENT) {
+			type = get_valuetype(node->env, node->name);
+		} else {
+			type = get_valuetype(g_env, node->name);
+		}
 		// int a[2]; a means the address of a[0],
 		// not contents
 		if (type->ty == TY_ARRAY) return;

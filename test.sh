@@ -122,6 +122,6 @@ try 3 "int a=3; int *b; int main(){b=&a; return *b;}"
 try 8 "int foo(int x, int y){return x + 2*y;} int main(){return foo(1,2)+3;}"
 try 3 "int main(){int x=3;int *y; y=&x;return *y;}"
 try 3 "int *foo(){int x=3;int *y;y=&x; return y;} int main(){int *z; z=foo(); return *z;}"
-try 0 "int *foo(int x){int *y; y = &x; return y;} int main(){int *a = foo(3); return *a;}"
+try 3 "int *foo(int x){int *y; y = &x; return y;} int main(){int *a; a = foo(3); return *a;}"
 
 echo OK

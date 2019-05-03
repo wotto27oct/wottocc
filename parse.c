@@ -327,11 +327,28 @@ Node *init_g_declarator(Env *env, Type *sp_type) {
 	Node *node = g_declarator(env, sp_type);
 
 	if (consume('=')) {
-		if (sp_type->ty == TY_INT || sp_type->ty == TY_CHAR) {
+		// これだと変数も初期化に認めてるので本当はよくない
+		// いい感じにanalyzeしたいけどとりあえずスルー
+		Node *rhs = initializer(env);
+		if (rhs->node_ty != ND_INITIALIZER_LIST) {
+			assignment_check(node->value_ty, rhs->value_ty);
+			node = new_node(ND_INIT_G_DECLARATOR, node->value_ty, env, node, rhs);
+		} else {
+			// a[3] = {1,2,3};
+			if (node->value_ty->ty != TY_ARRAY) {
+				error("lhs must be array at init_declarator\n");
+			}
+			if (node->value_ty->array_size < rhs->value_ty->array_size) {
+				error("too much initializer\n");
+			}
+			assignment_check(node->value_ty->ptrof, rhs->value_ty->ptrof);
+			node = new_node(ND_INIT_G_DECLARATOR, node->value_ty, env, node, rhs);
+		}
+		/*if (sp_type->ty == TY_INT || sp_type->ty == TY_CHAR) {
 			err_consume(TK_NUM, "initialization must be number\n");
 			Node *rhs = new_node_num(((Token *)vec_get(tokens, pos-1))->val, env);
 			node = new_node(ND_INIT_G_DECLARATOR, sp_type, env, node, rhs);
-		}
+		}*/
 	}
 
 	return node;

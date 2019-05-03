@@ -138,4 +138,7 @@ try 3 "int main(){char x=1; int a[2]; a[1]=3; return *(a+x);}"
 try 4 "int main(){int a[10] = {1,2,3,4}; return a[3];}"
 try 3 "int main(){char a[3] = {3,4,5,}; return a[0];}"
 
+try 2 "int a[3] = {1,2,3}; int main(){return a[1];}"
+try 4 "char a[4] = {1,2,3,4,}; int main(){a[2] = 2; return a[3];}"
+
 echo OK

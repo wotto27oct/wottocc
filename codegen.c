@@ -215,15 +215,15 @@ void gen(Node *node) {
 			// array a[10];
 			gen_lval(node->lhs);
 			// now the address of a is on stack
-			for(int i = 0; i < node->rhs->value_ty->array_size; i++) {
+			for(size_t i = 0; i < node->rhs->value_ty->array_size; i++) {
 				Node *arg = vec_get(node->rhs->args, i);
 				gen(arg);
 				
 				printf("  pop rdi\n");
 				printf("  pop rax\n");
-				if (node->value_ty->ty == TY_INT)
+				if (node->value_ty->ptrof->ty == TY_INT)
 					printf("  mov [rax], edi\n");
-				else if (node->value_ty->ty == TY_CHAR)
+				else if (node->value_ty->ptrof->ty == TY_CHAR)
 					printf("  mov byte ptr [rax], dil\n");
 				else
 					printf("  mov [rax], rdi\n");
@@ -236,15 +236,29 @@ void gen(Node *node) {
 	}	
 	
 	if (node->node_ty == ND_INIT_G_DECLARATOR) {
-		// 当面，global variableのinitializeはint,charのみ
-		printf(".data\n");
-		printf("%s:\n", node->lhs->name);
-		if (node->value_ty->ty == TY_INT) {
-			printf("  .long %d\n", node->rhs->val);
-		} else if (node->value_ty->ty == TY_CHAR) {
-			printf("  .byte %d\n", node->rhs->val);
+		// int,charのみ
+		if (node->value_ty->ty == TY_INT || node->value_ty->ty == TY_CHAR) {
+			printf(".data\n");
+			printf("%s:\n", node->lhs->name);
+			if (node->value_ty->ty == TY_INT) {
+				printf("  .long %d\n", node->rhs->val);
+			} else if (node->value_ty->ty == TY_CHAR) {
+				printf("  .byte %d\n", node->rhs->val);
+			}
+			printf(".text\n");
+		} else if (node->value_ty->ty == TY_ARRAY) {
+			printf(".data\n");
+			printf("%s:\n", node->lhs->name);
+			for (size_t i = 0; i < node->rhs->value_ty->array_size; i++) {
+				Node *arg = vec_get(node->rhs->args, i);
+				if (node->value_ty->ptrof->ty == TY_INT) {
+					printf("  .long %d\n", arg->val);
+				} else if (node->value_ty->ptrof->ty == TY_CHAR) {
+					printf("  .byte %d\n", arg->val);
+				}
+			}
+			printf(".text\n");
 		}
-		printf(".text\n");
 		return;
 	}	
 

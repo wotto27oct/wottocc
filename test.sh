@@ -135,4 +135,7 @@ try 2 "char x=1; int main(){x+=1; return x;}"
 try 3 "char x[3]; int main(){x[0]=-1;x[1]=2;int y=4;return x[0]+y;}"
 try 3 "int main(){char x=1; int a[2]; a[1]=3; return *(a+x);}"
 
+try 4 "int main(){int a[10] = {1,2,3,4}; return a[3];}"
+try 3 "int main(){char a[3] = {3,4,5,}; return a[0];}"
+
 echo OK

@@ -197,19 +197,41 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_INIT_DECLARATOR) {
-		// 当面,variableのinitializeはint,char,ptrのみ
-		gen_lval(node->lhs);
-		gen(node->rhs);
+		// int,char,ptrのみ
+		if (node->value_ty->ty != TY_ARRAY) {
+			gen_lval(node->lhs);
+			gen(node->rhs);
 
-		printf("  pop rdi\n");
-		printf("  pop rax\n");
-		if (node->value_ty->ty == TY_INT)
-			printf("  mov [rax], edi\n");
-		else if (node->value_ty->ty == TY_CHAR)
-			printf("  mov byte ptr [rax], dil\n");
-		else
-			printf("  mov [rax], rdi\n");
-		printf("  push rdi\n");
+			printf("  pop rdi\n");
+			printf("  pop rax\n");
+			if (node->value_ty->ty == TY_INT)
+				printf("  mov [rax], edi\n");
+			else if (node->value_ty->ty == TY_CHAR)
+				printf("  mov byte ptr [rax], dil\n");
+			else
+				printf("  mov [rax], rdi\n");
+			printf("  push rdi\n");
+		} else {
+			// array a[10];
+			gen_lval(node->lhs);
+			// now the address of a is on stack
+			for(int i = 0; i < node->rhs->value_ty->array_size; i++) {
+				Node *arg = vec_get(node->rhs->args, i);
+				gen(arg);
+				
+				printf("  pop rdi\n");
+				printf("  pop rax\n");
+				if (node->value_ty->ty == TY_INT)
+					printf("  mov [rax], edi\n");
+				else if (node->value_ty->ty == TY_CHAR)
+					printf("  mov byte ptr [rax], dil\n");
+				else
+					printf("  mov [rax], rdi\n");
+				printf("  add rax, %d\n", get_typesize(node->lhs->value_ty->ptrof));
+				printf("  push rax\n");
+			}
+			printf("  push 0\n");
+		}
 		return;
 	}	
 	

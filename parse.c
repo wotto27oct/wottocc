@@ -304,8 +304,20 @@ Node *init_declarator(Env *env, Type *sp_type) {
 
 	if (consume('=')) {
 		Node *rhs = initializer(env);
-		assignment_check(node->value_ty, rhs->value_ty);
-		node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
+		if (rhs->node_ty != ND_INITIALIZER_LIST) {
+			assignment_check(node->value_ty, rhs->value_ty);
+			node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
+		} else {
+			// a[3] = {1,2,3};
+			if (node->value_ty->ty != TY_ARRAY) {
+				error("lhs must be array at init_declarator\n");
+			}
+			if (node->value_ty->array_size < rhs->value_ty->array_size) {
+				error("too much initializer\n");
+			}
+			assignment_check(node->value_ty->ptrof, rhs->value_ty->ptrof);
+			node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
+		}
 	}
 
 	return node;
@@ -345,13 +357,8 @@ Node *declarator(Env *env, Type *sp_type) {
 	map_put(env->variables, vname, 0, type);
 	
 	Node *node = new_node_ident(vname, env);
+	node->value_ty = type;
 	
-	/*if (env == g_env) {
-		Node *lhs = new_node(ND_GVAR_DEF, type, env, NULL, NULL);
-		lhs->name = vname;
-		node->lhs = lhs;
-	}*/
-
 	return node;
 }
 
@@ -380,7 +387,30 @@ Node *g_declarator(Env *env, Type *sp_type) {
 
 // 6.7.9
 Node *initializer(Env *env) {
-	Node *node = assignment_expression(env);
+	Node *node;
+	if (consume('{')) {
+		Vector *args = new_vector();
+		Type *arr_type = NULL;
+		size_t arr_size = 0;
+		while (!consume('}')) {
+			Node *node = assignment_expression(env);
+			if (arr_type == NULL) arr_type = node->value_ty;
+			if (arr_type->ty != node->value_ty->ty){
+				error("different array initializer type\n");
+			}
+			vec_push(args, node);
+			arr_size++;
+			if (consume('}')) break;
+			err_consume(',', "no comma at array initialzation\n");
+		}
+		Type *type = new_type(TY_ARRAY);
+		type->ptrof = arr_type;
+		type->array_size = arr_size;
+		node = new_node(ND_INITIALIZER_LIST, type, env, NULL, NULL);
+		node->args = args;
+	} else {
+		node = assignment_expression(env);
+	}
 	return node;
 }
 

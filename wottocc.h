@@ -32,12 +32,14 @@ enum {
 	TK_CONTINUE,
 	TK_INT,			// token type of int
 	TK_CHAR,
+	TK_STR,
 	TK_EOF,			// token type of EOF
 };
 
 enum {
 	ND_NUM = 256,	// node type of number
 	ND_IDENT,		// node type of identifier
+	ND_STR,
 	ND_RETURN,		// node type of return
 	ND_EQUAL,		// node type of ==
 	ND_NEQUAL,		// node type of !=
@@ -224,11 +226,13 @@ Type *get_valuetype(Env*, char*);
 Node *new_node(int, Type*, Env*, Node*, Node*);
 Node *new_node_num(int, Env*);
 Node *new_node_ident(char*, Env*);
+Node *new_node_string(char*, int, Env*);
 Node *new_node_func(char*, Env*);
 Env *new_env(Env*);
 int read_nextToken(int);
 int consume(int);
 int err_consume(int, const char*);
+void gen_string_address();
 
 extern Vector *tokens;
 extern Vector *genv;
@@ -242,5 +246,6 @@ extern int envnum;
 extern Env *g_env;
 extern Map *g_funcs;
 extern Node *now_switch_node;
+extern Vector *strings;
 
 #endif

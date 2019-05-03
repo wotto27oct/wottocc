@@ -120,6 +120,30 @@ void tokenize(char *p) {
 			vec_push(tokens, (void *)tmp);
 			continue;
 		}
+		
+		if (*p == '"') {
+			char buf[256];
+			int bufind = 0;
+			p++;
+			while(1) {
+				if (*p == '"'){
+					p++;
+					break;
+				} else {
+					buf[bufind++] = *p;
+					p++;
+				}
+			}
+			buf[bufind] = '\0';
+			char *buf_str = new_str(buf);
+
+			Token *tmp = malloc(sizeof(Token));
+			tmp->ty = TK_STR;
+			tmp->input = buf_str;
+			tmp->val = bufind;
+			vec_push(tokens, (void *)tmp);
+			continue;
+		}
 
 
 		if (isdigit(*p)) {
@@ -180,6 +204,7 @@ void tokenize(char *p) {
 			continue;
 		}
 
+		
 		error("cannot tokenize: %s\n", p);
 		exit(1);
 	}

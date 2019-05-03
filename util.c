@@ -110,6 +110,19 @@ Node *new_node_ident(char *name, Env *env) {
 	return node;
 }
 
+Node *new_node_string(char *name, int str_len, Env *env) {
+	Type *value_ty = new_type(TY_PTR);
+	value_ty->ptrof = new_type(TY_CHAR);
+	Node *node = new_node(ND_STR, value_ty, env, NULL, NULL);
+	// LC0, LC1 etc...
+	node->val = strings->len;
+	vec_push(strings, name);
+	node->name = name;
+	// length of string
+	node->length = str_len;
+	return node;
+}	
+
 Node *new_node_func(char *name, Env *env) {
 	Node *node = new_node(ND_FUNC, NULL, env, NULL, NULL);
 	node->name = name;
@@ -146,5 +159,17 @@ int err_consume(int ty, const char *str) {
 		return 0;
 	}
 	return 1;
+}
+
+void gen_string_address() {
+	printf(".data\n");
+	char *tmp;
+	for (int i = 0; i < strings->len; i++) {
+		tmp = vec_get(strings, i);
+		printf("LC%d:\n", i);
+		printf("  .string \"%s\"\n", tmp);
+	}
+	printf(".text\n");
+	return;
 }
 

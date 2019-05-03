@@ -197,22 +197,35 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_INIT_DECLARATOR) {
-		// int,char,ptrのみ
-		if (node->value_ty->ty != TY_ARRAY) {
+		if (node->rhs->node_ty != ND_INITIALIZER_LIST) {
 			gen_lval(node->lhs);
 			gen(node->rhs);
 
 			printf("  pop rdi\n");
 			printf("  pop rax\n");
-			if (node->value_ty->ty == TY_INT)
+			if (node->value_ty->ty == TY_INT) {
 				printf("  mov [rax], edi\n");
-			else if (node->value_ty->ty == TY_CHAR)
+			} else if (node->value_ty->ty == TY_CHAR) {
 				printf("  mov byte ptr [rax], dil\n");
-			else
+			} else if (node->value_ty->ty == TY_ARRAY) {
+				if (node->value_ty->ptrof->ty == TY_CHAR) {
+					// int main(){char x[3] = "abc";}
+					for (size_t i = 0; i < node->rhs->length; i++) {
+						printf("  movzx esi, byte ptr [rdi]\n"); // "a"
+						printf("  mov byte ptr [rax], sil\n"); // x[0] = "a"
+						printf("  add rax, 1\n");
+						printf("  add rdi, 1\n");
+						printf("  push rax\n");
+						printf("  push rdi\n");
+					}
+					printf("  pop rax\n");
+				}
+			} else {
 				printf("  mov [rax], rdi\n");
+			}
 			printf("  push rdi\n");
 		} else {
-			// array a[10];
+			// array a[10] = {1, 2, 3};
 			gen_lval(node->lhs);
 			// now the address of a is on stack
 			for(size_t i = 0; i < node->rhs->value_ty->array_size; i++) {
@@ -236,17 +249,27 @@ void gen(Node *node) {
 	}	
 	
 	if (node->node_ty == ND_INIT_G_DECLARATOR) {
-		// int,charのみ
-		if (node->value_ty->ty == TY_INT || node->value_ty->ty == TY_CHAR) {
+		// int,char,ptr
+		if (node->rhs->node_ty != ND_INITIALIZER_LIST) {
 			printf(".data\n");
 			printf("%s:\n", node->lhs->name);
 			if (node->value_ty->ty == TY_INT) {
 				printf("  .long %d\n", node->rhs->val);
 			} else if (node->value_ty->ty == TY_CHAR) {
 				printf("  .byte %d\n", node->rhs->val);
+			} else if (node->value_ty->ty == TY_ARRAY) {
+				if (node->value_ty->ptrof->ty == TY_CHAR) {
+					// char x[3] = "abc";
+					printf("  .ascii \"%s\"\n", node->rhs->name);
+				}
+			} else if (node->value_ty->ty == TY_PTR) {
+				// 今の所これが起こるのはstringのみ
+				if (node->value_ty->ptrof->ty == TY_CHAR) {
+					printf("  .quad LC%d\n", node->rhs->val);
+				}
 			}
 			printf(".text\n");
-		} else if (node->value_ty->ty == TY_ARRAY) {
+		} else {
 			printf(".data\n");
 			printf("%s:\n", node->lhs->name);
 			for (size_t i = 0; i < node->rhs->value_ty->array_size; i++) {
@@ -255,6 +278,11 @@ void gen(Node *node) {
 					printf("  .long %d\n", arg->val);
 				} else if (node->value_ty->ptrof->ty == TY_CHAR) {
 					printf("  .byte %d\n", arg->val);
+				} else if (node->value_ty->ptrof->ty == TY_PTR) {
+					// 今の所これが起こるのはstringのみ
+					if (node->value_ty->ptrof->ptrof->ty == TY_CHAR) {
+						printf("  .quad LC%d\n", node->rhs->val);
+					}
 				}
 			}
 			printf(".text\n");
@@ -295,6 +323,12 @@ void gen(Node *node) {
 		printf("%s:\n", node->name);
 		printf("  .zero %d\n", get_typesize(node->value_ty));
 		printf(".text\n");
+		return;
+	}
+	
+	if (node->node_ty == ND_STR) {
+		printf("  lea rax, LC%d[rip]\n", node->val);
+		printf("  push rax\n");
 		return;
 	}
 

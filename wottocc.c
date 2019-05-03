@@ -2,6 +2,7 @@
 
 Vector *tokens;
 Vector *genv;
+Vector *strings;
 int envnum;
 Vector *functions;
 Node *now_switch_node;
@@ -37,6 +38,7 @@ int main(int argc, char **argv) {
 
 	tokens = new_vector();
 	genv = new_vector();
+	strings = new_vector();
 	envnum = 0;
 	functions = new_vector();
 	g_env = new_env(NULL);
@@ -58,6 +60,8 @@ int main(int argc, char **argv) {
 		if (tmp->node_ty == ND_GVARDEC) continue;
 		printf(".global %s\n", tmp->fname);
 	}
+
+	gen_string_address();
 
 	char r_registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 	char e_registers[6][4] = {"edi", "esi", "edx", "ecx", "e8", "e9"};

@@ -306,6 +306,12 @@ Node *init_declarator(Env *env, Type *sp_type) {
 		Node *rhs = initializer(env);
 		if (rhs->node_ty != ND_INITIALIZER_LIST) {
 			assignment_check(node->value_ty, rhs->value_ty);
+			// ban x[3] = "abcde"
+			if (node->value_ty->ty == TY_ARRAY && rhs->value_ty->ty == TY_PTR) {
+				if (node->value_ty->array_size < rhs->length) {
+					error("too much initialization at array");
+				}
+			}
 			node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
 		} else {
 			// a[3] = {1,2,3};
@@ -344,11 +350,6 @@ Node *init_g_declarator(Env *env, Type *sp_type) {
 			assignment_check(node->value_ty->ptrof, rhs->value_ty->ptrof);
 			node = new_node(ND_INIT_G_DECLARATOR, node->value_ty, env, node, rhs);
 		}
-		/*if (sp_type->ty == TY_INT || sp_type->ty == TY_CHAR) {
-			err_consume(TK_NUM, "initialization must be number\n");
-			Node *rhs = new_node_num(((Token *)vec_get(tokens, pos-1))->val, env);
-			node = new_node(ND_INIT_G_DECLARATOR, sp_type, env, node, rhs);
-		}*/
 	}
 
 	return node;
@@ -665,6 +666,7 @@ Node *primary_expression(Env *env) {
 	}
 
 	char *t_name;
+	Node *node;
 			
 	switch (((Token *)vec_get(tokens, pos))->ty){
 	case TK_NUM:
@@ -672,11 +674,17 @@ Node *primary_expression(Env *env) {
 		break;
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
-		Node *node = new_node_ident(t_name, env);
+		node = new_node_ident(t_name, env);
+		return node;
+		break;
+	case TK_STR:
+		t_name = ((Token *)vec_get(tokens, pos))->input;
+		int str_len = ((Token *)vec_get(tokens, pos++))->val;
+		node = new_node_string(t_name, str_len, env);
 		return node;
 		break;
 	}
-	
+
 	return NULL;
 }
 

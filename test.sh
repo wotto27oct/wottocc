@@ -141,4 +141,11 @@ try 3 "int main(){char a[3] = {3,4,5,}; return a[0];}"
 try 2 "int a[3] = {1,2,3}; int main(){return a[1];}"
 try 4 "char a[4] = {1,2,3,4,}; int main(){a[2] = 2; return a[3];}"
 
+try 97 "int main(){char *x = \"abc\"; return x[0];}"
+try 98 "char *x = \"abakan\"; int main(){return x[1];}"
+try 99 "char *x; int main(){x = \"minako_chan\"; return x[7];}"
+
+try 97 "char a[3] = \"abc\"; int main(){return a[0];}"
+try 98 "int main(){char a[3] = \"abc\"; return a[1];}"
+
 echo OK

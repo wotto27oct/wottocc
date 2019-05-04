@@ -12,4 +12,4 @@ test: wottocc
 	./test.sh
 
 clean:
-	rm -f wottocc *.o *~ tmp*
+	rm -f wottocc *.o *~ tmp* *.s

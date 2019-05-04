@@ -289,6 +289,14 @@ void gen(Node *node) {
 		}
 		return;
 	}	
+	
+	if (node->node_ty == ND_G_DECLARATOR) {
+		printf(".data\n");
+		printf("%s:\n", node->name);
+		printf("  .zero %d\n", get_typesize(node->value_ty));
+		printf(".text\n");
+		return;
+	}
 
 	if (node->node_ty == ND_NUM) {
 		printf("  push %d\n", node->val);
@@ -318,13 +326,6 @@ void gen(Node *node) {
 		return;
 	}
 
-	if (node->node_ty == ND_G_DECLARATOR) {
-		printf(".data\n");
-		printf("%s:\n", node->name);
-		printf("  .zero %d\n", get_typesize(node->value_ty));
-		printf(".text\n");
-		return;
-	}
 	
 	if (node->node_ty == ND_STR) {
 		printf("  lea rax, LC%d[rip]\n", node->val);

@@ -188,6 +188,10 @@ Node *constant_expression(Env*);
 // tokenize.c
 void tokenize(char*);
 
+// analyze.c
+void analyze_lval(Node*);
+void analyze(Node*);
+
 // codegen.c
 void gen_lval(Node*);
 void gen(Node*);

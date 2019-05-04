@@ -79,6 +79,13 @@ int main(int argc, char **argv) {
 
 	gen_string_address();
 
+	// analyze
+	for (int i = 0; i < functions->len; i++) {
+		Node *tmp = vec_get(functions, i);
+		analyze(tmp);
+	}
+
+
 	char r_registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 	char e_registers[6][4] = {"edi", "esi", "edx", "ecx", "e8", "e9"};
 

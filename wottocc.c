@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 		}
 		int variable_stack = gen_stackpos(tmp->env, 0);
 		// alignment
-		variable_stack = ((variable_stack - 1) / 4 + 1) * 4;
+		variable_stack = ((variable_stack - 1) / 16 + 1) * 16;
 		//Map *variables = vec_get(genv, i);
 		// output the first half part of assembly
 		printf("%s:\n", tmp->fname);

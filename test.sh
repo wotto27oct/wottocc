@@ -151,5 +151,8 @@ try 98 "int main(){char a[3] = \"abc\"; return a[1];}"
 try 2 "int main(){return puts(\"2\");}"
 
 try 2 "int main(){int a=2; /*a=3;*/return a;}"
+try 2 "int main(){int a=2; //a=3;
+return a;}"
+try 0 "int main(){printf(\"helo\nhell\"); return 0;}"
 
 echo OK

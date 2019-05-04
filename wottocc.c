@@ -26,7 +26,7 @@ Map *g_funcs;
 
 int main(int argc, char **argv) {
 
-	if (argc != 2) {
+	if (argc > 3) {
 		fprintf(stderr, "引数の個数が正しくありません\n");
 		return 1;
 	}
@@ -45,7 +45,23 @@ int main(int argc, char **argv) {
 	g_funcs = new_map(NULL);
 
 	// tokenize and parse
-	tokenize(argv[1]);
+	if (strcmp(argv[1], "-f") == 0) {
+		FILE *fp;
+		fp = fopen(argv[2], "r");
+		if (!fp) {
+			error("file not found\n");
+		}
+		fseek(fp, 0, SEEK_END);
+		long length = ftell(fp);
+		fseek(fp, 0, SEEK_SET);
+		char *buf = malloc(sizeof(char) * (length + 1));
+		fread(buf, length + 1, sizeof(char), fp);
+		fclose (fp);
+		tokenize(buf);
+	} else {
+		tokenize(argv[1]);
+	}
+
 
 	printf("#tokenized\n");
 	program();

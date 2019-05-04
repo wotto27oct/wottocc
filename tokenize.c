@@ -9,6 +9,22 @@ void tokenize(char *p) {
 			continue;
 		}
 
+		if (strncmp(p, "//", 2) == 0) {
+			p += 2;
+			while (*p != '\n' && *p != '\0')
+				p++;
+			continue;
+		}
+
+		if (strncmp(p, "/*", 2) == 0) {
+			p = strstr(p + 2, "*/");
+			if (!p) {
+				error("no */ at block comment\n");
+			}
+			p += 2;
+			continue;
+		}
+
 		if (*p == '*' || *p == '/' || *p == '(' || *p == ')' 
 			|| *p == ';' || *p == ',' || *p == '{' || *p == '}'
 			|| *p == '&' || *p == '[' || *p == ']' || *p == ':') {

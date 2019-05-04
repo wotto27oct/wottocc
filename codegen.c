@@ -341,7 +341,8 @@ void gen(Node *node) {
 				printf("  pop %s\n", registers[i-1]);
 			}
 		}
-
+		
+		printf("  mov rax, 0\n");
 		printf("  call %s\n", node->lhs->name);
 		printf("  push rax\n");
 		return;

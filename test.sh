@@ -4,7 +4,7 @@ try() {
 	input="$2"
 
 	./wottocc "$input" > tmp.s
-	gcc -o tmp tmp.s
+	gcc -o tmp -static tmp.s
 	./tmp
 	actual="$?"
 
@@ -21,7 +21,7 @@ tryfunc() {
 	input="$2"
 
 	./wottocc "$input" > tmp.s
-	gcc -o tmp tmp.s foo.o
+	gcc -o tmp -static tmp.s foo.o
 	actual=$(./tmp)
 
 	if [ "$actual" = "$expected" ]; then
@@ -147,5 +147,7 @@ try 99 "char *x; int main(){x = \"minako_chan\"; return x[7];}"
 
 try 97 "char a[3] = \"abc\"; int main(){return a[0];}"
 try 98 "int main(){char a[3] = \"abc\"; return a[1];}"
+
+try 2 "int main(){return puts(\"2\");}"
 
 echo OK

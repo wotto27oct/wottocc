@@ -4,7 +4,7 @@ Vector *tokens;
 Vector *genv;
 Vector *strings;
 int envnum;
-Vector *functions;
+Vector *toplevels;
 Node *now_switch_node;
 
 // position of tokens
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 	genv = new_vector();
 	strings = new_vector();
 	envnum = 0;
-	functions = new_vector();
+	toplevels = new_vector();
 	g_env = new_env(NULL);
 	g_funcs = new_map(NULL);
 
@@ -71,8 +71,8 @@ int main(int argc, char **argv) {
 
 	printf(".intel_syntax noprefix\n");
 
-	for (int i = 0; i < functions->len; i++) {
-		Node *tmp = vec_get(functions, i);
+	for (int i = 0; i < toplevels->len; i++) {
+		Node *tmp = vec_get(toplevels, i);
 		if (tmp->node_ty == ND_GVARDEC) continue;
 		printf(".global %s\n", tmp->fname);
 	}
@@ -80,8 +80,8 @@ int main(int argc, char **argv) {
 	gen_string_address();
 
 	// analyze
-	for (int i = 0; i < functions->len; i++) {
-		Node *tmp = vec_get(functions, i);
+	for (int i = 0; i < toplevels->len; i++) {
+		Node *tmp = vec_get(toplevels, i);
 		analyze(tmp);
 	}
 
@@ -90,8 +90,8 @@ int main(int argc, char **argv) {
 	char e_registers[6][4] = {"edi", "esi", "edx", "ecx", "e8", "e9"};
 
 	// generate assembly in order
-	for (int i = 0; i < functions->len; i++) {
-		Node *tmp = vec_get(functions, i);
+	for (int i = 0; i < toplevels->len; i++) {
+		Node *tmp = vec_get(toplevels, i);
 		if (tmp->node_ty == ND_GVARDEC) {
 			gen(tmp);
 			continue;

@@ -4,13 +4,13 @@ void program() {
 	while (((Token *)vec_get(tokens, pos))->ty != TK_EOF) {
 		//Map *variables = new_map();
 		//vec_push(genv, variables);
-		vec_push(functions, function());
+		vec_push(toplevels, toplevel());
 		envnum++;
 	}
 	return;
 }
 
-Node *function() {
+Node *toplevel() {
 	Node *node;
 
 	Type *toptype = err_read_type();

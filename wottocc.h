@@ -147,7 +147,7 @@ void runtest();
 
 // parse.c 
 void program();
-Node *function();
+Node *toplevel();
 Node *compound_statement(Env*);
 Node *block_item_list(Env*);
 Node *block_item(Env*);
@@ -245,7 +245,7 @@ extern int if_cnt;
 extern int loop_cnt;
 extern int now_while_cnt;
 extern int now_switch_cnt;
-extern Vector *functions;
+extern Vector *toplevels;
 extern int envnum;
 extern Env *g_env;
 extern Map *g_funcs;

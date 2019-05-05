@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 	// analyze
 	for (int i = 0; i < toplevels->len; i++) {
 		Node *tmp = vec_get(toplevels, i);
-		analyze(tmp);
+		analyze(tmp, NULL);
 	}
 	printf("#analyzed\n");
 

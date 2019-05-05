@@ -63,13 +63,13 @@ Node *new_node(int node_ty, Type *value_ty, Env *env, Node *lhs, Node *rhs) {
 	return node;
 }
 
-Node *new_node_num(int val, Env *env) {
-	Node *node = new_node(ND_NUM, new_type(TY_INT), env, NULL, NULL);
+Node *new_node_num(int val) {
+	Node *node = new_node(ND_NUM, NULL, NULL, NULL, NULL);
 	node->val = val;
 	return node;
 }
 
-Type *node_ident_type(char *name, Env *env) {
+/*Type *node_ident_type(char *name, Env *env) {
 	// decide value_ty
 	// if env is g_env, then variable is in env
 	Type *value_ty = get_valuetype(env, name);
@@ -102,12 +102,10 @@ Type *node_ident_type(char *name, Env *env) {
 	}
 
 	return value_ty;
-}
+}*/
 
-Node *new_node_string(char *name, int str_len, Env *env) {
-	Type *value_ty = new_type(TY_PTR);
-	value_ty->ptrof = new_type(TY_CHAR);
-	Node *node = new_node(ND_STR, value_ty, env, NULL, NULL);
+Node *new_node_string(char *name, int str_len) {
+	Node *node = new_node(ND_STR, NULL, NULL, NULL, NULL);
 	// LC0, LC1 etc...
 	node->val = strings->len;
 	vec_push(strings, name);
@@ -117,11 +115,11 @@ Node *new_node_string(char *name, int str_len, Env *env) {
 	return node;
 }	
 
-Node *new_node_func(char *name, Env *env) {
+/*Node *new_node_func(char *name, Env *env) {
 	Node *node = new_node(ND_FUNC, NULL, env, NULL, NULL);
 	node->name = name;
 	return node;
-}
+}*/
 
 Env *new_env(Env *outer) {
 	Env *env = malloc(sizeof(Env));

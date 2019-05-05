@@ -1,13 +1,5 @@
 #include "wottocc.h"
 
-void analyze_lval(Node *node) {
-	if (node->node_ty == ND_DEREF) {
-		analyze(node->lhs);
-		return;
-	}
-	return;
-}
-
 Type *get_ptr(Node *node, Type *sp_type) {
 	if (node->node_ty == ND_PTR) {
 		Type *newtype = new_type(TY_PTR);
@@ -22,17 +14,20 @@ Type *get_ptr(Node *node, Type *sp_type) {
 }	
 
 
-void analyze_dec(Node *node, Type *sp_type) {
+void analyze_dec(Node *node, Env *env, Type *sp_type) {
 	if (node->node_ty == ND_INIT_DECLARATOR_LIST || node->node_ty == ND_INIT_G_DECLARATOR_LIST) {
-		analyze_dec(node->lhs, sp_type);
-		analyze_dec(node->rhs, sp_type);	
+		node->env = env;
+		analyze_dec(node->lhs, env, sp_type);
+		analyze_dec(node->rhs, env, sp_type);	
 		return;
 	}
 	
 	if (node->node_ty == ND_INIT_DECLARATOR) {
-		analyze_dec(node->lhs, sp_type);
+		node->env = env;
+		analyze_dec(node->lhs, env, sp_type);
+		// TODO: may change
 		if (node->rhs != NULL) {
-			analyze(node->rhs);
+			analyze(node->rhs, env);
 			if (node->rhs->node_ty != ND_INITIALIZER_LIST) {
 				assignment_check(node->lhs->value_ty, node->rhs->value_ty);
 				// ban x[3] = "abcde"
@@ -58,8 +53,9 @@ void analyze_dec(Node *node, Type *sp_type) {
 	}	
 	
 	if (node->node_ty == ND_INIT_G_DECLARATOR) {
-		analyze_dec(node->lhs, sp_type);
-		analyze(node->rhs);
+		node->env = env;
+		analyze_dec(node->lhs, env, sp_type);
+		analyze(node->rhs, env);
 		if (node->rhs->node_ty != ND_INITIALIZER_LIST) {
 			assignment_check(node->lhs->value_ty, node->rhs->value_ty);
 		} else {
@@ -77,6 +73,7 @@ void analyze_dec(Node *node, Type *sp_type) {
 	}	
 	
 	if (node->node_ty == ND_DECLARATOR) {
+		node->env = env;
 		Type *type = sp_type;
 		if (node->lhs != NULL) {
 			type = get_ptr(node->lhs, type);
@@ -84,6 +81,7 @@ void analyze_dec(Node *node, Type *sp_type) {
 		
 		if (node->rhs != NULL) {
 			// a[10]
+			analyze(node->rhs, env);
 			Type *newtype = new_type(TY_ARRAY);
 			newtype->ptrof = type;
 			newtype->array_size = node->rhs->val;
@@ -95,15 +93,8 @@ void analyze_dec(Node *node, Type *sp_type) {
 		return;
 	}	
 
-	if (node->node_ty == ND_PTR) {
-	   Type *type = new_type(TY_PTR);
-	   type->ptrof = sp_type;
-	   if (node->lhs != NULL) analyze_dec(node->lhs, type); 
-	   sp_type = type;
-	   return;
-	}	   
-
 	if (node->node_ty == ND_G_DECLARATOR) {
+		node->env = env;
 		Type *type = sp_type;
 		if (node->lhs != NULL) {
 			type = get_ptr(node->lhs, type);
@@ -111,6 +102,7 @@ void analyze_dec(Node *node, Type *sp_type) {
 		
 		if (node->rhs != NULL) {
 			// a[10]
+			analyze(node->rhs, env);
 			Type *newtype = new_type(TY_ARRAY);
 			newtype->ptrof = type;
 			newtype->array_size = node->rhs->val;
@@ -123,9 +115,11 @@ void analyze_dec(Node *node, Type *sp_type) {
 }
 
 
-void analyze(Node *node) {
+void analyze(Node *node, Env *env) {
 	if (node->node_ty == ND_FUNCDEF) {
-		analyze(node->lhs); // int
+		Env *newenv = new_env(NULL);
+		node->env = newenv;
+		analyze(node->lhs, newenv); // int
 		Type *type = node->lhs->value_ty;
 		if (node->lhs->lhs != NULL) {
 			type = get_ptr(node->lhs->lhs, type);
@@ -133,14 +127,15 @@ void analyze(Node *node) {
 		map_put(g_funcs, node->fname, 0, type);
 		for (int i = 0; i < node->args->len; i++) {
 			Node *tmp = vec_get(node->args, i);
-			analyze(tmp);
+			analyze(tmp, newenv);
 		}
-		analyze(node->rhs);
+		analyze(node->rhs, newenv);
 		return;
 	}
 	
 	if (node->node_ty == ND_ARG) {
-		analyze(node->lhs); // int
+		node->env = env;
+		analyze(node->lhs, env); // int
 		Type *type = node->lhs->value_ty;
 		if (node->lhs->lhs != NULL) {
 			type = get_ptr(node->lhs->lhs, type);
@@ -151,125 +146,159 @@ void analyze(Node *node) {
 	}
 	
 	if (node->node_ty == ND_GVARDEC) {
-		analyze(node->lhs); // int
+		analyze(node->lhs, g_env); // int
 		Type *type = node->lhs->value_ty;
 		if (node->lhs->lhs != NULL) {
 			type = get_ptr(node->lhs->lhs, type);
 		}
-		analyze_dec(node->rhs, type);
+		analyze_dec(node->rhs, g_env, type);
 		return;
 	}
 	
 	if (node->node_ty == ND_CASE) {
+		node->env = env;
 		if (now_switch_node == NULL) error("case must be in switch\n");
 		node->val = now_switch_node->env->cases->len; // the order of this case
 		vec_push(now_switch_node->env->cases, node->rhs);
-		analyze(node->lhs);
+		analyze(node->lhs, env);
 		return;
 	}
 	
 	if (node->node_ty == ND_COMPOUND_STMT) {
-		analyze(node->lhs);
+		// update env
+		Env *inner_env = new_env(env);
+		vec_push(env->inner, inner_env);
+		analyze(node->lhs, inner_env);
 		return;
 	}
 	
 	if (node->node_ty == ND_BLOCKITEMLIST) {
+		node->env = env;
 		for (int i = 0; i < node->args->len; i++) {
-			analyze(vec_get(node->args, i));
+			analyze(vec_get(node->args, i), env);
 		}
 		return;
 	}
 	
 	if (node->node_ty == ND_EXPRESSION_STMT) {
+		node->env = env;
 		// exclude " ;"
 		if (node->lhs != NULL) {
-			analyze(node->lhs);
+			analyze(node->lhs, env);
 		}
 		return;
 	}
 	
 	if (node->node_ty == ND_IF) {
+		// update env
+		Env *inner_env = new_env(env);
+		vec_push(env->inner, inner_env);
+		node->env = inner_env;
+		
 		Node *arg = vec_get(node->args, 0);
-		analyze(arg);
-		analyze(node->lhs);
+		analyze(arg, inner_env);
+		analyze(node->lhs, inner_env);
 		if (node->rhs != NULL) {
 			// else
-			analyze(node->rhs);
+			analyze(node->rhs, inner_env);
 		}
 		return;
 	}
 	
 	if (node->node_ty == ND_SWITCH) {
-		analyze(node->lhs);
+		// update env
+		Env *inner_env = new_env(env);
+		vec_push(env->inner, inner_env);
+		node->env = inner_env;
+		
+		analyze(node->lhs, env);
+
 		// switch value must be on top of the stack
 		for (int i = node->env->cases->len - 1; i >= 0; i--) {
 			Node *tmp = vec_get(node->env->cases, i);
-			analyze(tmp);
+			analyze(tmp, inner_env);
 		}
 
 		Node *old_switch_node = now_switch_node;
 		now_switch_node = node;
-		analyze(node->rhs);
+		analyze(node->rhs, inner_env);
 		now_switch_node = old_switch_node;
 		return;
 	}
 	
 	if (node->node_ty == ND_WHILE) {
-		analyze(node->lhs);
+		// update env
+		Env *inner_env = new_env(env);
+		vec_push(env->inner, inner_env);
+		node->env = inner_env;
 		
-		analyze(node->rhs);
+		analyze(node->lhs, inner_env);
+		
+		analyze(node->rhs, inner_env);
 		return;
 	}	
 	
 	if (node->node_ty == ND_FOR) {
+		Env *inner_env = new_env(env);
+		vec_push(env->inner, inner_env);
+		node->env = inner_env;
+
 		Node *arg = vec_get(node->args, 0);
-		if (arg != NULL) analyze(arg);
+		if (arg != NULL) analyze(arg, inner_env);
 		
 		arg = vec_get(node->args, 1);
 		if (arg != NULL) {
-			analyze(arg);
+			analyze(arg, inner_env);
 		}
 	
-		analyze(node->lhs);
+		analyze(node->lhs, inner_env);
 		arg = vec_get(node->args, 2);
-		if (arg != NULL) analyze(arg);
+		if (arg != NULL) analyze(arg, inner_env);
 		return;
 	}
 	
 	if (node->node_ty == ND_CONTINUE) {
+		node->env = env;
 		return;
 	}
 	
 	if (node->node_ty == ND_BREAK) {
+		node->env = env;
 		return;
 	}
 
 	if (node->node_ty == ND_RETURN) {
 		// change later (support void)
-		analyze(node->lhs);
+		node->env = env;
+		analyze(node->lhs, env);
 		return;
 	}
 	
 	if (node->node_ty == ND_DECLARATION) {
-		analyze(node->lhs);
-		analyze_dec(node->rhs, node->lhs->value_ty);
+		node->env = env;
+		analyze(node->lhs, env);
+		if (node->rhs != NULL) analyze_dec(node->rhs, env, node->lhs->value_ty);
 		return;
 	}
 
 	if (node->node_ty == ND_INT) {
+		node->env = env;
 		node->value_ty = new_type(TY_INT);
 		return;
 	}
 
 	if (node->node_ty == ND_CHAR) {
+		node->env = env;
 		node->value_ty = new_type(TY_CHAR);
 		return;
 	}
 
 	if (node->node_ty == ND_INITIALIZER_LIST) {
+		node->env = env;
 		Type *arr_type = NULL;
 		for (int i = 0; i < node->args->len; i++) {
 			Node *tmp = vec_get(node->args, i);
+			analyze(tmp, env);
 			if (arr_type == NULL) arr_type = tmp->value_ty;
 			if (arr_type->ty != tmp->value_ty->ty){
 				error("different array initializer type\n");
@@ -283,13 +312,124 @@ void analyze(Node *node) {
 	}
 
 
+	if (node->node_ty == ND_EXP) {
+		node->env = env;
+		// a = 3, b = 3;
+		analyze(node->lhs, env);
+		analyze(node->rhs, env);
+		return;
+	}
+
+	if (node->node_ty == '=' || node->node_ty == ND_PLUSEQ || node->node_ty == ND_MINUSEQ) {
+		node->env = env;
+		analyze(node->lhs, env);
+		analyze(node->rhs, env);
+		node->value_ty = assignment_check(node->lhs->value_ty, node->rhs->value_ty);
+		return;
+	}
+	
+	if (node->node_ty == '<' || node->node_ty == '>' || node->node_ty == ND_LEQ || node->node_ty == ND_GEQ
+			|| node->node_ty == ND_EQUAL || node->node_ty == ND_NEQUAL) {
+		node->env = env;
+		analyze(node->lhs, env);
+		analyze(node->rhs, env);
+		node->value_ty = new_type(TY_INT);
+	}
+	
+	if (node->node_ty == '+' || node->node_ty == '-') {
+		node->env = env;
+		analyze(node->lhs, env);
+		analyze(node->rhs, env);
+		node->value_ty = plus_check(node->lhs->value_ty, node->rhs->value_ty);
+		return;
+	}
+	
+	if (node->node_ty == '*' || node->node_ty == '-') {
+		node->env = env;
+		analyze(node->lhs, env);
+		analyze(node->rhs, env);
+		// TODO:need to change
+		node->value_ty = new_type(TY_INT);
+	}
+	
+	if (node->node_ty == ND_PREINC || node->node_ty == ND_PREDEC) {
+		node->env = env;
+		analyze(node->lhs, env);
+		node->value_ty = new_type(TY_INT);
+		return;
+	}
+	
+	if (node->node_ty == ND_DEREF) {
+		node->env = env;
+		analyze(node->lhs, env);
+		if (node->lhs->value_ty->ty == TY_INT) {
+			error("illegal deref: %s\n", ((Token *)vec_get(tokens, pos))->input);
+		}
+		node->value_ty = node->lhs->value_ty->ptrof;
+		return;
+	}
+
+	if (node->node_ty == '&') {
+		node->env = env;
+		analyze(node->lhs, env);
+		node->value_ty = new_type(TY_PTR);
+		node->value_ty->ptrof = node->lhs->value_ty;
+		return;
+	}
+	
+	if (node->node_ty == ND_SIZEOF) {
+		node->env = env;
+		analyze(node->lhs, env);
+		if (node->lhs->value_ty->ty == TY_PTR && node->lhs->value_ty->array_size != 0) {
+			node->node_ty = ND_NUM;
+			node->val = node->lhs->value_ty->array_size * get_typesize(node->lhs->value_ty->ptrof);
+			node->value_ty = new_type(TY_INT);
+		} else {
+			node->node_ty = ND_NUM;
+			node->val = get_typesize(node->lhs->value_ty);
+			node->value_ty = new_type(TY_INT);
+		}
+		return;
+	}
+	
+	if (node->node_ty == ND_FUNC_CALL) {
+		node->env = env;
+		// foo(1, 2, 3)
+		analyze(node->lhs, env); // ident (foo)
+		node->value_ty = map_get_type(g_funcs, node->lhs->name);
+		node->name = node->lhs->name;
+		
+		if (node->rhs != NULL) {
+			// 1, 2, 3
+			analyze(node->rhs, env);
+		}
+		return;
+	}
+
+	if (node->node_ty == ND_POSTINC || node->node_ty == ND_POSTDEC) {
+		node->env = env;
+		analyze(node->lhs, env);
+		node->value_ty = new_type(TY_INT);
+		return;
+	}
+	
+	if (node->node_ty == ND_ARG_EXP_LIST) {
+		node->env = env;
+		// 1, 2, 3 (args)
+		analyze(node->lhs, env);
+		analyze(node->rhs, env);
+		return;
+	}
+
 	
 	if (node->node_ty == ND_NUM) {
+		node->env = env;	
+		node->value_ty = new_type(TY_INT);
 		return;
 	}
 
 	if (node->node_ty == ND_IDENT) {
-		//node->value_ty = node_ident_type(node->name, node->env);
+		node->env = env;
 		Type *value_ty = get_valuetype(node->env, node->name);
 		if (value_ty == NULL || node->env == g_env) {
 			value_ty = get_valuetype(g_env, node->name);
@@ -325,137 +465,12 @@ void analyze(Node *node) {
 	}
 	
 	if (node->node_ty == ND_STR) {
+		node->env = env;
+		Type *value_ty = new_type(TY_PTR);
+		value_ty->ptrof = new_type(TY_CHAR);
+		node->value_ty = value_ty;
 		return;
 	}
 	
-	if (node->node_ty == ND_FUNC_CALL) {
-		// foo(1, 2, 3)
-		analyze(node->lhs); // ident (foo)
-		node->value_ty = map_get_type(g_funcs, node->lhs->name);
-		node->name = node->lhs->name;
-		
-		if (node->rhs != NULL) {
-			// 1, 2, 3
-			analyze(node->rhs);
-		}
-		return;
-	}
-
-	if (node->node_ty == ND_ARG_EXP_LIST) {
-		// 1, 2, 3 (args)
-		analyze(node->lhs);
-		analyze(node->rhs);
-		return;
-	}
-
-	if (node->node_ty == ND_EXP) {
-		// a = 3, b = 3;
-		analyze(node->lhs);
-		analyze(node->rhs);
-		return;
-	}
-
-	if (node->node_ty == '=' || node->node_ty == ND_PLUSEQ || node->node_ty == ND_MINUSEQ) {
-		analyze(node->lhs);
-		analyze(node->rhs);
-		node->value_ty = assignment_check(node->lhs->value_ty, node->rhs->value_ty);
-		return;
-	}
-	
-	if (node->node_ty == ND_PREINC) {
-		analyze(node->lhs);
-		node->value_ty = new_type(TY_INT);
-		return;
-	}
-	
-	if (node->node_ty == ND_PREDEC) {
-		analyze(node->lhs);
-		node->value_ty = new_type(TY_INT);
-		return;
-	}
-
-	if (node->node_ty == ND_POSTINC) {
-		analyze(node->lhs);
-		node->value_ty = new_type(TY_INT);
-		return;
-	}
-
-	if (node->node_ty == ND_POSTDEC) {
-		analyze(node->lhs);
-		node->value_ty = new_type(TY_INT);
-		return;
-	}
-
-	if (node->node_ty == ND_DEREF) {
-		analyze(node->lhs);
-		if (node->lhs->value_ty->ty == TY_INT) {
-			error("illegal deref: %s\n", ((Token *)vec_get(tokens, pos))->input);
-		}
-		node->value_ty = node->lhs->value_ty->ptrof;
-		return;
-	}
-
-	if (node->node_ty == '&') {
-		analyze(node->lhs);
-		node->value_ty = new_type(TY_PTR);
-		node->value_ty->ptrof = node->lhs->value_ty;
-		return;
-	}
-	
-	if (node->node_ty == ND_SIZEOF) {
-		analyze(node->lhs);
-		if (node->lhs->value_ty->ty == TY_PTR && node->lhs->value_ty->array_size != 0) {
-			//node = new_node_num(node->lhs->value_ty->array_size * get_typesize(node->lhs->value_ty->ptrof), node->env);
-			node->node_ty = ND_NUM;
-			node->val = node->lhs->value_ty->array_size * get_typesize(node->lhs->value_ty->ptrof);
-			node->value_ty = new_type(TY_INT);
-		} else {
-			//node = new_node_num(get_typesize(node->lhs->value_ty), node->env);
-			node->node_ty = ND_NUM;
-			node->val = get_typesize(node->lhs->value_ty);
-			node->value_ty = new_type(TY_INT);
-		}
-		return;
-	}
-
-	
-	if (node->node_ty == '+') {
-		analyze(node->lhs);
-		analyze(node->rhs);
-		node->value_ty = plus_check(node->lhs->value_ty, node->rhs->value_ty);
-		return;
-	}
-	
-	if (node->node_ty == '-') {
-		analyze(node->lhs);
-		analyze(node->rhs);
-		node->value_ty = plus_check(node->lhs->value_ty, node->rhs->value_ty);
-		return;
-	}
-
-	if (node->node_ty == '*') {
-		analyze(node->lhs);
-		analyze(node->rhs);
-		// TODO:need to change
-		node->value_ty = new_type(TY_INT);
-	}
-	
-	if (node->node_ty == '/') {
-		analyze(node->lhs);
-		analyze(node->rhs);
-		// TODO:need to change
-		node->value_ty = new_type(TY_INT);
-	}
-
-	if (node->node_ty == '<' || node->node_ty == '>' || node->node_ty == ND_LEQ || node->node_ty == ND_GEQ
-			|| node->node_ty == ND_EQUAL || node->node_ty == ND_NEQUAL) {
-		analyze(node->lhs);
-		analyze(node->rhs);
-		node->value_ty = new_type(TY_INT);
-	}
-
-	
-	analyze(node->lhs);
-	analyze(node->rhs);
 	return;
 }

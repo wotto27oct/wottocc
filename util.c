@@ -53,59 +53,23 @@ Type* get_valuetype(Env *env, char* name) {
 }
 
 // create new Node
-Node *new_node(int node_ty, Type *value_ty, Env *env, Node *lhs, Node *rhs) {
+Node *new_node(int node_ty, Node *lhs, Node *rhs) {
 	Node *node = malloc(sizeof(Node));
 	node->node_ty = node_ty;
-	node->value_ty = value_ty;
-	node->env = env;
 	node->lhs = lhs;
 	node->rhs = rhs;
 	return node;
 }
 
 Node *new_node_num(int val) {
-	Node *node = new_node(ND_NUM, NULL, NULL, NULL, NULL);
+	Node *node = new_node(ND_NUM, NULL, NULL);
 	node->val = val;
 	return node;
 }
 
-/*Type *node_ident_type(char *name, Env *env) {
-	// decide value_ty
-	// if env is g_env, then variable is in env
-	Type *value_ty = get_valuetype(env, name);
-	if (value_ty == NULL || env == g_env) {
-		value_ty = get_valuetype(g_env, name);
-		if (value_ty == NULL) {
-			// may be function call c.f. foo(3)
-			return NULL;
-		} else {
-			// global variable
-			if (value_ty->ty == TY_ARRAY) {
-				// read array a as if pointer a
-				// cf. int a[10]; a[0]=1; *a => 1
-				Type *newtype = new_type(TY_PTR);
-				newtype->ptrof = value_ty->ptrof;
-				newtype->array_size = value_ty->array_size;
-				value_ty = newtype;
-			}
-			return value_ty;
-		}
-	}
-
-	if (value_ty->ty == TY_ARRAY) {
-		// read array a as if pointer a
-		// cf. int a[10]; a[0]=1; *a => 1
-		Type *newtype = new_type(TY_PTR);
-		newtype->ptrof = value_ty->ptrof;
-		newtype->array_size = value_ty->array_size;
-		value_ty = newtype;
-	}
-
-	return value_ty;
-}*/
 
 Node *new_node_string(char *name, int str_len) {
-	Node *node = new_node(ND_STR, NULL, NULL, NULL, NULL);
+	Node *node = new_node(ND_STR, NULL, NULL);
 	// LC0, LC1 etc...
 	node->val = strings->len;
 	vec_push(strings, name);
@@ -114,12 +78,6 @@ Node *new_node_string(char *name, int str_len) {
 	node->length = str_len;
 	return node;
 }	
-
-/*Node *new_node_func(char *name, Env *env) {
-	Node *node = new_node(ND_FUNC, NULL, env, NULL, NULL);
-	node->name = name;
-	return node;
-}*/
 
 Env *new_env(Env *outer) {
 	Env *env = malloc(sizeof(Env));

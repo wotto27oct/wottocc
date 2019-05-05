@@ -22,7 +22,7 @@ Node *toplevel() {
 	if (consume('(')) {
 		// function_definition
 		//node = new_node(ND_FUNCDEF, NULL, new_env(NULL), toptype, NULL);
-		node = new_node(ND_FUNCDEF, NULL, NULL, toptype, NULL);
+		node = new_node(ND_FUNCDEF, toptype, NULL);
 		node->fname = name;
 		//map_put(g_funcs, name, 0, toptype);
 		Vector *args = new_vector();
@@ -40,7 +40,7 @@ Node *toplevel() {
 			char *vname = ((Token *)vec_get(tokens,pos-1))->input; //variable name
 			//map_put(node->env->variables, vname, 0, type);
 
-			Node *arg = new_node(ND_ARG, NULL, NULL, type, NULL);
+			Node *arg = new_node(ND_ARG, type, NULL);
 			arg->name = vname;
 			vec_push(args, arg);
 
@@ -54,7 +54,7 @@ Node *toplevel() {
 		node->rhs = compound_statement(); // { ... }
 	} else {
 		// def of global variable
-		node = new_node(ND_GVARDEC, NULL, NULL, toptype, NULL);
+		node = new_node(ND_GVARDEC, toptype, NULL);
 		node->name = name;
 		pos -= 1; // read from the identifier
 		//node->lhs = init_g_declarator_list(g_env, toptype);
@@ -89,7 +89,7 @@ Node *labeled_statement() {
 	Node *node = NULL;
 	if (consume(TK_CASE)) {
 		// case env->cases : node->lhs
-		node = new_node(ND_CASE, NULL, NULL, NULL, constant_expression());
+		node = new_node(ND_CASE, NULL, constant_expression());
 		err_consume(':', "no colon at case");
 		node->lhs = statement();
 	}
@@ -99,7 +99,7 @@ Node *labeled_statement() {
 // 6.8.2
 Node *compound_statement() {
 	// { node->lhs }
-	Node *node = new_node(ND_COMPOUND_STMT, NULL, NULL, NULL, NULL);
+	Node *node = new_node(ND_COMPOUND_STMT, NULL, NULL);
 	err_consume('{', "no left-brace at compound_statement");
 
 	// node->lhs can't be NULL
@@ -111,7 +111,7 @@ Node *compound_statement() {
 
 Node *block_item_list() {
 	// node->args has the vector of block_item
-	Node *node = new_node(ND_BLOCKITEMLIST, NULL, NULL, NULL, NULL);
+	Node *node = new_node(ND_BLOCKITEMLIST, NULL, NULL);
 	Vector *args = new_vector();
 	while (1) {
 		Node *arg = block_item();
@@ -132,7 +132,7 @@ Node *block_item() {
 
 // 6.8.3
 Node *expression_statement() {
-	Node *node = new_node(ND_EXPRESSION_STMT, NULL, NULL, expression(), NULL);
+	Node *node = new_node(ND_EXPRESSION_STMT, expression(), NULL);
 	// only ";" is the expression, but " " is illegal.
 	// but here " " returns NULL for block_item_list.
 	if (node->lhs == NULL) {
@@ -153,7 +153,7 @@ Node *selection_statement() {
 		// if (node->args) node->lhs else node->rhs
 
 
-		node = new_node(ND_IF, NULL, NULL, NULL, NULL);
+		node = new_node(ND_IF, NULL, NULL);
 		err_consume('(', "no left-parenthesis at if");
 		Vector *arg = new_vector();
 		vec_push(arg, expression());
@@ -169,7 +169,7 @@ Node *selection_statement() {
 		// switch (node->lhs) node->rhs
 		
 		err_consume('(', "no left-parenthesis at switch");
-		node = new_node(ND_SWITCH, NULL, NULL, expression(), NULL);
+		node = new_node(ND_SWITCH, expression(), NULL);
 		err_consume(')', "no right-parenthesis at switch");
 		node->rhs = statement();
 	}
@@ -182,14 +182,14 @@ Node *iteration_statement() {
 	if (consume(TK_WHILE)) {
 		// while(node->lhs) node->rhs
 		
-		node = new_node(ND_WHILE, NULL, NULL, NULL, NULL);
+		node = new_node(ND_WHILE, NULL, NULL);
 		err_consume('(', "no left-parenthesis at while");
 		node->lhs = expression();
 		err_consume(')', "no right-parenthesis at while");
 		node->rhs = statement();
 
 	} else if (consume(TK_FOR)) {
-		node = new_node(ND_FOR, NULL, NULL, NULL, NULL);
+		node = new_node(ND_FOR, NULL, NULL);
 		err_consume('(', "no left-parenthesis at for");
 		Vector *arg = new_vector();
 
@@ -220,13 +220,13 @@ Node *iteration_statement() {
 Node *jump_statement() {
 	Node *node = NULL;
 	if (consume(TK_CONTINUE)) {
-		node = new_node(ND_CONTINUE, NULL, NULL, NULL, NULL);
+		node = new_node(ND_CONTINUE, NULL, NULL);
 		err_consume(';', "no ';' at continue");
 	} else if (consume(TK_BREAK)) {
-		node = new_node(ND_BREAK, NULL, NULL, NULL, NULL);
+		node = new_node(ND_BREAK, NULL, NULL);
 		err_consume(';', "no ';' at break");
 	} else if (consume(TK_RETURN)) {
-		node = new_node(ND_RETURN, NULL, NULL, expression(), NULL);
+		node = new_node(ND_RETURN, expression(), NULL);
 		err_consume(';', "no ';' at return");
 	}
 	return node;
@@ -239,7 +239,7 @@ Node *declaration() {
 	// allow NULL
 	Node *lhs = read_type();
 	if (lhs != NULL) {
-		node = new_node(ND_DECLARATION, NULL, NULL, lhs, NULL);
+		node = new_node(ND_DECLARATION, lhs, NULL);
 
 		// allow "int;"
 		if (read_nextToken(';') == 0) {
@@ -256,7 +256,7 @@ Node *init_declarator_list() {
 
 	for (;;) {
 		if (consume(',')) {
-			node = new_node(ND_INIT_DECLARATOR_LIST, NULL, NULL, node, init_declarator());
+			node = new_node(ND_INIT_DECLARATOR_LIST, node, init_declarator());
 		} else {
 			return node;
 		}
@@ -267,7 +267,7 @@ Node *init_g_declarator_list() {
 	Node *node = init_g_declarator();
 	for (;;) {
 		if (consume(',')) {
-			node = new_node(ND_INIT_G_DECLARATOR_LIST, NULL, NULL, node,init_g_declarator());
+			node = new_node(ND_INIT_G_DECLARATOR_LIST, node,init_g_declarator());
 		} else {
 			return node;
 		}
@@ -279,7 +279,7 @@ Node *init_declarator() {
 
 	if (consume('=')) {
 		Node *rhs = initializer();
-		node = new_node(ND_INIT_DECLARATOR, NULL, NULL, node, rhs);
+		node = new_node(ND_INIT_DECLARATOR, node, rhs);
 	}
 
 	return node;
@@ -292,7 +292,7 @@ Node *init_g_declarator() {
 		// これだと変数も初期化に認めてるので本当はよくない
 		// いい感じにanalyzeしたいけどとりあえずスルー
 		Node *rhs = initializer();
-		node = new_node(ND_INIT_G_DECLARATOR, NULL, NULL, node, rhs);
+		node = new_node(ND_INIT_G_DECLARATOR, node, rhs);
 	}
 
 	return node;
@@ -312,7 +312,7 @@ Node *declarator() {
 		err_consume(']', "no ']' at array-def");
 	}
 	
-	Node *node = new_node(ND_DECLARATOR, NULL, NULL, lhs, rhs);
+	Node *node = new_node(ND_DECLARATOR, lhs, rhs);
 	node->name = vname;
 	
 	return node;
@@ -330,7 +330,7 @@ Node *g_declarator() {
 		rhs = primary_expression();
 		err_consume(']', "no ']' at array-def");
 	}
-	Node *node = new_node(ND_G_DECLARATOR, NULL, NULL, lhs, rhs);
+	Node *node = new_node(ND_G_DECLARATOR, lhs, rhs);
 	node->name = vname;
 	return node;
 }
@@ -346,7 +346,7 @@ Node *initializer() {
 			if (consume('}')) break;
 			err_consume(',', "no comma at array initialzation\n");
 		}
-		node = new_node(ND_INITIALIZER_LIST, NULL, NULL, NULL, NULL);
+		node = new_node(ND_INITIALIZER_LIST, NULL, NULL);
 		node->args = args;
 	} else {
 		node = assignment_expression();
@@ -360,7 +360,7 @@ Node *expression() {
 
 	for (;;) {
 		if (consume(',')) {
-			node = new_node(ND_EXP, NULL, NULL, node, assignment_expression());
+			node = new_node(ND_EXP, node, assignment_expression());
 		} else {
 			return node;
 		}
@@ -374,15 +374,15 @@ Node *assignment_expression() {
 	if (consume('=')){
 		Node *lhs = node;
 		Node *rhs = assignment_expression();
-		node = new_node('=', NULL, NULL, lhs, rhs);
+		node = new_node('=', lhs, rhs);
 	} else if (consume(TK_PLUSEQ)) {
 		Node *lhs = node;
 		Node *rhs = assignment_expression();
-		node = new_node(ND_PLUSEQ, NULL, NULL, lhs, rhs);
+		node = new_node(ND_PLUSEQ, lhs, rhs);
 	} else if (consume(TK_MINUSEQ)) {
 		Node *lhs = node;
 		Node *rhs = assignment_expression();
-		node = new_node(ND_MINUSEQ, NULL, NULL, lhs, rhs);
+		node = new_node(ND_MINUSEQ, lhs, rhs);
 	}
 	return node;
 }
@@ -428,9 +428,9 @@ Node *equality_expression() {
 
 	for (;;) {
 		if (consume(TK_EQUAL)) {
-			node = new_node(ND_EQUAL, NULL, NULL, node, relational_expression());
+			node = new_node(ND_EQUAL, node, relational_expression());
 		} else if (consume(TK_NEQUAL)) {
-			node = new_node(ND_NEQUAL, NULL, NULL, node, relational_expression());
+			node = new_node(ND_NEQUAL, node, relational_expression());
 		} else {
 			return node;
 		}
@@ -442,13 +442,13 @@ Node *relational_expression() {
 	
 	for (;;) {
 		if (consume('<'))
-			node = new_node('<', NULL, NULL, node, shift_expression());
+			node = new_node('<', node, shift_expression());
 		else if (consume('>'))
-			node = new_node('>', NULL, NULL, node, shift_expression());
+			node = new_node('>', node, shift_expression());
 		else if (consume(TK_LEQ))
-			node = new_node(ND_LEQ, NULL, NULL, node, shift_expression());
+			node = new_node(ND_LEQ, node, shift_expression());
 		else if (consume(TK_GEQ))
-			node = new_node(ND_GEQ, NULL, NULL, node, shift_expression());
+			node = new_node(ND_GEQ, node, shift_expression());
 		else 
 			return node;
 	}
@@ -466,11 +466,11 @@ Node *additive_expression() {
 		if (consume('+')){
 			Node *lhs = node;
 			Node *rhs = multiplicative_expression();
-			node = new_node('+', NULL, NULL, lhs, rhs);
+			node = new_node('+', lhs, rhs);
 		} else if (consume('-')) {
 			Node *lhs = node;
 			Node *rhs = multiplicative_expression();
-			node = new_node('-', NULL, NULL, lhs, rhs);
+			node = new_node('-', lhs, rhs);
 		} else {
 			return node;
 		}
@@ -482,9 +482,9 @@ Node *multiplicative_expression() {
 
 	for (;;) {
 		if (consume('*'))
-			node = new_node('*', NULL, NULL, node, cast_expression());
+			node = new_node('*', node, cast_expression());
 		else if (consume('/'))
-			node = new_node('/', NULL, NULL, node, cast_expression());
+			node = new_node('/', node, cast_expression());
 		else
 			return node;
 	}
@@ -499,16 +499,16 @@ Node *unary_expression() {
 	Node *node = NULL;
 
 	if (consume(TK_INC)) {
-		node = new_node(ND_PREINC, NULL, NULL, unary_expression(), NULL);
+		node = new_node(ND_PREINC, unary_expression(), NULL);
 	} else if (consume(TK_DEC)) {
-		node = new_node(ND_PREDEC, NULL, NULL, unary_expression(), NULL);
+		node = new_node(ND_PREDEC, unary_expression(), NULL);
 	} else if (consume('*')) {
-		node = new_node(ND_DEREF, NULL, NULL, cast_expression(), NULL);
+		node = new_node(ND_DEREF, cast_expression(), NULL);
 	} else if (consume('&')) {
-		node = new_node('&', NULL, NULL, cast_expression(), NULL);
+		node = new_node('&', cast_expression(), NULL);
 	} else if (consume(TK_SIZEOF)) {
 		// sizeof(a)
-		node = new_node(ND_SIZEOF, NULL, NULL, unary_expression(), NULL);
+		node = new_node(ND_SIZEOF, unary_expression(), NULL);
 	} else {
 		node = postfix_expression();
 	}
@@ -523,19 +523,17 @@ Node *postfix_expression() {
 			// a[3] -> *(a + 3)
 			Node *rhs = expression();
 			
-			//Node *plus = new_node('+', new_type(TY_PTR), env, node, rhs);
-			Node *plus = new_node('+', NULL, NULL, node, rhs);
-			//node = new_node(ND_DEREF, new_type(node->value_ty->ptrof->ty), env, plus, NULL);
-			node = new_node(ND_DEREF, NULL, NULL, plus, NULL);
+			Node *plus = new_node('+', node, rhs);
+			node = new_node(ND_DEREF, plus, NULL);
 			err_consume(']', "no right_braket at array");
 		} else if (consume('(')) {
 			// foo(1 ,2)
-			node = new_node(ND_FUNC_CALL, NULL, NULL, node, argument_expression_list());
+			node = new_node(ND_FUNC_CALL, node, argument_expression_list());
 			err_consume(')', "no right-parenthesis at func_call");
 		} else if (consume(TK_INC)) {
-			node = new_node(ND_POSTINC, NULL, NULL, node, NULL);
+			node = new_node(ND_POSTINC, node, NULL);
 		} else if (consume(TK_DEC)) {
-			node = new_node(ND_POSTDEC, NULL, NULL, node, NULL);
+			node = new_node(ND_POSTDEC, node, NULL);
 		} else {
 			return node;
 		}
@@ -550,7 +548,7 @@ Node *argument_expression_list() {
 	node->length = length;
 	for (;;) {
 		if (consume(',')) {
-			node = new_node(ND_ARG_EXP_LIST, NULL, NULL, node, assignment_expression());
+			node = new_node(ND_ARG_EXP_LIST, node, assignment_expression());
 			node->length = ++length;
 		} else {
 			return node;
@@ -575,7 +573,7 @@ Node *primary_expression() {
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
 		//node = new_node_ident(t_name, env);
-		node = new_node(ND_IDENT, NULL, NULL, NULL, NULL);
+		node = new_node(ND_IDENT, NULL, NULL);
 		node->name = t_name;
 		return node;
 		break;

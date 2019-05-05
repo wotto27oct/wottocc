@@ -17,9 +17,9 @@ int get_typesize(Type *type) {
 Node *read_type() {
 	Node *node = NULL;
 	if (consume(TK_INT)) {
-		node = new_node(ND_INT, NULL, NULL, NULL, NULL);
+		node = new_node(ND_INT, NULL, NULL);
 	} else if (consume(TK_CHAR)) {
-		node = new_node(ND_CHAR, NULL, NULL, NULL, NULL);
+		node = new_node(ND_CHAR, NULL, NULL);
 	}
 	return node;
 }
@@ -33,7 +33,7 @@ Node *err_read_type() {
 Node *read_ptr() {
 	Node *tmp = NULL;
 	while(consume('*')) {
-		tmp = new_node(ND_PTR, NULL, NULL, tmp, NULL);
+		tmp = new_node(ND_PTR, tmp, NULL);
 	}
 	return tmp;
 }

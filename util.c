@@ -69,7 +69,7 @@ Node *new_node_num(int val, Env *env) {
 	return node;
 }
 
-Node *new_node_ident(char *name, Env *env) {
+Type *node_ident_type(char *name, Env *env) {
 	// decide value_ty
 	// if env is g_env, then variable is in env
 	Type *value_ty = get_valuetype(env, name);
@@ -77,9 +77,7 @@ Node *new_node_ident(char *name, Env *env) {
 		value_ty = get_valuetype(g_env, name);
 		if (value_ty == NULL) {
 			// may be function call c.f. foo(3)
-			Node *node = new_node(ND_IDENT, value_ty, env, NULL, NULL);
-			node->name = name;
-			return node;
+			return NULL;
 		} else {
 			// global variable
 			if (value_ty->ty == TY_ARRAY) {
@@ -90,9 +88,7 @@ Node *new_node_ident(char *name, Env *env) {
 				newtype->array_size = value_ty->array_size;
 				value_ty = newtype;
 			}
-			Node *node = new_node(ND_G_IDENT, value_ty, env, NULL, NULL);
-			node->name = name;
-			return node;
+			return value_ty;
 		}
 	}
 
@@ -105,9 +101,7 @@ Node *new_node_ident(char *name, Env *env) {
 		value_ty = newtype;
 	}
 
-	Node *node = new_node(ND_IDENT, value_ty, env, NULL, NULL);
-	node->name = name;
-	return node;
+	return value_ty;
 }
 
 Node *new_node_string(char *name, int str_len, Env *env) {

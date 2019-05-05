@@ -84,6 +84,7 @@ int main(int argc, char **argv) {
 		Node *tmp = vec_get(toplevels, i);
 		analyze(tmp);
 	}
+	printf("#analyzed\n");
 
 
 	char r_registers[6][4] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};

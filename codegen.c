@@ -25,12 +25,12 @@ void gen_lval(Node *node) {
 // emurate stack machine
 void gen(Node *node) {
 	if (node->node_ty == ND_FUNCDEF) {
-		gen(node->lhs);
+		gen(node->rhs);
 		return;
 	}
 
 	if (node->node_ty == ND_GVARDEC) {
-		gen(node->lhs);
+		gen(node->rhs);
 		return;
 	}
 	
@@ -184,7 +184,7 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_DECLARATION) {
-		gen(node->lhs);
+		gen(node->rhs);
 		printf("  pop rax\n"); // statement must not be one value on stack
 		return;
 	}

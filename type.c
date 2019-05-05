@@ -14,29 +14,28 @@ int get_typesize(Type *type) {
 	return 0;
 }
 
-Type *read_type() {
-	Type *type = NULL;
+Node *read_type() {
+	Node *node = NULL;
 	if (consume(TK_INT)) {
-		type = new_type(TY_INT);
+		node = new_node(ND_INT, NULL, NULL, NULL, NULL);
 	} else if (consume(TK_CHAR)) {
-		type = new_type(TY_CHAR);
+		node = new_node(ND_CHAR, NULL, NULL, NULL, NULL);
 	}
-	return type;
+	return node;
 }
 
-Type *err_read_type() {
-	Type *type = read_type();
+Node *err_read_type() {
+	Node *type = read_type();
 	if (type == NULL) error("no specifier\n");
 	return type;
 }
 
-Type *read_ptr(Type *type) {
+Node *read_ptr() {
+	Node *tmp = NULL;
 	while(consume('*')) {
-		Type *newtype = new_type(TY_PTR);
-		newtype->ptrof = type;
-		type = newtype;
+		tmp = new_node(ND_PTR, NULL, NULL, tmp, NULL);
 	}
-	return type;
+	return tmp;
 }
 
 Type *assignment_check(Type *lhs, Type *rhs) {

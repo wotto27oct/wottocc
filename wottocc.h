@@ -60,6 +60,7 @@ enum {
 	ND_BREAK,
 	ND_CONTINUE,
 	ND_INT,
+	ND_PTR,
 	ND_CHAR,
 	ND_DEREF,
 	ND_ADDRESS,
@@ -82,7 +83,9 @@ enum {
 	ND_INIT_G_DECLARATOR_LIST,
 	ND_INIT_G_DECLARATOR,
 	ND_G_DECLARATOR,
+	ND_ARG,
 	ND_INITIALIZER_LIST,
+	ND_SIZEOF,
 };
 
 enum {
@@ -152,13 +155,13 @@ Node *compound_statement(Env*);
 Node *block_item_list(Env*);
 Node *block_item(Env*);
 Node *declaration(Env*);
-Node *init_declarator_list(Env*, Type*);
-Node *init_g_declarator_list(Env*, Type*);
-Node *init_declarator(Env*, Type*);
-Node *init_g_declarator(Env*, Type*);
+Node *init_declarator_list(Env*);
+Node *init_g_declarator_list(Env*);
+Node *init_declarator(Env*);
+Node *init_g_declarator(Env*);
 Node *initializer(Env*);
-Node *declarator(Env *env, Type *type);
-Node *g_declarator(Env *env, Type *type);
+Node *declarator(Env *env);
+Node *g_declarator(Env *env);
 Node *statement(Env*);
 Node *jump_statement(Env*);
 Node *expression_statement(Env*);
@@ -190,7 +193,9 @@ void tokenize(char*);
 
 // analyze.c
 void analyze_lval(Node*);
+void analyze_dec(Node*, Type*);
 void analyze(Node*);
+Type *get_ptr(Node*, Type*);
 
 // codegen.c
 void gen_lval(Node*);
@@ -215,9 +220,9 @@ void test_map();
 // type.c
 Type *new_type(int);
 int get_typesize(Type*);
-Type *read_type();
-Type *err_read_type();
-Type *read_ptr(Type*);
+Node *read_type();
+Node *err_read_type();
+Node *read_ptr();
 Type *assignment_check(Type*, Type*);
 Type *plus_check(Type*, Type*);
 
@@ -229,7 +234,7 @@ int gen_stackpos(Env*, int);
 Type *get_valuetype(Env*, char*);
 Node *new_node(int, Type*, Env*, Node*, Node*);
 Node *new_node_num(int, Env*);
-Node *new_node_ident(char*, Env*);
+Type *node_ident_type(char*, Env*);
 Node *new_node_string(char*, int, Env*);
 Node *new_node_func(char*, Env*);
 Env *new_env(Env*);

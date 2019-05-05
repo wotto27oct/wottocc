@@ -13,8 +13,9 @@ void program() {
 Node *toplevel() {
 	Node *node;
 
-	Type *toptype = err_read_type();
-	toptype = read_ptr(toptype);
+	Node *toptype = err_read_type();
+	Node *topptr = read_ptr();
+	toptype->lhs = topptr;
 
 	err_consume(TK_IDENT, "It's not suitable format for function");
 	char *name = ((Token *)vec_get(tokens, pos - 1))->input;
@@ -22,9 +23,10 @@ Node *toplevel() {
 
 	if (consume('(')) {
 		// function_definition
-		node = new_node(ND_FUNCDEF, toptype, new_env(NULL), NULL, NULL);
+		//node = new_node(ND_FUNCDEF, toptype, new_env(NULL), NULL, NULL);
+		node = new_node(ND_FUNCDEF, NULL, new_env(NULL), toptype, NULL);
 		node->fname = name;
-		map_put(g_funcs, name, 0, toptype);
+		//map_put(g_funcs, name, 0, toptype);
 		Vector *args = new_vector();
 
 		// int foo(int *x, int y){ ... }
@@ -32,14 +34,15 @@ Node *toplevel() {
 			if (consume(')')) {
 				break;
 			}
-			Type *type = err_read_type();
-			type = read_ptr(type);
+			Node *type = err_read_type();
+			Node *typeptr = read_ptr();
+			type->lhs = typeptr;
 			err_consume(TK_IDENT, "args is not variable");
 
 			char *vname = ((Token *)vec_get(tokens,pos-1))->input; //variable name
-			map_put(node->env->variables, vname, 0, type);
+			//map_put(node->env->variables, vname, 0, type);
 
-			Node *arg = new_node(ND_INT, type, NULL, NULL, NULL);
+			Node *arg = new_node(ND_ARG, NULL, node->env, type, NULL);
 			arg->name = vname;
 			vec_push(args, arg);
 
@@ -50,15 +53,14 @@ Node *toplevel() {
 
 		}
 		node->args = args; // set of arguments of function
-
-
-		node->lhs = compound_statement(node->env); // { ... }
+		node->rhs = compound_statement(node->env); // { ... }
 	} else {
 		// def of global variable
-		node = new_node(ND_GVARDEC, NULL, NULL, NULL, NULL);
+		node = new_node(ND_GVARDEC, NULL, NULL, toptype, NULL);
 		node->name = name;
 		pos -= 1; // read from the identifier
-		node->lhs = init_g_declarator_list(g_env, toptype);
+		//node->lhs = init_g_declarator_list(g_env, toptype);
+		node->rhs = init_g_declarator_list(g_env);
 		err_consume(';', "no ; at def of global variable");
 	}
 
@@ -255,13 +257,13 @@ Node *jump_statement(Env *env) {
 Node *declaration(Env *env) {
 	Node *node = NULL;
 	// allow NULL
-	Type *type = read_type();
-	if (type != NULL) {
-		node = new_node(ND_DECLARATION, NULL, env, NULL, NULL);
+	Node *lhs = read_type();
+	if (lhs != NULL) {
+		node = new_node(ND_DECLARATION, NULL, env, lhs, NULL);
 
 		// allow "int;"
 		if (read_nextToken(';') == 0) {
-			node->lhs = init_declarator_list(env, type);
+			node->rhs = init_declarator_list(env);
 		}
 
 		err_consume(';', "no ';' at declaration");
@@ -269,35 +271,35 @@ Node *declaration(Env *env) {
 	return node;
 }
 
-Node *init_declarator_list(Env *env, Type *sp_type) {
-	Node *node = init_declarator(env, sp_type);
+Node *init_declarator_list(Env *env) {
+	Node *node = init_declarator(env);
 
 	for (;;) {
 		if (consume(',')) {
-			node = new_node(ND_INIT_DECLARATOR_LIST, NULL, env, node, init_declarator(env, sp_type));
+			node = new_node(ND_INIT_DECLARATOR_LIST, NULL, env, node, init_declarator(env));
 		} else {
 			return node;
 		}
 	}
 }	
 
-Node *init_g_declarator_list(Env *env, Type *sp_type) {
-	Node *node = init_g_declarator(env, sp_type);
+Node *init_g_declarator_list(Env *env) {
+	Node *node = init_g_declarator(env);
 	for (;;) {
 		if (consume(',')) {
-			node = new_node(ND_INIT_G_DECLARATOR_LIST, NULL, env, node,init_g_declarator(env, sp_type));
+			node = new_node(ND_INIT_G_DECLARATOR_LIST, NULL, env, node,init_g_declarator(env));
 		} else {
 			return node;
 		}
 	}
 }
 
-Node *init_declarator(Env *env, Type *sp_type) {
-	Node *node = declarator(env, sp_type);
+Node *init_declarator(Env *env) {
+	Node *node = declarator(env);
 
 	if (consume('=')) {
 		Node *rhs = initializer(env);
-		if (rhs->node_ty != ND_INITIALIZER_LIST) {
+		/*if (rhs->node_ty != ND_INITIALIZER_LIST) {
 			assignment_check(node->value_ty, rhs->value_ty);
 			// ban x[3] = "abcde"
 			if (node->value_ty->ty == TY_ARRAY && rhs->value_ty->ty == TY_PTR) {
@@ -305,7 +307,6 @@ Node *init_declarator(Env *env, Type *sp_type) {
 					error("too much initialization at array");
 				}
 			}
-			node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
 		} else {
 			// a[3] = {1,2,3};
 			if (node->value_ty->ty != TY_ARRAY) {
@@ -315,21 +316,22 @@ Node *init_declarator(Env *env, Type *sp_type) {
 				error("too much initializer\n");
 			}
 			assignment_check(node->value_ty->ptrof, rhs->value_ty->ptrof);
-			node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
-		}
+		}*/
+		//node = new_node(ND_INIT_DECLARATOR, node->value_ty, env, node, rhs);
+		node = new_node(ND_INIT_DECLARATOR, NULL, env, node, rhs);
 	}
 
 	return node;
 }
 
-Node *init_g_declarator(Env *env, Type *sp_type) {
-	Node *node = g_declarator(env, sp_type);
+Node *init_g_declarator(Env *env) {
+	Node *node = g_declarator(env);
 
 	if (consume('=')) {
 		// これだと変数も初期化に認めてるので本当はよくない
 		// いい感じにanalyzeしたいけどとりあえずスルー
 		Node *rhs = initializer(env);
-		if (rhs->node_ty != ND_INITIALIZER_LIST) {
+		/*if (rhs->node_ty != ND_INITIALIZER_LIST) {
 			assignment_check(node->value_ty, rhs->value_ty);
 			node = new_node(ND_INIT_G_DECLARATOR, node->value_ty, env, node, rhs);
 		} else {
@@ -341,57 +343,70 @@ Node *init_g_declarator(Env *env, Type *sp_type) {
 				error("too much initializer\n");
 			}
 			assignment_check(node->value_ty->ptrof, rhs->value_ty->ptrof);
-			node = new_node(ND_INIT_G_DECLARATOR, node->value_ty, env, node, rhs);
-		}
+		}*/
+		node = new_node(ND_INIT_G_DECLARATOR, NULL, env, node, rhs);
 	}
 
 	return node;
 }
 
 // 6.7.6
-Node *declarator(Env *env, Type *sp_type) {
-	Type *type = sp_type;
-	type = read_ptr(type);
+Node *declarator(Env *env) {
+	/*Type *type = sp_type;
+	type = read_ptr(type);*/
+	
+	Node *lhs = read_ptr();
 
 	err_consume(TK_IDENT, "no identifier at declarator");
 	char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
 
+	Node *rhs = NULL;
+
 	if (consume('[')) {
-		err_consume(TK_NUM, "array initializer must be number");
+		/*err_consume(TK_NUM, "array initializer must be number");
 		Type *newtype = new_type(TY_ARRAY);
 		newtype->ptrof = type;
 		newtype->array_size = ((Token *)vec_get(tokens,pos-1))->val;
-		type = newtype;
+		type = newtype;*/
+		rhs = primary_expression(env);
 		err_consume(']', "no ']' at array-def");
 	}
 	
-	map_put(env->variables, vname, 0, type);
+	//map_put(env->variables, vname, 0, type);
 	
-	Node *node = new_node_ident(vname, env);
-	node->value_ty = type;
+	/*Node *node = new_node_ident(vname, env);
+	node->value_ty = type;*/
+	Node *node = new_node(ND_DECLARATOR, NULL, env, lhs, rhs);
+	node->name = vname;
 	
 	return node;
 }
 
-Node *g_declarator(Env *env, Type *sp_type) {
-	Type *type = sp_type;
-	type = read_ptr(type);
+Node *g_declarator(Env *env) {
+	//Type *type = sp_type;
+	//type = read_ptr(type);
+	//
+	Node *lhs = read_ptr();
 
 	err_consume(TK_IDENT, "no identifier at declarator");
 	char *vname = ((Token *)vec_get(tokens,pos-1))->input;	
 
+	Node *rhs = NULL;
+
 	if (consume('[')) {
-		err_consume(TK_NUM, "array initializer must be number");
+		/*err_consume(TK_NUM, "array initializer must be number");
 		Type *newtype = new_type(TY_ARRAY);
 		newtype->ptrof = type;
 		newtype->array_size = ((Token *)vec_get(tokens,pos-1))->val;
-		type = newtype;
+		type = newtype;*/
+		rhs = primary_expression(env);
 		err_consume(']', "no ']' at array-def");
 	}
 	
-	map_put(env->variables, vname, 0, type);
+	//map_put(env->variables, vname, 0, type);
 	
-	Node *node = new_node(ND_G_DECLARATOR, type, env, NULL, NULL);
+	//Node *node = new_node(ND_G_DECLARATOR, type, env, lhs, rhs);
+	Node *node = new_node(ND_G_DECLARATOR, NULL, env, lhs, rhs);
 	node->name = vname;
 	return node;
 }
@@ -401,23 +416,24 @@ Node *initializer(Env *env) {
 	Node *node;
 	if (consume('{')) {
 		Vector *args = new_vector();
-		Type *arr_type = NULL;
-		size_t arr_size = 0;
+		/*Type *arr_type = NULL;
+		size_t arr_size = 0;*/
 		while (!consume('}')) {
 			Node *node = assignment_expression(env);
-			if (arr_type == NULL) arr_type = node->value_ty;
-			if (arr_type->ty != node->value_ty->ty){
-				error("different array initializer type\n");
-			}
+			//if (arr_type == NULL) arr_type = node->value_ty;
+			//if (arr_type->ty != node->value_ty->ty){
+			//	error("different array initializer type\n");
+			//}
 			vec_push(args, node);
-			arr_size++;
+			//arr_size++;
 			if (consume('}')) break;
 			err_consume(',', "no comma at array initialzation\n");
 		}
-		Type *type = new_type(TY_ARRAY);
-		type->ptrof = arr_type;
-		type->array_size = arr_size;
-		node = new_node(ND_INITIALIZER_LIST, type, env, NULL, NULL);
+		//Type *type = new_type(TY_ARRAY);
+		//type->ptrof = arr_type;
+		//type->array_size = arr_size;
+		//node = new_node(ND_INITIALIZER_LIST, type, env, NULL, NULL);
+		node = new_node(ND_INITIALIZER_LIST, NULL, env, NULL, NULL);
 		node->args = args;
 	} else {
 		node = assignment_expression(env);
@@ -446,21 +462,24 @@ Node *assignment_expression(Env *env) {
 	if (consume('=')){
 		Node *lhs = node;
 		Node *rhs = assignment_expression(env);
-		Type *value_ty;
+		/*Type *value_ty;
 		value_ty = assignment_check(lhs->value_ty, rhs->value_ty);
-		node = new_node('=', value_ty, env, lhs, rhs);
+		node = new_node('=', value_ty, env, lhs, rhs);*/
+		node = new_node('=', NULL, env, lhs, rhs);
 	} else if (consume(TK_PLUSEQ)) {
 		Node *lhs = node;
 		Node *rhs = assignment_expression(env);
-		Type *value_ty;
+		/*Type *value_ty;
 		value_ty = assignment_check(lhs->value_ty, rhs->value_ty);
-		node = new_node(ND_PLUSEQ, value_ty, env, lhs, rhs);
+		node = new_node(ND_PLUSEQ, value_ty, env, lhs, rhs);*/
+		node = new_node(ND_PLUSEQ, NULL, env, lhs, rhs);
 	} else if (consume(TK_MINUSEQ)) {
 		Node *lhs = node;
 		Node *rhs = assignment_expression(env);
-		Type *value_ty;
+		/*Type *value_ty;
 		value_ty = assignment_check(lhs->value_ty, rhs->value_ty);
-		node = new_node(ND_MINUSEQ, value_ty, env, lhs, rhs);
+		node = new_node(ND_MINUSEQ, value_ty, env, lhs, rhs);*/
+		node = new_node(ND_MINUSEQ, NULL, env, lhs, rhs);
 	}
 	return node;
 }
@@ -506,9 +525,11 @@ Node *equality_expression(Env *env) {
 
 	for (;;) {
 		if (consume(TK_EQUAL)) {
-			node = new_node(ND_EQUAL, new_type(TY_INT), env, node, relational_expression(env));
+			//node = new_node(ND_EQUAL, new_type(TY_INT), env, node, relational_expression(env));
+			node = new_node(ND_EQUAL, NULL, env, node, relational_expression(env));
 		} else if (consume(TK_NEQUAL)) {
-			node = new_node(ND_NEQUAL, new_type(TY_INT), env, node, relational_expression(env));
+			//node = new_node(ND_NEQUAL, new_type(TY_INT), env, node, relational_expression(env));
+			node = new_node(ND_NEQUAL, NULL, env, node, relational_expression(env));
 		} else {
 			return node;
 		}
@@ -520,13 +541,17 @@ Node *relational_expression(Env *env) {
 	
 	for (;;) {
 		if (consume('<'))
-			node = new_node('<', new_type(TY_INT), env, node, shift_expression(env));
+			//node = new_node('<', new_type(TY_INT), env, node, shift_expression(env));
+			node = new_node('<', NULL, env, node, shift_expression(env));
 		else if (consume('>'))
-			node = new_node('>', new_type(TY_INT), env, node, shift_expression(env));
+			//node = new_node('>', new_type(TY_INT), env, node, shift_expression(env));
+			node = new_node('>', NULL, env, node, shift_expression(env));
 		else if (consume(TK_LEQ))
-			node = new_node(ND_LEQ, new_type(TY_INT), env, node, shift_expression(env));
+			//node = new_node(ND_LEQ, new_type(TY_INT), env, node, shift_expression(env));
+			node = new_node(ND_LEQ, NULL, env, node, shift_expression(env));
 		else if (consume(TK_GEQ))
-			node = new_node(ND_GEQ, new_type(TY_INT), env, node, shift_expression(env));
+			//node = new_node(ND_GEQ, new_type(TY_INT), env, node, shift_expression(env));
+			node = new_node(ND_GEQ, NULL, env, node, shift_expression(env));
 		else 
 			return node;
 	}
@@ -542,17 +567,19 @@ Node *additive_expression(Env *env) {
 
 	for (;;) {
 		if (consume('+')){
-			Type *value_ty;
+			//Type *value_ty;
 			Node *lhs = node;
 			Node *rhs = multiplicative_expression(env);
-			value_ty = plus_check(lhs->value_ty, rhs->value_ty);
-			node = new_node('+', value_ty, env, lhs, rhs);
+			//value_ty = plus_check(lhs->value_ty, rhs->value_ty);
+			//node = new_node('+', value_ty, env, lhs, rhs);
+			node = new_node('+', NULL, env, lhs, rhs);
 		} else if (consume('-')) {
 			Node *lhs = node;
 			Node *rhs = multiplicative_expression(env);
-			Type *value_ty;
-			value_ty = plus_check(lhs->value_ty, rhs->value_ty);
-			node = new_node('-', value_ty, env, lhs, rhs);
+			//Type *value_ty;
+			//value_ty = plus_check(lhs->value_ty, rhs->value_ty);
+			//node = new_node('-', value_ty, env, lhs, rhs);
+			node = new_node('-', NULL, env, lhs, rhs);
 		} else {
 			return node;
 		}
@@ -564,9 +591,11 @@ Node *multiplicative_expression(Env *env) {
 
 	for (;;) {
 		if (consume('*'))
-			node = new_node('*', new_type(TY_INT), env, node, cast_expression(env));
+			//node = new_node('*', new_type(TY_INT), env, node, cast_expression(env));
+			node = new_node('*', NULL, env, node, cast_expression(env));
 		else if (consume('/'))
-			node = new_node('/', new_type(TY_INT), env, node, cast_expression(env));
+			//node = new_node('/', new_type(TY_INT), env, node, cast_expression(env));
+			node = new_node('/', NULL, env, node, cast_expression(env));
 		else
 			return node;
 	}
@@ -581,25 +610,21 @@ Node *unary_expression(Env *env) {
 	Node *node = NULL;
 
 	if (consume(TK_INC)) {
-		node = new_node(ND_PREINC, new_type(TY_INT), env, unary_expression(env), NULL);
+		//node = new_node(ND_PREINC, new_type(TY_INT), env, unary_expression(env), NULL);
+		node = new_node(ND_PREINC, NULL, env, unary_expression(env), NULL);
 	} else if (consume(TK_DEC)) {
-		node = new_node(ND_PREDEC, new_type(TY_INT), env, unary_expression(env), NULL);
+		//node = new_node(ND_PREDEC, new_type(TY_INT), env, unary_expression(env), NULL);
+		node = new_node(ND_PREDEC, NULL, env, unary_expression(env), NULL);
 	} else if (consume('*')) {
 		Node *lhs = cast_expression(env);
-		if (lhs->value_ty->ty == TY_INT) {
-			error("illegal deref: %s\n", ((Token *)vec_get(tokens, pos))->input);
-		}
-		node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), env, lhs, NULL);
+		//node = new_node(ND_DEREF, new_type(lhs->value_ty->ptrof->ty), env, lhs, NULL);
+		node = new_node(ND_DEREF, NULL, env, lhs, NULL);
 	} else if (consume('&')) {
-		node = new_node('&', new_type(TY_PTR), env, cast_expression(env), NULL);
+		//node = new_node('&', new_type(TY_PTR), env, cast_expression(env), NULL);
+		node = new_node('&', NULL, env, cast_expression(env), NULL);
 	} else if (consume(TK_SIZEOF)) {
 		// sizeof(a)
-		node = unary_expression(env);
-		if (node->value_ty->ty == TY_PTR && node->value_ty->array_size != 0) {
-			node = new_node_num(node->value_ty->array_size * get_typesize(node->value_ty->ptrof), env);
-		} else {
-			node = new_node_num(get_typesize(node->value_ty), env);
-		}
+		node = new_node(ND_SIZEOF, NULL, env, unary_expression(env), NULL);
 		return node;
 
 	} else {
@@ -616,18 +641,23 @@ Node *postfix_expression(Env *env) {
 			// a[3] -> *(a + 3)
 			Node *rhs = expression(env);
 			
-			Node *plus = new_node('+', new_type(TY_PTR), env, node, rhs);
-			node = new_node(ND_DEREF, new_type(node->value_ty->ptrof->ty), env, plus, NULL);
+			//Node *plus = new_node('+', new_type(TY_PTR), env, node, rhs);
+			Node *plus = new_node('+', NULL, env, node, rhs);
+			//node = new_node(ND_DEREF, new_type(node->value_ty->ptrof->ty), env, plus, NULL);
+			node = new_node(ND_DEREF, NULL, env, plus, NULL);
 			err_consume(']', "no right_braket at array");
 		} else if (consume('(')) {
 			// foo(1 ,2)
-			Type *type = map_get_type(g_funcs, node->name);
-			node = new_node(ND_FUNC_CALL, type, env, node, argument_expression_list(env));
+			//Type *type = map_get_type(g_funcs, node->name);
+			//node = new_node(ND_FUNC_CALL, type, env, node, argument_expression_list(env));
+			node = new_node(ND_FUNC_CALL, NULL, env, node, argument_expression_list(env));
 			err_consume(')', "no right-parenthesis at func_call");
 		} else if (consume(TK_INC)) {
-			node = new_node(ND_POSTINC, new_type(TY_INT), env, node, NULL);
+			//node = new_node(ND_POSTINC, new_type(TY_INT), env, node, NULL);
+			node = new_node(ND_POSTINC, NULL, env, node, NULL);
 		} else if (consume(TK_DEC)) {
-			node = new_node(ND_POSTDEC, new_type(TY_INT), env, node, NULL);
+			//node = new_node(ND_POSTDEC, new_type(TY_INT), env, node, NULL);
+			node = new_node(ND_POSTDEC, NULL, env, node, NULL);
 		} else {
 			return node;
 		}
@@ -667,7 +697,9 @@ Node *primary_expression(Env *env) {
 		break;
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
-		node = new_node_ident(t_name, env);
+		//node = new_node_ident(t_name, env);
+		node = new_node(ND_IDENT, NULL, env, NULL, NULL);
+		node->name = t_name;
 		return node;
 		break;
 	case TK_STR:

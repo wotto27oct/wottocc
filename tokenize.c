@@ -211,6 +211,8 @@ void tokenize(char *p) {
 				tmp->ty = TK_INT;
 			} else if (strcmp(buf_str, "char") == 0) {
 				tmp->ty = TK_CHAR;
+			} else if (strcmp(buf_str, "double") == 0) {
+				tmp->ty = TK_DOUBLE;
 			} else if (strcmp(buf_str, "sizeof") == 0) {
 				tmp->ty = TK_SIZEOF;
 			} else {

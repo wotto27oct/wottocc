@@ -33,6 +33,7 @@ enum {
 	TK_INT,			// token type of int
 	TK_CHAR,
 	TK_STR,
+	TK_DOUBLE,
 	TK_EOF,			// token type of EOF
 };
 
@@ -62,6 +63,7 @@ enum {
 	ND_INT,
 	ND_PTR,
 	ND_CHAR,
+	ND_DOUBLE,
 	ND_DEREF,
 	ND_ADDRESS,
 	ND_BLOCKITEMLIST,
@@ -92,7 +94,8 @@ enum {
 	TY_INT = 512,
 	TY_CHAR,
 	TY_PTR,
-	TY_ARRAY
+	TY_ARRAY,
+	TY_DOUBLE
 };
 
 // トークンの型

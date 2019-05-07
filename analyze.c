@@ -293,6 +293,12 @@ void analyze(Node *node, Env *env) {
 		return;
 	}
 
+	if (node->node_ty == ND_DOUBLE) {
+		node->env = env;
+		node->value_ty = new_type(TY_DOUBLE);
+		return;
+	}
+
 	if (node->node_ty == ND_INITIALIZER_LIST) {
 		node->env = env;
 		Type *arr_type = NULL;

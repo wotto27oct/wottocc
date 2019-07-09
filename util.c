@@ -85,6 +85,7 @@ Env *new_env(Env *outer) {
 	env->outer = outer;
 	env->inner = new_vector();
 	env->cases = new_vector();
+	if (outer != NULL) env->returntype = outer->returntype;
 	return env;
 }
 

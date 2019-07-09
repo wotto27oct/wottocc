@@ -125,6 +125,7 @@ void analyze(Node *node, Env *env) {
 			type = get_ptr(node->lhs->lhs, type);
 		}
 		map_put(g_funcs, node->fname, 0, type);
+		newenv->returntype = type;
 		for (int i = 0; i < node->args->len; i++) {
 			Node *tmp = vec_get(node->args, i);
 			analyze(tmp, newenv);
@@ -270,7 +271,19 @@ void analyze(Node *node, Env *env) {
 	if (node->node_ty == ND_RETURN) {
 		// change later (support void)
 		node->env = env;
-		analyze(node->lhs, env);
+		// void
+		if (node->env->returntype->ty == TY_VOID) {
+			if (node->lhs != NULL) {
+				error("return value must be NULL\n");
+			}
+		} else {
+			analyze(node->lhs, env);
+			//printf("%d, %d\n", node->lhs->value_ty->ty, node->env->returntype->ty);
+			if (node->lhs->value_ty != NULL && node->lhs->value_ty->ty != node->env->returntype->ty) {
+				error("the type of return value is wrong\n");
+			}
+		}
+
 		return;
 	}
 	
@@ -296,6 +309,12 @@ void analyze(Node *node, Env *env) {
 	if (node->node_ty == ND_DOUBLE) {
 		node->env = env;
 		node->value_ty = new_type(TY_DOUBLE);
+		return;
+	}
+
+	if (node->node_ty == ND_VOID) {
+		node->env = env;
+		node->value_ty = new_type(TY_VOID);
 		return;
 	}
 

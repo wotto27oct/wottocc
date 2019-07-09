@@ -130,23 +130,23 @@ try 1 "int main(){int a=1;int *x=&a; int *y; y=x; return *y;}"
 try 3 "int main(){int a[2]; a[1]=3; int *x; x=1+a; return *x;}"
 
 try 1 "int main(){char a = 1; return 1;}"
-try 1 "char x[3]; int main(){x[0]=1; x[1]=2; return x[0];}"
-try 2 "char x=1; int main(){x+=1; return x;}"
+try 1 "char x[3]; char main(){x[0]=1; x[1]=2; return x[0];}"
+try 2 "char x=1; char main(){x+=1; return x;}"
 try 3 "char x[3]; int main(){x[0]=-1;x[1]=2;int y=4;return x[0]+y;}"
-try 3 "int main(){char x=1; int a[2]; a[1]=3; return *(a+x);}"
+try 3 "char main(){char x=1; int a[2]; a[1]=3; return *(a+x);}"
 
 try 4 "int main(){int a[10] = {1,2,3,4}; return a[3];}"
-try 3 "int main(){char a[3] = {3,4,5,}; return a[0];}"
+try 3 "char main(){char a[3] = {3,4,5,}; return a[0];}"
 
 try 2 "int a[3] = {1,2,3}; int main(){return a[1];}"
-try 4 "char a[4] = {1,2,3,4,}; int main(){a[2] = 2; return a[3];}"
+try 4 "char a[4] = {1,2,3,4,}; char main(){a[2] = 2; return a[3];}"
 
-try 97 "int main(){char *x = \"abc\"; return x[0];}"
-try 98 "char *x = \"abakan\"; int main(){return x[1];}"
-try 99 "char *x; int main(){x = \"minako_chan\"; return x[7];}"
+try 97 "char main(){char *x = \"abc\"; return x[0];}"
+try 98 "char *x = \"abakan\"; char main(){return x[1];}"
+try 99 "char *x; char main(){x = \"minako_chan\"; return x[7];}"
 
-try 97 "char a[3] = \"abc\"; int main(){return a[0];}"
-try 98 "int main(){char a[3] = \"abc\"; return a[1];}"
+try 97 "char a[3] = \"abc\"; char main(){return a[0];}"
+try 98 "char main(){char a[3] = \"abc\"; return a[1];}"
 
 try 2 "int main(){return puts(\"2\");}"
 
@@ -154,5 +154,9 @@ try 2 "int main(){int a=2; /*a=3;*/return a;}"
 try 2 "int main(){int a=2; //a=3;
 return a;}"
 try 0 "int main(){printf(\"helo\nhell\"); return 0;}"
+
+try 0 "int main(){int a=1; printf(\"%d\n\", a); return 0;}"
+
+try 2 "int a = 1; void foo(){a=2; return;} int main(){foo(); return a;}"
 
 echo OK

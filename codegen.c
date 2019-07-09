@@ -175,8 +175,10 @@ void gen(Node *node) {
 	}
 
 	if (node->node_ty == ND_RETURN) {
-		gen(node->lhs);
-		printf("  pop rax\n");
+		if (node->lhs != NULL) {
+			gen(node->lhs);
+			printf("  pop rax\n");
+		}
 		printf("  mov rsp, rbp\n");
 		printf("  pop rbp\n");
 		printf("  ret\n");

@@ -23,6 +23,8 @@ Node *read_type() {
 		node = new_node(ND_CHAR, NULL, NULL);
 	} else if (consume(TK_DOUBLE)) {
 		node = new_node(ND_DOUBLE, NULL, NULL);
+	} else if (consume(TK_VOID)) {
+		node = new_node(ND_VOID, NULL, NULL);
 	}
 	return node;
 }

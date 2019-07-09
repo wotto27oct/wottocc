@@ -21,7 +21,6 @@ Node *toplevel() {
 
 	if (consume('(')) {
 		// function_definition
-		//node = new_node(ND_FUNCDEF, NULL, new_env(NULL), toptype, NULL);
 		node = new_node(ND_FUNCDEF, toptype, NULL);
 		node->fname = name;
 		//map_put(g_funcs, name, 0, toptype);
@@ -572,7 +571,6 @@ Node *primary_expression() {
 		break;
 	case TK_IDENT:
 		t_name = ((Token *)vec_get(tokens, pos++))->input;
-		//node = new_node_ident(t_name, env);
 		node = new_node(ND_IDENT, NULL, NULL);
 		node->name = t_name;
 		return node;

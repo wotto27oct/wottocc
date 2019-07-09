@@ -34,6 +34,7 @@ enum {
 	TK_CHAR,
 	TK_STR,
 	TK_DOUBLE,
+	TK_VOID,
 	TK_EOF,			// token type of EOF
 };
 
@@ -64,6 +65,7 @@ enum {
 	ND_PTR,
 	ND_CHAR,
 	ND_DOUBLE,
+	ND_VOID,
 	ND_DEREF,
 	ND_ADDRESS,
 	ND_BLOCKITEMLIST,
@@ -95,7 +97,8 @@ enum {
 	TY_CHAR,
 	TY_PTR,
 	TY_ARRAY,
-	TY_DOUBLE
+	TY_DOUBLE,
+	TY_VOID
 };
 
 // トークンの型
@@ -130,6 +133,7 @@ typedef struct Env {
 	Vector *inner;
 	int stackpos;
 	Vector *cases;
+	Type *returntype;
 } Env;
 
 typedef struct Node {

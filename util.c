@@ -11,7 +11,7 @@ char *new_str(const char *src){
 void error(const char *str, ...) {
 	va_list ap;
 	va_start(ap, str);
-	vprintf(str, ap);
+	vfprintf(stderr, str, ap);
 	va_end(ap);
 	exit(1);
 }
